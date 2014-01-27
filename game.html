@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>game</title>
+	</head>
+	<style type="text/css">
+	canvas{
+		position: fixed;
+		left:50%;
+		top:50%;
+		
+		height: 480px;
+		margin-top: -240px;
+		
+		width: 640px;
+		margin-left: -320px;
+		cursor: none;
+	}
+	</style>
+	
+	<body>
+		<div id="displaydiv">
+			<p id='fps'>fps: 0.0</p>
+			<canvas id="Display" width="640" height="480" style="border:1px solid #c3c3c3; z-index: 0;">
+			HTML5 Canvas is not supported
+			</canvas>
+		</div>
+		<script id="noise_fs" type="x-shader/x-fragment">
+			precision mediump float;
+			varying vec2 texCoord2D;
+			uniform float time;
+		
+			float rand(vec2 co){
+				return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+			}
+
+			void main(void) {
+				gl_FragColor = vec4(rand(time*texCoord2D)*vec3(1.0,1.0,1.0),1.0);
+			}
+		</script>
+		<script id="noise_vs" type="x-shader/x-vertex">
+			precision mediump float;
+			attribute vec3 aVertexPosition;
+			
+			uniform float time;
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+			varying vec2 texCoord2D;
+			
+			void main(void) {
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+				texCoord2D = aVertexPosition.xy;
+			}
+		</script>
+		<script id="fs" type="x-shader/x-fragment">
+			precision mediump float;
+
+			varying vec4 vColor;
+
+			void main(void) {
+				gl_FragColor = vColor;
+			}
+		</script>
+		<script id="vs" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+			attribute vec4 aVertexColor;
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+
+			varying vec4 vColor;
+
+		  void main(void) {
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+			vColor = aVertexColor;
+		  }
+		</script>
+		<script id="point_vs" type="x-shader/x-vertex">
+			precision mediump float;
+			
+			attribute vec3 aVertexPosition;
+			attribute vec4 aVertexColor;
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+			uniform float pointSize;
+			
+			varying vec4 vColor;
+
+			void main(void) {
+				gl_PointSize = pointSize;
+				
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+				
+				vColor = aVertexColor;
+			}
+		</script>
+		<script type="text/javascript" src="libraries/gl-matrix-min.js"></script>
+		<!--this script loads all of the source files for the game-->
+		<script type="text/javascript" src="main.js"></script>
+	</body>
+</html>
