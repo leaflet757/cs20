@@ -38,7 +38,7 @@ function initLoop(){
 	var startTime=0;
 	var loopTime = 0;
 	var updatables= new Array();
-	
+	var paused = false;
 	
 	var update = function(){
 		var n = Date.now();
@@ -47,19 +47,21 @@ function initLoop(){
 		var delta = Math.min((n-previousTime)*0.001,0.064);//floored at 15fps
 		// var delta =.016;
 		previousTime = n;
-		for(var i in updatables){
-			updatables[i].preupdate(delta)
-		}
-		for(var i in updatables){
-			updatables[i].update(delta)
-		}
-		for(var i in updatables){
-			updatables[i].postupdate(delta)
+		if(!paused){
+			for(var i in updatables){
+				updatables[i].preupdate(delta)
+			}
+			for(var i in updatables){
+				updatables[i].update(delta)
+			}
+			for(var i in updatables){
+				updatables[i].postupdate(delta)
+			}
 		}
 	}
 	
 	//public functions and variables
-	window.Loop = {
+	window.Loop = Object.defineProperties({
 		start: function(){
 			console.log("loop starting...")
 			startTime = Date.now();
@@ -89,7 +91,17 @@ function initLoop(){
 		getHertz: function(){
 			return hertz;
 		}
-	}
+	},
+	{
+		paused:{
+			get: function(){
+				return paused;
+			},
+			set: function(p){
+				paused = p;
+			}
+		}
+	});
 }
 
 function Updatable(){

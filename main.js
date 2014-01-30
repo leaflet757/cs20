@@ -53,6 +53,39 @@ function initInput(){
 	keyboard.addFlag(55,'_7');
 	keyboard.addFlag(56,'_8');
 	keyboard.addFlag(57,'_9');
+	
+	keyboard.addKeyListener(80,'p',(function(){
+		var pressed = false;
+		return {
+			onPress:function(){
+				if(!pressed){
+					pressed = true;
+					Loop.paused = !Loop.paused;
+				}
+			},
+			onRelease:function(){
+				pressed = false;
+			}
+		}
+		})()
+	);
+	
+	keyboard.addKeyListener(27,'esc',(function(){
+		var pressed = false;
+		return {
+			onPress:function(){
+				if(!pressed){
+					pressed = true;
+					Entities.player.getInstance(0).physState.set(0,0,0,0,0,0);
+				}
+			},
+			onRelease:function(){
+				pressed = false;
+			}
+		}
+		})()
+	);
+	
 	mouse = new input.Mouse(window,document.getElementById("Display"));
 }
 
@@ -63,7 +96,11 @@ function init(){
 		Loop.add(gameComponents[i])
 	}
 	Loop.add(Entities)
-	
+	Loop.start();
+	initScene();
+}
+
+function initScene(){
 	var currentScreen = graphics.getScreen('gl_main');
 	
 	var glTester = fillProperties(new GLDrawable(),
@@ -134,7 +171,14 @@ function init(){
 		var x=0, y=0;
 		return{
 			draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
-				manager.point(mouse.x+12,mouse.yInv,0,12,1,1,1,1)
+				var r = 1,g = 1,b=1;
+				if(mouse.left){
+					g = 0;
+				}
+				if(mouse.right){
+					b=0;
+				}
+				manager.point(mouse.x+12,mouse.yInv,0,12,r,g,b,1);
 			},
 			tick: function(){
 				x = mouse.x;
@@ -148,45 +192,8 @@ function init(){
 	})());
 	graphics.addToDisplay(cursor,"gl_main")
 	ticker.add(cursor);
-	
-	// var follower = fillProperties(new GLDrawable(),{
-		// xs: new Array(),
-		// ys: new Array(),
-		// dist: 60,
-		// tick: function(delta){
-			// var player = Entities.player.getInstance(0);
-			// if(this.xs.length>=this.dist){
-				// this.x=this.xs.shift();
-				// this.y=this.ys.shift();
-			// }
-			// this.xs.push(player.physState.x);
-			// this.ys.push(player.physState.y);
-		// },
-		// glInit: function(manager){
-		// },
-		// glDelete: function(manager){
-			
-		// },
-		// draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
-			// manager.fill(1.0,1.0,0,1);
-			// manager.stroke(0,0,1,1);
-			// manager.fillRect(this.x,this.y,-5,this.width*2,this.height,0);
-			// manager.strokeRect(this.x,this.y,-5,this.width*2,this.height,0);
-			// var player = Entities.player.getInstance(0)
-			// manager.stroke(1,1,1,1)
-			// manager.line(this.x,this.y,player.physState.x,player.physState.y,0);
-		// },
-		// x:0,
-		// y:0,
-		// width:64,
-		// height:64
-	// });
-	// graphics.addToDisplay(follower,"gl_main")
-	// ticker.add(follower);
-	Loop.start();
 }
 
-
-//initializes engine
+//initializes game
 loadSource();
 document.addEventListener("DOMContentLoaded", function(){initInput();init();}, false);

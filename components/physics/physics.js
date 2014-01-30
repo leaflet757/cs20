@@ -69,6 +69,9 @@ function initPhysics(){
 					break;
 				}
 			}
+		},
+		reset: function(){
+		
 		}
 	});
 	
@@ -92,4 +95,27 @@ function MovementState(x,y){
 	this.vel = {0:0,1:0,length:2};
 	this.accel = {0:0,1:0,length:2};
 	return this;
+}
+
+MovementState.prototype = {
+	setPos:function(x,y){
+		this.x = x;
+		this.y = y;
+	},
+	setVel:function(x,y){
+		this.vel[0]=x;
+		this.vel[1]=y;
+	},
+	setAccel: function(x,y){
+		this.accel[0]=x;
+		this.accel[1]=y;
+	},
+	set:function(x,y,vx,vy,ax,ay){
+		this.x = x;
+		this.y = y;
+		this.vel[0]=vx;
+		this.vel[1]=vy;
+		this.accel[0]=ax;
+		this.accel[1]=ay;
+	}
 }

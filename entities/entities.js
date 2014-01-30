@@ -17,6 +17,9 @@ Entities = fillProperties(new Updatable(),{
 	createStandardState: function(obj,x,y){
 		return fillProperties(new GLDrawable(),fillProperties(new MovementState(x,y),obj));
 	},
+	/**
+	*	does a type check then adds the entity to Entities as a property with the given name
+	*/
 	add: function(name,entity){
 		if(entity instanceof Entity){
 			this[name] = entity;
@@ -24,14 +27,37 @@ Entities = fillProperties(new Updatable(),{
 			throw 'Entities: attempt to add non-entity'
 		}
 	},
+	/**
+	*	Deletes the entity from this object and clears its instances
+	*/
 	remove: function(name){
 		if(this[name] instanceof Entity){
+			this[name].reset();
 			delete this[name];
 		}
 	},
+	/**
+	*	updates all of the properties of Entities with an update function
+	*/
 	update: function(delta){
 		for(var o in this){
-			if(typeof this[o].update== 'function')this[o].update(delta);
+			if(typeof this[o].update == 'function')this[o].update(delta);
+		}
+	},
+	/**
+	*	clears all instances but not object pools
+	*/
+	reset:function(){
+		for(var o in this){
+			if(typeof this[o].reset== 'function')this[o].reset();
+		}
+	},
+	/**
+	*	clears all object pools, killing all instances
+	*/
+	clear:function(){
+		for(var o in this){
+			if(typeof this[o].clear == 'function')this[o].clear();
 		}
 	}
 });
@@ -139,6 +165,23 @@ Entity.prototype=(function(){
 					this.def.update(instance,delta);
 				}
 			}
+		},
+		/**
+		*	kills all instances but does not clear the object pool
+		*/
+		reset:function(){
+			for(var i = 0; i<position; i++){
+				delete this.instances[this.instanceArray[i].id];
+				this.def.destroy(this.instanceArray[i]);
+			}
+			position = 0;
+		},
+		/**
+		*	kills all instances and clears the object pool
+		*/
+		clear: function(){
+			this.reset();
+			this.instances.length = 0;
 		}
 	}
 })();
