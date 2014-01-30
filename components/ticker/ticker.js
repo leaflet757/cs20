@@ -20,6 +20,14 @@ function initTicker(){
 			}else{
 				return -1
 			}
+		},
+		remove: function(obj){
+			for(var i = 0; i<tickables.length; i++){
+				if(tickables[i]==obj){
+					tickables.splice(i,1);
+					break;
+				}
+			}
 		}
 	});
 	

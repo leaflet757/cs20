@@ -17,16 +17,17 @@ function initSound(){
 		var gainNode = context.createGain();
 		var playing=false;
 		var source=null;
+		var onendFunc = function(){
+			playing = false;
+			source = null;
+		}
 		this.play = function(t){
 			if(buffers[bufferId].loaded){
 				source = context.createBufferSource(); // Create Sound Source
 				source.buffer = buffers[bufferId].data; // Add Buffered Data to Object
 				source.loop = loop;
 				source.connect(gainNode);
-				source.onend = function(){
-					playing = false;
-					source = null;
-				}
+				source.onend = onendFunc;
 				gainNode.connect(globalGain);
 				source.start(0);
 			}

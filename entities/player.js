@@ -217,11 +217,11 @@ Entities.player = (function(){
 			}
 			angle /= count;
 			if(count>0){
-				state.accel.x = Math.cos(angle)*acceleration;
-				state.accel.y = Math.sin(angle)*acceleration;
+				state.accel[0] = Math.cos(angle)*acceleration;
+				state.accel[1] = Math.sin(angle)*acceleration;
 			}else{
-				state.accel.x=0;
-				state.accel.y=0;
+				state.accel[0]=0;
+				state.accel[1]=0;
 			}
 		}
 		
@@ -231,7 +231,7 @@ Entities.player = (function(){
 		var mvec = [0,0];
 		var k = 1;
 		var pk = 0;
-		this.tick = function delta(){
+		this.tick = function(delta){
 			movementCheck();
 			if(keyboard._1 && k!=1){
 				transitionSound.play(0);
@@ -308,7 +308,7 @@ Entities.player = (function(){
 	var instances = {};
 	var currid = 0;
 	
-	return fillProperties(new Entity(),{
+	return fillProperties({
 		newInstance:function(x,y){
 			instances[currid] = new PlayerInstance(x,y);
 			graphics.addToDisplay(instances[currid].drawable,'gl_main');

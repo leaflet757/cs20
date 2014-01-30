@@ -43,8 +43,8 @@ function initLoop(){
 	var update = function(){
 		var n = Date.now();
 		requestAnimationFrame(update)
-		var delta = (n-previousTime)*0.001;
-		// var delta = Math.min((n-previousTime)*0.001,0.064);//floored at 15fps
+		// var delta = (n-previousTime)*0.001;
+		var delta = Math.min((n-previousTime)*0.001,0.064);//floored at 15fps
 		// var delta =.016;
 		previousTime = n;
 		for(var i in updatables){

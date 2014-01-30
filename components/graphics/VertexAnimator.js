@@ -1,3 +1,5 @@
+var VERTEXANIMATOR_ALT_DRAW = true;
+
 /**
 *  program is string id to a program in the glmanager of the display that this animator is added to
 */
@@ -32,19 +34,48 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 					manager.removeArrayBuffer(o);
 				}
 			},
-			draw:function(gl,delta,screen,manager,pMatrix,mvMatrix,drawType){
-				drawType = gl.TRIANGLE_FAN;
+			draw:(VERTEXANIMATOR_ALT_DRAW) ? (function(){
+				var floatArrays = null;
+				
+				return function(gl,delta,screen,manager,pMatrix,mvMatrix,drawType){
+					if(floatArrays == null){
+						floatArrays = new Object();
+						for(var o in this.attributeArrays){
+							floatArrays[o] = new Float32Array(this.attributeArrays[o]);
+							
+						}
+					}else{
+						for(var o in this.attributeArrays){
+							floatArrays[o].set(this.attributeArrays[o]);
+						}
+					}
+					drawType =drawType || gl.TRIANGLE_FAN;
+					manager.bindProgram(program);
+					//set array buffers
+					for(var o in this.attributeArrays){
+						manager.setArrayBuffer(o,false,floatArrays[o],this.attributeArrays[o].items,this.attributeArrays[o].itemSize);
+						manager.setArrayBufferAsProgramAttribute(o,program,this.attributeArrays[o].attributeId);
+					}
+					if(doUniforms){
+						setUniforms(this.uniforms,gl,delta,screen,manager);
+					}
+					manager.setMatrixUniforms(program,pMatrix,mvMatrix.current);
+					gl.drawArrays(drawType,0,numOfVerts-1);
+				}
+			})() : function(gl,delta,screen,manager,pMatrix,mvMatrix,drawType){
+				drawType =drawType || gl.TRIANGLE_FAN;
 				manager.bindProgram(program);
 				//set array buffers
 				for(var o in this.attributeArrays){
 					manager.setArrayBuffer(o,false,this.attributeArrays[o]);
-					manager.setArrayBufferAsProgramAttribute(o,program,attributeArrays[o].attributeId);
+					manager.setArrayBufferAsProgramAttribute(o,program,this.attributeArrays[o].attributeId);
 				}
 				if(doUniforms){
 					setUniforms(this.uniforms,gl,delta,screen,manager);
 				}
 				manager.setMatrixUniforms(program,pMatrix,mvMatrix.current);
 				gl.drawArrays(drawType,0,numOfVerts-1);
+			
 			},
 			clone: function(){
 				var tempUniforms = {};
@@ -177,12 +208,12 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 			out.uniforms[o] = a.uniforms[o] + (b.uniforms[o]-a.uniforms[o]);
 		}
 		for(var o in out.attributeArrays){
-			var outArray = out.attributeArrays[o]
-			var aArray = a.attributeArrays[o];
-			var bArray = b.attributeArrays[o];
-			for(var i in outArray){
-				outArray[i] = aArray[i] + delta*(bArray[i]-aArray[i]);
-			}
+				var outArray = out.attributeArrays[o]
+				var aArray = a.attributeArrays[o];
+				var bArray = b.attributeArrays[o];
+				for(var i in outArray){
+					if(typeof aArray[i] == 'number')outArray[i] = aArray[i] + delta*(bArray[i]-aArray[i]);
+				}
 		}
 		return out;
 	}

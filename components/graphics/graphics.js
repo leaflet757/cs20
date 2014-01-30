@@ -229,7 +229,7 @@ function initGraphics(){
 	}
 	
 	//this manages the buffers, shaders, and programs for a gl context
-	var GLManager = function(gl){
+	var GLManager = function(gl,pMatrix,mvMatrix){
 		var shaders = {};
 		var programs = {};
 		var buffers = {};
@@ -407,13 +407,17 @@ function initGraphics(){
 			}
 		}
 		
+		/**
+		*	sets the current array buffer to the passed array or Float32Array
+		*	should only be called on dynamic buffers
+		*/
 		this.setArrayBuffer = function(name,isStatic,verts,items,itemSize){
 			var buffer = this.getBuffer(name);
 			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 			if(isStatic){
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+				gl.bufferData(gl.ARRAY_BUFFER, (verts instanceof Float32Array) ? verts : new Float32Array(verts), gl.STATIC_DRAW);
 			}else{
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+				gl.bufferData(gl.ARRAY_BUFFER, (verts instanceof Float32Array) ? verts : new Float32Array(verts), gl.DYNAMIC_DRAW);
 			}
 			buffer.items = items || verts.items;
 			buffer.itemSize = itemSize || verts.itemSize;
@@ -433,26 +437,112 @@ function initGraphics(){
 		}
 		
 		// var t = 0;
-		this.setArrayBufferAsProgramAttribute = function(name,programName,attributeName){
-			var buffer = this.getBuffer(name);
+		this.setArrayBufferAsProgramAttribute = function(bufferName,programName,attributeName){
+			var buffer = this.getBuffer(bufferName);
 			// if(t++<64)console.log(name +" "+buffer.itemSize)
 			gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
 			
 			gl.vertexAttribPointer(this.getProgram(programName).attribArrays[attributeName], buffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
 		
-		this.drawRect = function(x,y,width,height,r,g,b,a){
-		
+		//convenience functions
+		//----------------------------------------------------------------------------------------
+		var simpleColorVec = vec4.create();
+		var sr=0,sg=0,sb=0,sa=1;
+		var fr=0,fg=0,fb=0,fa=1;
+		this.drawPrimitive = function(x,y,z,width,height,theta,r,g,b,a,name,numOfVerts,drawType){
+			this.bindProgram('simple');
+			gl.uniform4fv(this.getProgram('simple').color,vec4.set(simpleColorVec,r,g,b,a));
+			this.setArrayBufferAsProgramAttribute(name,'simple','vertexPosition');
+			mvMatrix.push();
+			mvMatrix.translate(x,y,z);
+			mvMatrix.scale(width,height,1);//default width and height is 1 so scaling is simple
+			if(theta && theta!=0){
+				mvMatrix.rotateZ(theta);
+			}
+			this.setMatrixUniforms('simple',pMatrix,mvMatrix.current);
+			gl.drawArrays(drawType,0,numOfVerts);
+			mvMatrix.pop();
 		}
 		
-		this.drawTriangle = function(x,y,width,height,r,g,b,a){
-		
+		this.fill = function(r,g,b,a){
+			if(r && !b && !g && !a) {
+				fr = r;
+				fb = r;
+				fg = r;
+				fa = 1;
+			}else{
+				fr = checkNum(r,1);
+				fg = checkNum(g,1);
+				fb = checkNum(b,1);
+				fa = checkNum(a,1);
+			}
 		}
 		
-		this.drawCircle = function(x,y,width,height,r,g,b,a){
-		
+		this.fillPrimitive = function(x,y,z,width,height,theta,r,g,b,a,name,numOfVerts){
+			this.drawPrimitive(x,y,z,width,height,theta,checkNum(r,fr),checkNum(g,fg),checkNum(b,fb),checkNum(a,fa),name,numOfVerts,gl.TRIANGLE_FAN);
 		}
 		
+		this.fillRect = function(x,y,z,width,height,theta,r,g,b,a){
+			this.fillPrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_rect',4);
+		}
+		
+		this.fillTriangle = function(x,y,z,width,height,theta,r,g,b,a){
+			this.fillPrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_triangle',3);
+		}
+		
+		this.fillEllipse = function(x,y,z,width,height,theta,r,g,b,a){
+			this.fillPrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_circle',32);
+		}
+		
+		this.stroke = function(r,g,b,a){
+			if(r && !b && !g && !a) {
+				sr = r;
+				sb = r;
+				sg = r;
+				sa = 1;
+			}else{
+				sr = checkNum(r,1);
+				sg = checkNum(g,1);
+				sb = checkNum(b,1);
+				sa = checkNum(a,1);
+			}
+		}
+		
+		this.strokePrimitive = function(x,y,z,width,height,theta,r,g,b,a,name,numOfVerts){
+			this.drawPrimitive(x,y,z,width,height,theta,checkNum(r,sr),checkNum(g,sg),checkNum(b,sb),checkNum(a,sa),name,numOfVerts,gl.LINE_LOOP,this);
+		}
+		
+		this.strokeRect = function(x,y,z,width,height,theta,r,g,b,a){
+			this.strokePrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_rect',4);
+		}
+		
+		this.strokeTriangle = function(x,y,z,width,height,theta,r,g,b,a){
+			this.strokePrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_triangle',3);
+		}
+		
+		this.strokeEllipse = function(x,y,z,width,height,theta,r,g,b,a){
+			this.strokePrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_circle',32);
+		}
+		
+		this.line = function(x1,y1,x2,y2,z,r,g,b,a){
+			this.strokePrimitive(x1,y1,z,x2-x1,y2-y1,0,r,g,b,a,'primitive_line',2);
+		}
+		
+		this.point = function(x,y,z,size,r,g,b,a){
+			this.bindProgram('simple_point');
+			gl.uniform1f(this.getProgram('simple_point').pointSize,(size || 6.0));
+			gl.uniform4fv(this.getProgram('simple_point').color,vec4.set(simpleColorVec,checkNum(r,fr),checkNum(g,fg),checkNum(b,fb),checkNum(a,fa)));
+			this.setArrayBufferAsProgramAttribute('empty_point','simple','vertexPosition');
+			mvMatrix.push();
+			mvMatrix.identity();
+			mvMatrix.translate(x,y,z);
+			this.setMatrixUniforms('simple_point',pMatrix,mvMatrix.current);
+			gl.drawArrays(gl.POINTS,0,1);
+			mvMatrix.pop();
+		}
+		
+		//----------------------------------------------------------------------------------------
 		/**
 		* frees all shaders, programs, and buffers
 		*/
@@ -467,6 +557,110 @@ function initGraphics(){
 				gl.deleteShader(shaders.pop());
 			}
 		}
+	
+	
+		//sets up primitives and generic buffers
+		
+		this.addArrayBuffer('empty_point',true,[0.0,0.0,0.0],1,3);//for drawing single points
+		
+		this.addArrayBuffer('primitive_line',true,
+		[
+			0.0, 0.0, 0.0,
+			1.0, 1.0, 0.0
+		],2,3)
+		
+		
+		this.addArrayBuffer('primitive_triangle',true,
+		[
+			0.0,   0.5,  0.0,
+			0.5,  -0.5,  0.0,
+			-0.5, -0.5, 0.0
+		],3,3);
+		
+		this.addArrayBuffer('primitive_rect',true,
+		[
+			0.5,   0.5,  0.0,
+			0.5,  -0.5,  0.0,
+			-0.5, -0.5, 0.0,
+			-0.5,  0.5, 0.0
+		],4,3);
+		
+		
+		this.addArrayBuffer('primitive_circle',true,(function(){
+				var verts = [];
+				var current = [0.0,0.5,0.0];
+				var numOfVerts = 32;
+				var theta = (Math.PI*2)/(numOfVerts)
+				var c = Math.cos(theta);
+				var s = Math.sin(theta);
+				
+				for(var i = 0; i<numOfVerts; i++){
+					verts.push(current[0],current[1],current[2]);
+					var u =current[0];
+					var v =current[1]
+					current[0]= c*u - s*v;
+					current[1]= s*u + c*v;
+					current[2]=0;
+				}
+				console.log(verts.length);
+				return verts;
+			})(),32,3);
+		
+		//load shaders
+		this.addShader('basic_fs','fs');
+		this.addShader('basic_vs','vs');
+		this.addProgram('basic','basic_vs','basic_fs');
+		this.bindProgram('basic');
+		
+		this.addShader('simple_fs','simple_fs');
+		this.addShader('simple_vs','simple_vs')
+		this.addProgram('simple','simple_vs','simple_fs',function(gl,prog){
+			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+			
+			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+			prog.color = gl.getUniformLocation(prog, "color");
+		});
+		this.bindProgram('simple');
+		
+		this.addShader('point_vs','point_vs');
+		this.addProgram('basic_point','point_vs','basic_fs',function(gl,prog){
+			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+			
+			prog.attribArrays.vertexColor = gl.getAttribLocation(prog, "aVertexColor");
+			gl.enableVertexAttribArray(prog.attribArrays.vertexColor);
+			
+			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+			prog.pointSize = gl.getUniformLocation(prog, "pointSize");
+		});
+		this.bindProgram('basic_point');
+		
+		this.addShader('simple_point_vs','simple_point_vs');
+		this.addProgram('simple_point','simple_point_vs','simple_fs',function(gl,prog){
+			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+			
+			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+			prog.pointSize = gl.getUniformLocation(prog, "pointSize");
+			prog.color = gl.getUniformLocation(prog, "color");
+		});
+		this.bindProgram('simple_point');
+		
+		this.addShader('noise_fs','noise_fs');
+		this.addShader('noise_vs','noise_vs');
+		this.addProgram('noise','noise_vs','noise_fs',function(gl,prog){
+			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+			
+			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+			prog.time = gl.getUniformLocation(prog, "time");
+		});
+		this.bindProgram('noise');
 	}
 	
 	//constructor for a display that uses the webgl context
@@ -483,6 +677,11 @@ function initGraphics(){
 		//this display's glManager
 		var manager;
 		
+		//this matrix is not operated on by drawables
+		var pMatrix = mat4.create();
+		//this matrix is used for standard rotation, scaling, and translation
+		var mvMatrix = new MatrixStack();
+		
 		//initializes the context
 		try{
 			gl = display.getContext("webgl") || display.getContext("experimental-webgl");
@@ -491,7 +690,7 @@ function initGraphics(){
 			alert("unable to initialize webgl");
 			throw "unable to initialize webgl";
 		}else{
-			manager = new GLManager(gl);
+			manager = new GLManager(gl,pMatrix,mvMatrix);
 			gl.clearColor(0.0, 0.0, 0.0, 1.0);        
 			gl.enable(gl.DEPTH_TEST);
 			gl.depthFunc(gl.LEQUAL);                               
@@ -499,43 +698,9 @@ function initGraphics(){
 			gl.viewport(0,0,display.width,display.height);
 		}
 		
-		//this matrix is not operated on by drawables
-		var pMatrix = mat4.create();
-		//this matrix is used for standard rotation, scaling, and translation
-		var mvMatrix = new MatrixStack();
+		
 		
 		//sets up default shader
-		manager.addShader('basic_fs','fs');
-		manager.addShader('basic_vs','vs');
-		manager.addProgram('basic','basic_vs','basic_fs');
-		manager.bindProgram('basic');
-		
-		manager.addShader('point_vs','point_vs');
-		manager.addProgram('basic_point','point_vs','basic_fs',function(gl,prog){
-			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-			
-			prog.attribArrays.vertexColor = gl.getAttribLocation(prog, "aVertexColor");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexColor);
-			
-			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-			prog.pointSize = gl.getUniformLocation(prog, "pointSize");
-		});
-		manager.bindProgram('basic_point');
-		
-		manager.addShader('noise_fs','noise_fs');
-		manager.addShader('noise_vs','noise_vs');
-		manager.addProgram('noise','noise_vs','noise_fs',function(gl,prog){
-			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-			
-			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-			prog.time = gl.getUniformLocation(prog, "time");
-		});
-		manager.bindProgram('noise');
-		
 		
 		//add a drawable to this display
 		this.add=function(obj){
@@ -650,8 +815,13 @@ function initGraphics(){
 			var d = getDisplay(identifier);
 			if(typeof d == 'object'){
 				return d.add(drawable);
+			}else{
+				throw 'no such display: '+identifier;
 			}
 			return -1;
+		},
+		removeFromDisplay: function(drawable,identifier){
+			getDisplay(identifier).remove(drawable);
 		},
 		setDisplayName:function(id,name){
 			if(typeof displays[id] == 'object'){

@@ -22,7 +22,7 @@ var input = {
 		var x=0,
 			y=0,
 			pressed=false,
-			m=this,
+			onElement=false,
 			update = function(evt){//update x and y
 				x=evt.clientX - rect.left;
 				y=evt.clientY - rect.top;
@@ -70,7 +70,7 @@ var input = {
 		element.addEventListener(
 			'mouseover',
 			function(evt){
-				m.onElement = true;
+				onElement = true;
 				update(evt)
 			},
 			false);
@@ -78,7 +78,7 @@ var input = {
 		element.addEventListener(
 			'mouseout',
 			function(evt){
-				m.onElement = false;
+				onElement = false;
 				x=0;
 				y=0;
 				pressed=false;
@@ -88,7 +88,7 @@ var input = {
 		element.addEventListener(
 			'mousemove',
 			function(evt){
-				if(m.onElement){
+				if(onElement){
 					update(evt);
 				}
 			},
@@ -97,7 +97,7 @@ var input = {
 		element.addEventListener(
 			'mousedown',
 			function(evt){
-				if(m.onElement){
+				if(onElement){
 					pressed = true;
 				}
 			},
@@ -106,7 +106,7 @@ var input = {
 		element.addEventListener(
 			'mouseup',
 			function(evt){
-				if(m.onElement){
+				if(onElement){
 					pressed = false;
 				}
 			},
@@ -116,7 +116,7 @@ var input = {
 			'click',
 			function(evt){
 				for(var o in clickListeners){
-					clickListeners[o].call(evt);
+					clickListeners[o](evt);
 				}
 			},
 			false);

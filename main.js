@@ -62,6 +62,7 @@ function init(){
 	for(var i in gameComponents){
 		Loop.add(gameComponents[i])
 	}
+	Loop.add(Entities)
 	
 	var currentScreen = graphics.getScreen('gl_main');
 	
@@ -113,7 +114,7 @@ function init(){
 	//fps counter using a simple low pass filter
 	var fpsCounter = (function(){
 		var element = document.getElementById('fps');
-		var filterStrength = 20;
+		var filterStrength = 10;
 		var frameTime = 0, lastLoop = new Date, thisLoop;
 		return {
 			tick: function(delta){
@@ -132,24 +133,8 @@ function init(){
 		var first = true;
 		var x=0, y=0;
 		return{
-			glInit:function(manager){
-				manager.addArrayBuffer('cursorPos',true,[0.0,0.0,0.0],1,3);
-				manager.addArrayBuffer('cursorColor1',true,[1.0,1.0,1.0,1.0],1,4);
-				manager.addArrayBuffer('cursorColor2',true,[1.0,0.5,0.5,1.0],1,4);
-				manager.setArrayBufferAsProgramAttribute('cursorPos','basic_point','vertexPosition');
-			},
-			glDelete:function(manager){
-				manager.removeArrayBuffer('cursorPos');
-				manager.deleteArrayBuffer('cursorColor');
-			},
 			draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
-				manager.bindProgram('basic_point');
-				if(first){manager.setUniform1f('basic_point','pointSize',12);first=false;}
-				manager.setArrayBufferAsProgramAttribute((mouse.pressed) ? 'cursorColor2': 'cursorColor1','basic_point','vertexColor');
-				mvMatrix.identity();
-				mvMatrix.translate(mouse.x+12,mouse.yInv-32,0);
-				manager.setMatrixUniforms('basic_point',pMatrix,mvMatrix.current);
-				gl.drawArrays(gl.POINTS,0,1);
+				manager.point(mouse.x+12,mouse.yInv,0,12,1,1,1,1)
 			},
 			tick: function(){
 				x = mouse.x;
@@ -164,56 +149,40 @@ function init(){
 	graphics.addToDisplay(cursor,"gl_main")
 	ticker.add(cursor);
 	
-	var follower = fillProperties(new GLDrawable(),{
-		xs: new Array(),
-		ys: new Array(),
-		dist: 60,
-		tick: function(delta){
-			var player = Entities.player.getInstance(0);
-			if(this.xs.length>=this.dist){
-				this.x=this.xs.shift();
-				this.y=this.ys.shift();
-			}
-			this.xs.push(player.physState.x);
-			this.ys.push(player.physState.y);
-		},
-		glInit: function(manager){
-			manager.addArrayBuffer('followerVerts',true,
-				[
-					1, 1, 0.0,
-					1, -1, 0.0,
-					-1, -1, 0.0,
-					-1, 1, 0.0
-				],3,3);
+	// var follower = fillProperties(new GLDrawable(),{
+		// xs: new Array(),
+		// ys: new Array(),
+		// dist: 60,
+		// tick: function(delta){
+			// var player = Entities.player.getInstance(0);
+			// if(this.xs.length>=this.dist){
+				// this.x=this.xs.shift();
+				// this.y=this.ys.shift();
+			// }
+			// this.xs.push(player.physState.x);
+			// this.ys.push(player.physState.y);
+		// },
+		// glInit: function(manager){
+		// },
+		// glDelete: function(manager){
 			
-			manager.addArrayBuffer('followerColor',true,
-				[
-					1.0, 0.0, 0.0, 1.0,
-					0.0, 1.0, 0.0, 1.0,
-					0.0, 0.0, 1.0, 1.0,
-					0.0, 1.0, 1.0, 1.0,
-				],3,4);
-		},
-		glDelete: function(manager){
-			
-		},
-		draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
-			manager.bindProgram('basic');
-			manager.setArrayBufferAsProgramAttribute('followerVerts','basic','vertexPosition');
-			manager.setArrayBufferAsProgramAttribute('followerColor','basic','vertexColor');
-			mvMatrix.identity();
-			mvMatrix.translate(this.x,this.y,0);
-			mvMatrix.scale(this.width,this.height,0);
-			manager.setMatrixUniforms('basic',pMatrix,mvMatrix.current);
-			gl.drawArrays(gl.TRIANGLE_FAN,0,4);
-		},
-		x:0,
-		y:0,
-		width:64,
-		height:64
-	});
-	graphics.addToDisplay(follower,"gl_main")
-	ticker.add(follower);
+		// },
+		// draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
+			// manager.fill(1.0,1.0,0,1);
+			// manager.stroke(0,0,1,1);
+			// manager.fillRect(this.x,this.y,-5,this.width*2,this.height,0);
+			// manager.strokeRect(this.x,this.y,-5,this.width*2,this.height,0);
+			// var player = Entities.player.getInstance(0)
+			// manager.stroke(1,1,1,1)
+			// manager.line(this.x,this.y,player.physState.x,player.physState.y,0);
+		// },
+		// x:0,
+		// y:0,
+		// width:64,
+		// height:64
+	// });
+	// graphics.addToDisplay(follower,"gl_main")
+	// ticker.add(follower);
 	Loop.start();
 }
 

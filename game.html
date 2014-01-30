@@ -71,10 +71,10 @@
 
 			varying vec4 vColor;
 
-		  void main(void) {
-			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-			vColor = aVertexColor;
-		  }
+			void main(void) {
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+				vColor = aVertexColor;
+			}
 		</script>
 		<script id="point_vs" type="x-shader/x-vertex">
 			precision mediump float;
@@ -94,6 +94,40 @@
 				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 				
 				vColor = aVertexColor;
+			}
+		</script>
+		<script id="simple_point_vs" type="x-shader/x-vertex">
+			precision mediump float;
+			
+			attribute vec3 aVertexPosition;
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+			uniform float pointSize;
+
+			void main(void) {
+				gl_PointSize = pointSize;
+				
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+			}
+		</script>
+		<script id="simple_fs" type="x-shader/x-fragment">
+			precision mediump float;
+
+			uniform vec4 color;
+
+			void main(void) {
+				gl_FragColor = color;
+			}
+		</script>
+		<script id="simple_vs" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+
+			void main(void) {
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 			}
 		</script>
 		<script type="text/javascript" src="libraries/gl-matrix-min.js"></script>

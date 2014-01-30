@@ -23,3 +23,7 @@ function hasUndefined(array){
 	}
 	return false;
 }
+
+function checkNum(a,b){
+	return (typeof a === 'number') ? a : b;
+}

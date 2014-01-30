@@ -1,8 +1,8 @@
 initPhysics();
 
 function initPhysics(){
-	colliders = new Array()
-	movers = new Array()
+	colliders = new Array();
+	movers = new Array();
 	
 	var isCollider = function(obj){
 		return false
@@ -17,44 +17,58 @@ function initPhysics(){
 	}
 	
 	var getDif = function(delta,vel,accel){
-		return (vel*delta) + (0.5 * accel * delta*delta)
+		return (vel*delta) + (0.5 * accel * delta*delta);
 	}
 	
 	var move = function(mover,delta){
 		//calculate drag
 		var dragConst = mover.dragConst || 0;
-		var mag = mover.vel.getMag()*dragConst;
-		var dir =(mover.vel.getDir());
+		var mag = Vector.getMag(mover.vel)*dragConst;
+		var dir =(Vector.getDir(mover.vel));
 		var u = Math.cos(dir)*mag;
 		var v = Math.sin(dir)*mag;
 		
-		var ax = mover.accel.x-u;
-		var ay = mover.accel.y-v;
+		var ax = mover.accel[0]-u;
+		var ay = mover.accel[1]-v;
 		
-		mover.x += getDif(delta,mover.vel.x,ax);
-		mover.y += getDif(delta,mover.vel.y,ay);
+		mover.x += getDif(delta,mover.vel[0],ax);
+		mover.y += getDif(delta,mover.vel[1],ay);
 		
-		mover.vel.x += ax*delta;
-		mover.vel.y += ay*delta;
+		mover.vel[0] += ax*delta;
+		mover.vel[1] += ay*delta;
 	}
 	
 	physics = fillProperties(new Updatable(),{
 		update: function(delta){
 			for(var i in movers){
-				move(movers[i],delta)
+				move(movers[i],delta);
 			}
 		},
 		add: function(obj){
 			var result = -1
 			if(isMover(obj)){
-				movers.push(obj)
+				movers.push(obj);
 				result = 1
 			}
 			if(isCollider(obj)){
-				colliders.push(obj)
+				colliders.push(obj);
 				result = 2
 			}
-			return result
+			return result;
+		},
+		remove: function(obj){
+			for(var i=0; i<movers.length; i++){
+				if(movers[i]==obj){
+					movers.splice(i,1);
+					break;
+				}
+			}
+			for(var i=0; i<colliders.length; i++){
+				if(colliders[i]==obj){
+					colliders.splice(i,1);
+					break;
+				}
+			}
 		}
 	});
 	
@@ -63,7 +77,7 @@ function initPhysics(){
 
 
 function PolygonState(x,y,polygon){
-	MovementState.call(this,x,y)
+	MovementState.call(this,x,y);
 	this.polygon = polygon;
 	return this;
 }
@@ -75,7 +89,7 @@ function MovementState(x,y){
 	}
 	this.x = x;
 	this.y = y;
-	this.vel = new Vector2d();
-	this.accel = new Vector2d();
+	this.vel = {0:0,1:0,length:2};
+	this.accel = {0:0,1:0,length:2};
 	return this;
 }
