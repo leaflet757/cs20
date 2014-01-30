@@ -21,7 +21,8 @@ var input = {
 		var rect = frame.getBoundingClientRect();
 		var x=0,
 			y=0,
-			pressed=false,
+			left=false,
+			right=false,
 			onElement=false,
 			update = function(evt){//update x and y
 				x=evt.clientX - rect.left;
@@ -60,9 +61,23 @@ var input = {
 			set: function(){}
 		});
 		
+		Object.defineProperty(this,'left',{
+			get:function(){
+				return left;
+			},
+			set: function(){}
+		});
+		
+		Object.defineProperty(this,'right',{
+			get:function(){
+				return right;
+			},
+			set: function(){}
+		});
+		
 		Object.defineProperty(this,'pressed',{
 			get:function(){
-				return pressed;
+				return right || left;
 			},
 			set: function(){}
 		});
@@ -81,7 +96,8 @@ var input = {
 				onElement = false;
 				x=0;
 				y=0;
-				pressed=false;
+				left=false;
+				right=false;
 			},
 			false)
 			
@@ -94,20 +110,42 @@ var input = {
 			},
 			false)
 			
+		//prevents right click menue
+		element.addEventListener('contextmenu', function(e) {
+			e.preventDefault();
+			return false;
+		},false);
+		
+		var setMousePressed = function(e,val){
+			if ("which" in e){  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+				if(e.which == 3){
+					right = val;
+				}else{
+					left = val;
+				}
+			}else if ("button" in e){  // IE, Opera 
+				if(e.button == 2){
+					right = val;
+				}else{
+					left = val;
+				}
+			}
+		}
+			
 		element.addEventListener(
 			'mousedown',
-			function(evt){
+			function(e){
 				if(onElement){
-					pressed = true;
+					setMousePressed(e || window.event,true);
 				}
 			},
 			false);
 			
 		element.addEventListener(
 			'mouseup',
-			function(evt){
+			function(e){
 				if(onElement){
-					pressed = false;
+					setMousePressed(e || window.event,false);
 				}
 			},
 			false);
