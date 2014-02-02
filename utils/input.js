@@ -23,11 +23,19 @@ var input = {
 			y=0,
 			left=false,
 			right=false,
-			onElement=false,
-			update = function(evt){//update x and y
-				x=evt.clientX - rect.left;
-				y=evt.clientY - rect.top;
-			};
+			onElement=false;
+			
+		var box={
+			x:0,
+			y:0,
+			width:frame.width,
+			height:frame.height
+		}
+		
+		var update = function(evt){//update x and y
+			x =	evt.clientX-rect.left;
+			y =	evt.clientY-rect.top;
+		};
 			
 		var clickListeners = {};
 		
@@ -40,46 +48,71 @@ var input = {
 			delete clickListeners[id];
 		}
 		
-		Object.defineProperty(this,'x',{
-			get:function(){
-				return x;
+		Object.defineProperties(this,{
+			x:{
+				get:function(){
+					return box.x + box.width*(x/(rect.right-rect.left));
+				},
+				set: function(){}
 			},
-			set: function(){}
-		});
-		
-		Object.defineProperty(this,'y',{
-			get:function(){
-				return y;
+			y:{
+				get:function(){
+					return box.y + box.height*(y/(rect.bottom-rect.top));
+				},
+				set: function(){}
 			},
-			set: function(){}
-		});
-		
-		Object.defineProperty(this,'yInv',{
-			get:function(){
-				return (rect.bottom-rect.top)-y;
+			yInv:{
+				get:function(){
+					return box.y + (box.height - box.height*(y/(rect.bottom-rect.top)));
+				},
+				set: function(){}
 			},
-			set: function(){}
-		});
-		
-		Object.defineProperty(this,'left',{
-			get:function(){
-				return left;
+			left:{
+				get:function(){
+					return left;
+				},
+				set: function(){}
 			},
-			set: function(){}
-		});
-		
-		Object.defineProperty(this,'right',{
-			get:function(){
-				return right;
+			right:{
+				get:function(){
+					return right;
+				},
+				set: function(){}
 			},
-			set: function(){}
-		});
-		
-		Object.defineProperty(this,'pressed',{
-			get:function(){
-				return right || left;
+			pressed:{
+				get:function(){
+					return right || left;
+				},
+				set: function(){}
 			},
-			set: function(){}
+			/**
+			*	this represents a bounding box that the mouses x and y values are scaled to
+			* 	the assigned object must have the properties:
+			*		.x(number)
+			*		.y(number)
+			*		.width(number)
+			*		.height(number)
+			*	else an exception is thrown
+			*/
+			box:{
+				get:function(){
+					return box;
+				},
+				set:function(newBox){
+					if(box!=newBox){
+						if(
+							typeof box.x == 'number' && 
+							typeof box.y == 'number' && 
+							typeof box.width == 'number' && 
+							typeof box.height == 'number'
+								){
+							box=newBox;
+						}else{
+							throw 'Input.Mouse.box: invalid assignment'
+						}
+					}
+				}
+			}
 		});
 		
 		element.addEventListener(

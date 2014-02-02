@@ -27,3 +27,10 @@ function hasUndefined(array){
 function checkNum(a,b){
 	return (typeof a === 'number') ? a : b;
 }
+
+var iuid = (function(){
+	var next = 0;
+	return function(){
+		return next
+	}
+})();

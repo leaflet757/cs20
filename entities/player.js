@@ -4,13 +4,14 @@ Entities.player = (function(){
 	transitionSound.gain = 0.1;
 	//creates a circle with the given number of sides and radius
 	var generateCircle = function(numOfVerts,radius){
+		numOfVerts-=1;
 		var verts = new Array();
-		
+		verts.push(0,0,0);
 		var current = vec3.set(vec3.create(),0,radius,0);
 		
 		var rotation = mat4.create();
 		mat4.identity(rotation);
-		mat4.rotateZ(rotation,rotation,(Math.PI*2)/numOfVerts);
+		mat4.rotateZ(rotation,rotation,(Math.PI*2)/(numOfVerts-2));
 		
 		for(var i = 0;i<numOfVerts; i++){
 			verts.push(current[0]);verts.push(current[1]);verts.push(current[2]);
@@ -22,9 +23,10 @@ Entities.player = (function(){
 	//generates a triangle keyframe
 	var generateTriangle = function(numOfVerts,radius){
 		var verts = new Array();
+		verts.push(0,0,0)
 		var sides;
 		var bottom;
-		numOfVerts-=3;
+		numOfVerts-=5;
 		//get the number of vertices to be
 		//hidden in the triangles sides
 		if(numOfVerts%3 == 0){
@@ -58,18 +60,22 @@ Entities.player = (function(){
 			verts.push(temp[0],temp[1],temp[2]);
 		}
 		verts.push(pc[0],pc[1],pc[2]);
-		for(var j = 1; j<=sides; j++){
-			vec3.lerp(temp,pc,pa,pSides*j);
+		for(var j = 1; j<=sides+1; j++){
+			vec3.lerp(temp,pc,pa,(1/(sides))*j);
 			verts.push(temp[0],temp[1],temp[2]);
 		}
+		
+		// verts.push(0,radius,0);
+		console.log("verts "  + verts.length+ ' '+ numOfVerts);
+		
 		return verts;
 	}
 	
 	//generates a square keyframe
 	var generateSquare = function(numOfVerts,radius){
-		numOfVerts-=5;
+		numOfVerts-=7;
 		var verts = new Array();
-		
+		verts.push(0,0,0);
 		var div = Math.floor(numOfVerts/4);
 		var mod = numOfVerts%4;
 		var top = (div - (div%2))/2;
@@ -115,6 +121,7 @@ Entities.player = (function(){
 			vec3.lerp(temp,ne,n,topP*i);
 			verts.push(temp[0],temp[1],temp[2]);
 		}
+		verts.push(n[0],n[1],n[2]);
 		return verts;
 	}
 	
@@ -188,9 +195,18 @@ Entities.player = (function(){
 		
 		animator.setCurrentKeyframe('triangle');
 			
-		var state = new MovementState(x,y);
-		var acceleration = 500;
-		var drag = 0.3;
+		var state = new MovementState(x+animator.x-(animator.width/2),y+animator.y-(animator.height/2));
+		state.width = animator.width;
+		state.height = animator.height;
+		state.elasticity=0.5;
+		var setState = function(){
+			state.x += (state.width-animator.width)/2;
+			state.y += (state.height-animator.height)/2;
+			state.width = animator.width;
+			state.height = animator.height;
+		}
+		var acceleration = 800;
+		var drag = 0.01;
 		
 		this.physState = state;
 		state.dragConst = drag;
@@ -226,7 +242,7 @@ Entities.player = (function(){
 		}
 		
 		var theta = 0;
-		var r = Vector.getDir(triangle);
+		var r = Vector.getDir([triangle[3],triangle[4],triangle[5]]);
 		var cx = animator.cx, cy = animator.cy;
 		var mvec = [0,0];
 		var k = 1;
@@ -236,7 +252,7 @@ Entities.player = (function(){
 			if(keyboard._1 && k!=1){
 				transitionSound.play(0);
 				animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
-				pk=k
+				pk=k;
 				k=1;
 			}else if(keyboard._2 && k!=2){
 				transitionSound.play(0);
@@ -247,11 +263,12 @@ Entities.player = (function(){
 				transitionSound.play(0);
 				animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
 				pk=k;
-				k=3
+				k=3;
 			}
 			
 			var mx= mouse.x,my=mouse.yInv;
-			theta = Vector.getDir(vec2.set(mvec,mx-(cx+state.x),my-(cy+state.y)))-r;
+			theta = Vector.getDir(vec2.set(mvec,mx-(state.x+(state.width/2)),my-(state.y+(state.height/2))))-r;
+			animator.theta = theta;
 		}
 		
 		var PlayerDrawable = function(){
@@ -259,38 +276,43 @@ Entities.player = (function(){
 				animator.glInit(manager);
 			},
 			this.draw=function(gl,delta,screen,manager,pMatrix,mvMatrix){
+				setState();
 				mvMatrix.identity(mvMatrix);
-				mvMatrix.translate(state.x,state.y,0);
+				mvMatrix.translate(state.x+state.width/2,state.y+state.height/2,0);
+				manager.point(state.x+state.width/2,state.y+state.height/2,-1,6,1,1,1,1);
 				mvMatrix.rotateZ(theta);
 				animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+				// mvMatrix.identity();
+				// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
 			},
 			Object.defineProperties(this,{
 				x:{
 					set: function(){
 					},
 					get: function(){
-						return Math.floor(state.x+animator.x);
+						
+						return state.x+(state.width/2)+animator.x;
 					}
 				},
 				y:{
 					set: function(){
 					},
 					get: function(){
-						return Math.floor(state.y+animator.y);
+						return state.y+(state.height/2)+animator.y;
 					}
 				},
 				width:{
 					set: function(){
 					},
 					get: function(){
-						return Math.ceil(animator.width)+1;
+						return state.width;
 					}
 				},
 				height:{
 					set: function(){
 					},
 					get: function(){
-						return Math.ceil(animator.height)+1;
+						return state.height;
 					}
 				}
 			});
@@ -314,6 +336,7 @@ Entities.player = (function(){
 			graphics.addToDisplay(instances[currid].drawable,'gl_main');
 			physics.add(instances[currid].physState);
 			ticker.add(instances[currid]);
+			graphics.getScreen('gl_main').follower = instances[currid].physState;
 			return currid++;
 		},
 		getInstance: function(id){

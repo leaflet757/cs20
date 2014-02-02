@@ -5,37 +5,36 @@ Entities.add('clickBox',Entities.create(
 		return {
 			create: function(state,x,y){
 				if(!state.first){
-					state.artist = Entities.createStandardState(
-					{
-						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillRect(this.x,this.y,0,this.width,this.height,theta,.5,1,1,1);
-						},
-						width: 64,
-						height: 64
-					},x,y);
-					state.artist.accel[0]=100;
-					state.artist.tick = function(delta){
+					fillProperties(state,Entities.createStandardState(
+						{
+							draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+								manager.fillRect(this.x,this.y,0,this.width,this.height,theta,.5,1,1,1);
+							},
+							width: 64,
+							height: 64
+						},x,y));
+					state.accel[0]=100;
+					state.tick = function(delta){
 						if(this.x>640){
 							state.alive = false;
 						}
 					}
-					state.artist.first = true;
+					state.first = true;
 				}else{
-					console.log(1);
-					state.artist.x = x;
-					state.artist.y = y;
-					state.artist.vel[0]=0;
-					state.artist.vel[1]=0;
-					state.artist.accel[0]=100;
+					state.x = x;
+					state.y = y;
+					state.vel[0]=0;
+					state.vel[1]=0;
+					state.accel[0]=100;
 				}
-				graphics.addToDisplay(state.artist,'gl_main');
-				ticker.add(state.artist);
-				physics.add(state.artist);
+				graphics.addToDisplay(state,'gl_main');
+				ticker.add(state);
+				physics.add(state);
 			},
 			destroy: function(state){
-				graphics.removeFromDisplay(state.artist,'gl_main');
-				ticker.remove(state.artist);
-				physics.remove(state.artist);
+				graphics.removeFromDisplay(state,'gl_main');
+				ticker.remove(state);
+				physics.remove(state);
 			}
 		};
 	})())

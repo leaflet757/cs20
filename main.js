@@ -12,7 +12,9 @@ function loadSource(){
 	var scriptSource = [
 		'misc.js',
 		'utils/input.js',
+		'utils/collisions.js',
 		'utils/geometry.js',
+		'utils/ObjectPool.js',
 		'components/loop.js',
 		'components/ticker/ticker.js',
 		'components/physics/physics.js',
@@ -102,49 +104,7 @@ function init(){
 
 function initScene(){
 	var currentScreen = graphics.getScreen('gl_main');
-	
-	var glTester = fillProperties(new GLDrawable(),
-	{
-		time:1,
-		glInit:function(manager){
-			manager.addArrayBuffer('testVert',true,
-				[
-				0.0, 64, 0.0,
-				-64, -64, 0.0,
-				64, -64, 0.0
-				],3,3);
-			
-			manager.addArrayBuffer('testColor',true,
-				[
-				1.0, 0.0, 0.0, 1.0,
-				0.0, 1.0, 0.0, 1.0,
-				0.0, 0.0, 1.0, 1.0
-				],3,4);
-		},
-		glDelete:function(){
-			manager.removeArrayBuffer('testVert');
-			manager.removeArrayBuffer('testColor');
-		},
-		draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-			if(this.time>10)this.time=1;
-			
-			manager.bindProgram('noise');
-			
-			manager.setArrayBufferAsProgramAttribute('testVert','noise','vertexPosition');
-			
-			gl.uniform1f(manager.getProgram('noise').time,this.time++);
-			
-			mvMatrix.translate(128,128,0);
-			manager.setMatrixUniforms('noise',pMatrix,mvMatrix.current);
-			gl.drawArrays(gl.TRIANGLES,0,3);
-		},
-		x:0,
-		y:0,
-		width:128,
-		height:128
-	})
-	
-	graphics.addToDisplay(glTester,'gl_main');
+	mouse.box = currentScreen;
 	
 	Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
 	
@@ -178,7 +138,7 @@ function initScene(){
 				if(mouse.right){
 					b=0;
 				}
-				manager.point(mouse.x+12,mouse.yInv,0,12,r,g,b,1);
+				manager.point(mouse.x,mouse.yInv,0,12,r,g,b,1);
 			},
 			tick: function(){
 				x = mouse.x;
@@ -192,6 +152,38 @@ function initScene(){
 	})());
 	graphics.addToDisplay(cursor,"gl_main")
 	ticker.add(cursor);
+	
+	var testLines= [
+		0.0, 0.0,	512, 0.0,
+		512, 0.0,   512, 128,
+		512, 128,   640, 128,
+		640, 128,   640, 0,
+		640, 0,     1152, 0,
+		1152, 0,    1152, 512,
+		1152,512,   640, 512,
+		640, 512,   640, 394,
+		640, 394,   512, 394,
+		512, 394,   512, 512,
+		512, 512,   0.0, 512,
+		0.0, 512,	0.0, 0.0
+	]
+	
+	physics.setGeometry(testLines);
+	
+	var testMap = fillProperties(new GLDrawable(),{
+		draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+			manager.stroke(1,1,0,1);
+			for(var i = 2; i<testLines.length; i+=2){
+				manager.line(testLines[i-2],testLines[i-1],testLines[i],testLines[i+1],98);
+			}
+		},
+		x: 0,
+		y: 0,
+		width: 512,
+		height: 512
+	});
+	
+	graphics.addToDisplay(testMap,"gl_main")
 }
 
 //initializes game

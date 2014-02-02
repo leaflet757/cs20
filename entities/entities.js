@@ -118,10 +118,8 @@ Entity.prototype=(function(){
 		newInstance: function(a,b,c,d,e,f,g,h){
 			var id = instanceId++
 			var instance;
-			// console.log(position+ " "+this.instanceArray.length )
 			if(position<this.instanceArray.length){
 				instance = this.instanceArray[position];
-				// console.log(this.instanceArray.length);
 				instance.id = instanceId++;
 			}else{
 				instance = new EntityState(instanceId++);
@@ -131,7 +129,6 @@ Entity.prototype=(function(){
 			this.instances[id] = instance;
 			this.def.create(instance,a,b,c,d,e,f,g,h);
 			position++;
-			// console.log(instance.alive+' '+position)
 			return id;
 		},
 		getInstance: function(id){
@@ -152,13 +149,14 @@ Entity.prototype=(function(){
 				var instance = this.instanceArray[i];
 				while(!instance.alive && i<position){
 					var temp = instance;
-					for(var j = i+1; j<this.instanceArray.length; j++){
-						this.instanceArray[j-1] = this.instanceArray[j];
-					}
-					this.instanceArray[this.instanceArray.length-1] = temp;
-					delete this.instances[temp.id];
-					this.def.destroy(temp);
 					position--;
+					if(i!=position){
+						this.instanceArray[i] = this.instanceArray[position];
+						this.instanceArray[position] = temp;
+					}
+					this.instances[temp.id] = null;
+					this.def.destroy(temp);
+					
 					instance = this.instanceArray[i];
 				}
 				if(i<position && instance.active){

@@ -4,8 +4,12 @@
 
 initGraphics();
 var currentScreen;
-var drawBoundingBoxes=true;
-var doScreenTest = false;
+var draw_bounding_boxes  = true;
+var do_screen_test = false;
+var draw_grid = false;
+var grid_w = 64;
+var grid_h = 64;
+var grid_z = 99;
 
 function initGraphics(){
 	var displayDiv=document.getElementById("displaydiv")
@@ -27,6 +31,16 @@ function initGraphics(){
 		this.height=height;
 	}
 	
+	Screen.prototype={
+		follower: null,
+		update: function(){
+			if(this.follower != null){
+				this.x = (this.follower.x + (this.follower.width/2)) - (this.width/2);
+				this.y = (this.follower.y + (this.follower.height/2)) - (this.height/2);
+			}
+		}
+	}
+	
 	//creates a new canvas and adds it to the document
 	var createCanvas = function(width,height,z){
 		var canvas = document.createElement('canvas');
@@ -41,7 +55,7 @@ function initGraphics(){
 		return (drawable.x < screen.x+screen.width 		&& 
 				drawable.x+drawable.width > screen.x 	&&
 				drawable.y < screen.y+screen.height 	&&
-				drawable.y+drawable.height > screen.y) || !doScreenTest;
+				drawable.y+drawable.height > screen.y) || !do_screen_test;
 	}
 	
 	//constructor for objects representing the different canvases with a 2d context
@@ -63,7 +77,7 @@ function initGraphics(){
 		
 		//add a drawable to this display
 		this.add=function(obj){
-			if(obj instanceof Drawable){
+			if(obj.isDrawable){
 				this.drawables.push(obj)
 				return this.drawables.length-1
 			}else{
@@ -106,7 +120,7 @@ function initGraphics(){
 					d.draw(ctx,delta,this.screen);
 					draws.push(d);
 					ctx.restore();
-					if(drawBoundingBoxes){
+					if(draw_bounding_boxes){
 						Draw.rect.stroke(ctx,'rgb(255,255,255)',d.x,d.y,d.width,d.height)
 					}
 				}
@@ -123,7 +137,7 @@ function initGraphics(){
 			while(draws.length>0){
 				var d = draws.pop();
 				if(d.clear){
-					if(drawBoundingBoxes){
+					if(draw_bounding_boxes){
 						this.context.clearRect(d.x-1,d.y-1,d.width+2,d.height+2);
 						this.contextFinal.clearRect(d.x-1,d.y-1,d.width+2,d.height+2);
 					}else{
@@ -466,11 +480,17 @@ function initGraphics(){
 		}
 		
 		this.fill = function(r,g,b,a){
-			if(r && !b && !g && !a) {
-				fr = r;
-				fb = r;
-				fg = r;
-				fa = 1;
+			if(	
+				typeof g != 'number' && 
+				typeof b != 'number' && 
+				typeof a != 'number'
+					) {
+				if(typeof r == 'number'){
+					fr = r;
+					fb = r;
+					fg = r;
+					fa = 1;
+				}
 			}else{
 				fr = checkNum(r,1);
 				fg = checkNum(g,1);
@@ -496,11 +516,17 @@ function initGraphics(){
 		}
 		
 		this.stroke = function(r,g,b,a){
-			if(r && !b && !g && !a) {
-				sr = r;
-				sb = r;
-				sg = r;
-				sa = 1;
+			if(	
+				typeof g != 'number' && 
+				typeof b != 'number' && 
+				typeof a != 'number'
+					) {
+				if(typeof r == 'number'){
+					sr = r;
+					sb = r;
+					sg = r;
+					sa = 1;
+				}
 			}else{
 				sr = checkNum(r,1);
 				sg = checkNum(g,1);
@@ -542,6 +568,18 @@ function initGraphics(){
 			mvMatrix.pop();
 		}
 		
+		this.drawGrid = function(box,z,gridW,gridH,r,b,g,a){
+			this.stroke(r,g,b,a);
+			var start = Math.ceil(box.x/gridW)*gridW;
+			for(var x = start; x < box.x+box.width; x+=gridW){
+				this.line(x,box.y,x,box.y+box.height,z);
+			}
+			var start = Math.ceil(box.y/gridH)*gridH;
+			for(var y = start; y < box.y+box.height; y+=gridH){
+				this.line(box.x,y,box.x+box.width,y,z);
+			}
+		}
+		
 		//----------------------------------------------------------------------------------------
 		/**
 		* frees all shaders, programs, and buffers
@@ -560,107 +598,107 @@ function initGraphics(){
 	
 	
 		//sets up primitives and generic buffers
+		{
+			this.addArrayBuffer('empty_point',true,[0.0,0.0,0.0],1,3);//for drawing single points
+			
+			this.addArrayBuffer('primitive_line',true,
+			[
+				0.0, 0.0, 0.0,
+				1.0, 1.0, 0.0
+			],2,3)
+			
+			
+			this.addArrayBuffer('primitive_triangle',true,
+			[
+				0.0,   0.5,  0.0,
+				0.5,  -0.5,  0.0,
+				-0.5, -0.5, 0.0
+			],3,3);
+			
+			this.addArrayBuffer('primitive_rect',true,
+			[
+				0.5,   0.5,  0.0,
+				0.5,  -0.5,  0.0,
+				-0.5, -0.5, 0.0,
+				-0.5,  0.5, 0.0
+			],4,3);
+			
+			
+			this.addArrayBuffer('primitive_circle',true,(function(){
+					var verts = [];
+					var current = [0.0,0.5,0.0];
+					var numOfVerts = 32;
+					var theta = (Math.PI*2)/(numOfVerts)
+					var c = Math.cos(theta);
+					var s = Math.sin(theta);
+					
+					for(var i = 0; i<numOfVerts; i++){
+						verts.push(current[0],current[1],current[2]);
+						var u =current[0];
+						var v =current[1]
+						current[0]= c*u - s*v;
+						current[1]= s*u + c*v;
+						current[2]=0;
+					}
+					return verts;
+				})(),32,3);
 		
-		this.addArrayBuffer('empty_point',true,[0.0,0.0,0.0],1,3);//for drawing single points
-		
-		this.addArrayBuffer('primitive_line',true,
-		[
-			0.0, 0.0, 0.0,
-			1.0, 1.0, 0.0
-		],2,3)
-		
-		
-		this.addArrayBuffer('primitive_triangle',true,
-		[
-			0.0,   0.5,  0.0,
-			0.5,  -0.5,  0.0,
-			-0.5, -0.5, 0.0
-		],3,3);
-		
-		this.addArrayBuffer('primitive_rect',true,
-		[
-			0.5,   0.5,  0.0,
-			0.5,  -0.5,  0.0,
-			-0.5, -0.5, 0.0,
-			-0.5,  0.5, 0.0
-		],4,3);
-		
-		
-		this.addArrayBuffer('primitive_circle',true,(function(){
-				var verts = [];
-				var current = [0.0,0.5,0.0];
-				var numOfVerts = 32;
-				var theta = (Math.PI*2)/(numOfVerts)
-				var c = Math.cos(theta);
-				var s = Math.sin(theta);
+			//load shaders
+			this.addShader('basic_fs','fs');
+			this.addShader('basic_vs','vs');
+			this.addProgram('basic','basic_vs','basic_fs');
+			this.bindProgram('basic');
+			
+			this.addShader('simple_fs','simple_fs');
+			this.addShader('simple_vs','simple_vs')
+			this.addProgram('simple','simple_vs','simple_fs',function(gl,prog){
+				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
 				
-				for(var i = 0; i<numOfVerts; i++){
-					verts.push(current[0],current[1],current[2]);
-					var u =current[0];
-					var v =current[1]
-					current[0]= c*u - s*v;
-					current[1]= s*u + c*v;
-					current[2]=0;
-				}
-				console.log(verts.length);
-				return verts;
-			})(),32,3);
-		
-		//load shaders
-		this.addShader('basic_fs','fs');
-		this.addShader('basic_vs','vs');
-		this.addProgram('basic','basic_vs','basic_fs');
-		this.bindProgram('basic');
-		
-		this.addShader('simple_fs','simple_fs');
-		this.addShader('simple_vs','simple_vs')
-		this.addProgram('simple','simple_vs','simple_fs',function(gl,prog){
-			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+				prog.color = gl.getUniformLocation(prog, "color");
+			});
+			this.bindProgram('simple');
 			
-			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-			prog.color = gl.getUniformLocation(prog, "color");
-		});
-		this.bindProgram('simple');
-		
-		this.addShader('point_vs','point_vs');
-		this.addProgram('basic_point','point_vs','basic_fs',function(gl,prog){
-			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+			this.addShader('point_vs','point_vs');
+			this.addProgram('basic_point','point_vs','basic_fs',function(gl,prog){
+				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+				
+				prog.attribArrays.vertexColor = gl.getAttribLocation(prog, "aVertexColor");
+				gl.enableVertexAttribArray(prog.attribArrays.vertexColor);
+				
+				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+				prog.pointSize = gl.getUniformLocation(prog, "pointSize");
+			});
+			this.bindProgram('basic_point');
 			
-			prog.attribArrays.vertexColor = gl.getAttribLocation(prog, "aVertexColor");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexColor);
+			this.addShader('simple_point_vs','simple_point_vs');
+			this.addProgram('simple_point','simple_point_vs','simple_fs',function(gl,prog){
+				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+				
+				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+				prog.pointSize = gl.getUniformLocation(prog, "pointSize");
+				prog.color = gl.getUniformLocation(prog, "color");
+			});
+			this.bindProgram('simple_point');
 			
-			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-			prog.pointSize = gl.getUniformLocation(prog, "pointSize");
-		});
-		this.bindProgram('basic_point');
-		
-		this.addShader('simple_point_vs','simple_point_vs');
-		this.addProgram('simple_point','simple_point_vs','simple_fs',function(gl,prog){
-			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-			
-			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-			prog.pointSize = gl.getUniformLocation(prog, "pointSize");
-			prog.color = gl.getUniformLocation(prog, "color");
-		});
-		this.bindProgram('simple_point');
-		
-		this.addShader('noise_fs','noise_fs');
-		this.addShader('noise_vs','noise_vs');
-		this.addProgram('noise','noise_vs','noise_fs',function(gl,prog){
-			prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-			gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-			
-			prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-			prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-			prog.time = gl.getUniformLocation(prog, "time");
-		});
-		this.bindProgram('noise');
+			this.addShader('noise_fs','noise_fs');
+			this.addShader('noise_vs','noise_vs');
+			this.addProgram('noise','noise_vs','noise_fs',function(gl,prog){
+				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+				
+				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+				prog.time = gl.getUniformLocation(prog, "time");
+			});
+			this.bindProgram('noise');
+		}
 	}
 	
 	//constructor for a display that uses the webgl context
@@ -698,17 +736,15 @@ function initGraphics(){
 			gl.viewport(0,0,display.width,display.height);
 		}
 		
-		
-		
 		//sets up default shader
 		
 		//add a drawable to this display
 		this.add=function(obj){
-			if(obj instanceof GLDrawable){
+			if(obj.isDrawable){
 				obj.glInit(manager);
 				this.drawables.push(obj)
 				return this.drawables.length-1
-			}else if(obj instanceof Drawable){
+			}else if(obj.isGLDrawable){
 				this.drawables.push(obj)
 				return this.drawables.length-1
 			}else{
@@ -725,7 +761,7 @@ function initGraphics(){
 					break;
 				}
 			}
-			if(obj instanceof GLDrawable){
+			if(obj.isGLDrawable){
 				obj.glDelete(manager);
 			}
 		}
@@ -736,14 +772,16 @@ function initGraphics(){
 		
 		this.draw=function(delta){
 			if(this.drawables.length<1)return;
-			
+
 			manager.bindProgram('basic');
 			gl.viewport(0, 0, display.width, display.height);
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			mat4.identity(pMatrix);
-			mat4.ortho(pMatrix, this.screen.x, this.screen.x+this.screen.width, this.screen.y,this.screen.y+this.screen.height, -100.0, 100.0);
+			mat4.ortho(pMatrix, this.screen.x, this.screen.x+this.screen.width, this.screen.y,this.screen.y+this.screen.height, 100.0, -100.0);
 			
 			mvMatrix.identity();
+			
+			if(draw_grid) manager.drawGrid(this.screen,grid_z,grid_w,grid_h,1);
 			
 			for(var i in this.drawables){
 				var d = this.drawables[i];
@@ -753,6 +791,15 @@ function initGraphics(){
 					if(mvMatrix.stackSize>0){
 						console.error("to many calls to push matrix or to few calls to pop matrix");
 						mvMatrix.reset();
+					}
+				}
+			}
+			if(draw_bounding_boxes){	
+				mvMatrix.identity();
+				for(var i in this.drawables){
+					var d = this.drawables[i];
+					if(d.visible && isOnScreen(this.screen,d)){
+						manager.strokeRect(d.x+(d.width/2),d.y+(d.height/2),0,d.width,d.height,0,1,1,1,1);
 					}
 				}
 			}
@@ -792,6 +839,11 @@ function initGraphics(){
 		update:function(delta){
 			for(var i in displays){
 				displays[i].draw(delta);
+			}
+		},
+		updateScreens:function(delta){
+			for(var i in displays){
+				displays[i].screen.update();
 			}
 		},
 		//creates a new display
@@ -849,7 +901,6 @@ function Drawable(){
 	this.displayWidth=0;
 	this.displayHeight=0;
 }
-
 Drawable.prototype = fillProperties(new Box(),{
 	//these variables define this objects bounding rectangle
 	x: 0,
@@ -869,7 +920,8 @@ Drawable.prototype = fillProperties(new Box(),{
 	},
 	//this function should be overridden to provide functionality
 	draw: function(ctx,screen,delta){
-	}
+	},
+	isDrawable: true
 });
 
 /**
@@ -879,10 +931,10 @@ Drawable.prototype = fillProperties(new Box(),{
 * object can free any data when it is removed
 */
 function GLDrawable(){}
-
 GLDrawable.prototype = fillProperties(new Drawable(),{
 	glInit: function(manager){},
-	glDelete: function(manager){}
+	glDelete: function(manager){},
+	isGLDrawable: true
 });
 
 /**

@@ -19,7 +19,7 @@ Box.prototype=Object.defineProperties({
 	x: 0,
 	y: 0,
 	collision: function(x,y,width,height){
-		if(x instanceof Box){
+		if(typeof x == 'object'){
 			y = x.y;
 			width = x.width;
 			height = x.height;
@@ -32,6 +32,21 @@ Box.prototype=Object.defineProperties({
 				(x < this.x+this.width) &&
 				(y+height > this.y) &&
 				(y < this.y+this.height);
+	},
+	boxInside: function(x,y,width,height){
+		if(typeof x == 'object'){
+			y = x.y;
+			width = x.width;
+			height = x.height;
+			x = x.x;
+		}else{
+			width = width || 0;
+			height = height || 0;
+		}
+		return 	(x> this.x) &&
+				(x+width<this.x+this.width) &&
+				(y > this.y) &&
+				(y+height < this.y+this.height);
 	}
 },
 {
@@ -261,8 +276,8 @@ VecArray = {
 	getMaxDif:function(vecs,itemSize,index){
 		var max = 0;
 		for(var i = index; i<vecs.length; i+=itemSize){
-			for(var j = i; j<vecs.length; j+=itemSize){
-				max = Math.max(max,Math.abs(vecs[i],vecs[j]));
+			for(var j = i+itemSize; j<vecs.length; j+=itemSize){
+				max = Math.max(max,Math.abs(vecs[i]-vecs[j]));
 			}
 		}
 		return max;

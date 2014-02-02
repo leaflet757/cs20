@@ -85,7 +85,7 @@ var Collisions = {
 		}else if((this.lineRes.ua<0) || (this.lineRes.ua>1) || (this.lineRes.ub<0) || (this.lineRes.ub>1)){
 			return false;
 		}else{
-			if(point instanceof Point){
+			if(point){
 				point.x = this.lineRes.point.x;
 				point.y = this.lineRes.point.y;
 				return point;
@@ -204,11 +204,20 @@ var Collisions = {
 		return (x>xb) && (x<xb+width) && (y>yb) && (y<yb+height);
 	},
 	boxLine: function(x,y,width,height,xa,ya,xb,yb){
-		if(this.lineLine(xa,ya,xb,yb,x,y,x+width,y)){return true}
-		if(this.lineLine(xa,ya,xb,yb,x+width,y,x+width,y+height)){return true}
-		if(this.lineLine(xa,ya,xb,yb,x+width,y+height,x,y+height)){return true}
-		if(this.lineLine(xa,ya,xb,yb,x,y,x,y+height)){return true}
-		return false;
+		return 	(this.pointInBox(xa,ya,x,y,width,height))					||
+				(this.pointInBox(xa,ya,x,y,width,height)) 					||
+				(this.lineLine(xa,ya,xb,yb,x,y,x+width,y))  				||
+				(this.lineLine(xa,ya,xb,yb,x+width,y,x+width,y+height)) 	||
+				(this.lineLine(xa,ya,xb,yb,x+width,y+height,x,y+height)) 	||
+				(this.lineLine(xa,ya,xb,yb,x,y,x,y+height)); 
+	},
+	boxRay: function(x,y,width,height,xa,ya,xb,yb){
+		return 	(this.pointInBox(xa,ya,x,y,width,height))					||
+				(this.pointInBox(xb,yb,x,y,width,height)) 					||
+				(this.lineLine(x,y,x+width,y,xa,ya,xb,yb))  				||
+				(this.lineLine(x+width,y,x+width,y+height,xa,ya,xb,yb)) 	||
+				(this.lineLine(x+width,y+height,x,y+height,xa,ya,xb,yb)) 	||
+				(this.lineLine(x,y,x,y+height,xa,ya,xb,yb)); 
 	},
 	pointOnLine: function(x,y,ax,ay,bx,by){
 		if(ax==bx){

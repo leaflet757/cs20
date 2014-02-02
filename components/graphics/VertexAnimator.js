@@ -18,6 +18,7 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 	var sequence;
 	var vertexAttribute;
 	var vertexSize;
+	var x=NaN,y=NaN,width=NaN,height=NaN,changed=true;
 	
 	var Keyframe = function(attributeArrays,uniforms){
 		this.attributeArrays = attributeArrays;
@@ -243,6 +244,11 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 	//draw function
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix,drawType){
 		sequence.draw(gl,delta,screen,manager,pMatrix,mvMatrix,drawType);
+		x=NaN;
+		y=NaN;
+		width=NaN;
+		height=NaN;
+		changed=true;
 	}
 	
 	this.glInit = function(manager){
@@ -335,48 +341,104 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 		if(!vertexAttribute || !vertexSize) throw "vertex attribute undefined";
 	}
 	
-	Object.defineProperties(this,{
-		x:{
-			get: function(){
-				vertCheck();
-				return VecArray.getCorner(drawframe.attributeArrays[vertexAttribute],vertexSize,0);
-			},
-			set: function(x){
-				vertCheck();
-				VecArray.setCorner(drawframe.attributeArrays[vertexAttribute],vertexSize,0,x);
+	Object.defineProperties(this,(function(){
+		var theta = 0;
+		var verts = new Array();
+		
+		var getVerts = function(){
+			for(var i = 0; i<drawframe.attributeArrays[vertexAttribute].length; i++){
+				verts[i] = drawframe.attributeArrays[vertexAttribute][i];	
 			}
-		},
-		y:{
-			get: function(){
-				vertCheck();
-				return VecArray.getCorner(drawframe.attributeArrays[vertexAttribute],vertexSize,1);
-			},
-			set: function(y){
-				vertCheck();
-				VecArray.setCorner(drawframe.attributeArrays[vertexAttribute],vertexSize,1,y);
-			}
-		},
-		width:{
-			get: function(){
-				vertCheck();
-				return VecArray.getMaxDif(drawframe.attributeArrays[vertexAttribute],vertexSize,0);
-			},
-			set: function(width){
-				vertCheck();
-				return VecArray.setMaxDif(drawframe.attributeArrays[vertexAttribute],vertexSize,0,width);
-			}
-		},
-		height:{
-			get: function(){
-				vertCheck();
-				return VecArray.getMaxDif(drawframe.attributeArrays[vertexAttribute],vertexSize,1);
-			},
-			set: function(height){
-				vertCheck();
-				return VecArray.setMaxDif(drawframe.attributeArrays[vertexAttribute],vertexSize,1,height);
+			if(theta!=0)rotateVerts(theta);
+			changed = false;
+		}
+		var rotateVerts = function(theta){
+			var c = Math.cos(theta);
+			var s = Math.sin(theta);
+			for(var i = 0; i<verts.length; i+=vertexSize){
+				var u = verts[i], v=verts[i+1];
+				verts[i] 	= c*u - s*v;
+				verts[i+1] 	= s*u + c*v;
 			}
 		}
-	});
+		
+		return {
+			x:{
+				get: function(){
+					vertCheck();
+					if(changed){
+						getVerts();
+					}
+					if(isNaN(x)){
+						x = VecArray.getCorner(verts,vertexSize,0);
+					}
+					return x;
+				},
+				set: function(x){
+					vertCheck();
+					VecArray.setCorner(verts,vertexSize,0,x);
+				}
+			},
+			y:{
+				get: function(){
+					vertCheck();
+					if(changed){
+						getVerts();
+					}
+					if(isNaN(y)){
+						y = VecArray.getCorner(verts,vertexSize,1);
+					}
+					return y;
+				},
+				set: function(y){
+					vertCheck();
+					VecArray.setCorner(verts,vertexSize,1,y);
+				}
+			},
+			width:{
+				get: function(){
+					vertCheck();
+					if(changed){
+						getVerts();
+					}
+					if(isNaN(width)){
+						width = VecArray.getMaxDif(verts,vertexSize,0);
+					}
+					return width;
+				},
+				set: function(width){
+					vertCheck();
+					return VecArray.setMaxDif(verts,vertexSize,0,width);
+				}
+			},
+			height:{
+				get: function(){
+					vertCheck();
+					if(changed){
+						getVerts();
+					}
+					if(isNaN(height)){
+						height = VecArray.getMaxDif(verts,vertexSize,1);
+					}
+					return height;
+				},
+				set: function(height){
+					vertCheck();
+					return VecArray.setMaxDif(verts,vertexSize,1,height);
+				}
+			},
+			theta:{
+				get: function(){
+					return theta;
+				},
+				set: function(t){
+					var dif = t-theta;
+					theta = t;
+					rotateVerts(dif);
+				}
+			}
+		}
+	})());
 	//-------------------------------------------------------------------------
 	
 }
