@@ -26,6 +26,7 @@ Entities = fillProperties(new Updatable(),{
 		}else{
 			throw 'Entities: attempt to add non-entity'
 		}
+		return entity;
 	},
 	/**
 	*	Deletes the entity from this object and clears its instances
@@ -103,13 +104,13 @@ function Entity(def){
 		this.def = def;
 		this.instances = {};
 		this.instanceArray = new Array();
+		this.position = 0;
 	}else{
 		throw 'Entity: illegal parameter';
 	}
 }
 Entity.prototype=(function(){
 	var instanceId = 0;
-	var position = 0;
 	
 	return {
 		/**
@@ -118,8 +119,8 @@ Entity.prototype=(function(){
 		newInstance: function(a,b,c,d,e,f,g,h){
 			var id = instanceId++
 			var instance;
-			if(position<this.instanceArray.length){
-				instance = this.instanceArray[position];
+			if(this.position<this.instanceArray.length){
+				instance = this.instanceArray[this.position];
 				instance.id = instanceId++;
 			}else{
 				instance = new EntityState(instanceId++);
@@ -128,7 +129,7 @@ Entity.prototype=(function(){
 			instance.alive = true;
 			this.instances[id] = instance;
 			this.def.create(instance,a,b,c,d,e,f,g,h);
-			position++;
+			this.position++;
 			return id;
 		},
 		getInstance: function(id){
@@ -145,21 +146,21 @@ Entity.prototype=(function(){
 		* 	looks for and handles destroyed objects 
 		*/
 		update : function(delta){
-			for(var i = 0; i<position; i++){
+			for(var i = 0; i<this.position; i++){
 				var instance = this.instanceArray[i];
-				while(!instance.alive && i<position){
+				while(!instance.alive && i<this.position){
 					var temp = instance;
-					position--;
-					if(i!=position){
-						this.instanceArray[i] = this.instanceArray[position];
-						this.instanceArray[position] = temp;
+					this.position--;
+					if(i!=this.position){
+						this.instanceArray[i] = this.instanceArray[this.position];
+						this.instanceArray[this.position] = temp;
 					}
 					this.instances[temp.id] = null;
 					this.def.destroy(temp);
 					
 					instance = this.instanceArray[i];
 				}
-				if(i<position && instance.active){
+				if(i<this.position && instance.active){
 					this.def.update(instance,delta);
 				}
 			}
@@ -168,11 +169,11 @@ Entity.prototype=(function(){
 		*	kills all instances but does not clear the object pool
 		*/
 		reset:function(){
-			for(var i = 0; i<position; i++){
+			for(var i = 0; i<this.position; i++){
 				delete this.instances[this.instanceArray[i].id];
 				this.def.destroy(this.instanceArray[i]);
 			}
-			position = 0;
+			this.position = 0;
 		},
 		/**
 		*	kills all instances and clears the object pool
