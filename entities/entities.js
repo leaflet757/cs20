@@ -188,3 +188,4 @@ Entity.prototype=(function(){
 
 importS('entities/player.js');
 importS('entities/miscEntities.js');
+importS('entities/rocket.js');
