@@ -243,7 +243,7 @@ function initPhysics(){
 					var index = collidingLines[j];
 					switch(getLineType(collidingLines[j])){
 						case 0://right
-							if(Math.abs(lines[index]-co.x) < Math.abs(co.vel[0]*delta)){
+							if(collidingLines.length == 1 || Math.abs(lines[index]-co.x) < Math.abs(co.vel[0]*delta)+Math.abs(co.width-co.pwidth)){
 								if(co.vel[0]<0){
 									co.vel[0] = -(co.vel[0]*co.elasticity);
 								}
@@ -254,7 +254,7 @@ function initPhysics(){
 							}
 							break;
 						case 1:
-							if(Math.abs(lines[index]-(co.x+co.width)) < Math.abs(co.vel[0]*delta)){
+							if(collidingLines.length == 1 || Math.abs(lines[index]-(co.x+co.width)) < Math.abs(co.vel[0]*delta)+Math.abs(co.width-co.pwidth)){
 								if(co.vel[0]>0){
 									co.vel[0] = -(co.vel[0]*co.elasticity);
 								}
@@ -265,8 +265,7 @@ function initPhysics(){
 							}
 							break;
 						case 2:
-							
-							if(Math.abs(lines[index+1]-(co.y+co.height)) < Math.abs(co.vel[1]*delta)){
+							if(collidingLines.length == 1 || Math.abs(lines[index+1]-(co.y+co.height)) < Math.abs(co.vel[1]*delta)+Math.abs(co.height-co.pheight)){
 								if(co.vel[1]>0){
 									co.vel[1] = -(co.vel[1]*co.elasticity);
 								}
@@ -277,7 +276,7 @@ function initPhysics(){
 							}
 							break;
 						case 3:
-							if(Math.abs(lines[index+1]-co.y) < Math.abs(co.vel[1]*delta)){
+							if(collidingLines.length == 1 || Math.abs(lines[index+1]-co.y) < Math.abs(co.vel[1]*delta)+Math.abs(co.height-co.pheight)){
 								if(co.vel[1]<0){
 									co.vel[1] = -(co.vel[1]*co.elasticity);
 								}
@@ -300,6 +299,10 @@ function initPhysics(){
 				move(movers[i],delta);
 			}
 			if(lines)doCollisionCheck(delta);
+			for(var i = 0; i<colliders.length; i++){
+				colliders[i].pwidth = colliders[i].width;
+				colliders[i].pheight = colliders[i].height;
+			}
 			graphics.updateScreens();
 		},
 		add: function(obj){
@@ -387,6 +390,8 @@ function BasicCollider(x,y,width,height,elasticity){
 	this.y = y || 0;
 	this.width = width || 0;
 	this.height = height || 0;
+	this.pwidth = width || 0;
+	this.pheight = height || 0;
 	this.elasticity = elasticity || 0;
 }
 BasicCollider.prototype = fillProperties(new MovementState,{

@@ -61,7 +61,7 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 						setUniforms(this.uniforms,gl,delta,screen,manager);
 					}
 					manager.setMatrixUniforms(program,pMatrix,mvMatrix.current);
-					gl.drawArrays(drawType,0,numOfVerts-1);
+					gl.drawArrays(drawType,0,numOfVerts);
 				}
 			})() : function(gl,delta,screen,manager,pMatrix,mvMatrix,drawType){
 				drawType =drawType || gl.TRIANGLE_FAN;
@@ -75,7 +75,7 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 					setUniforms(this.uniforms,gl,delta,screen,manager);
 				}
 				manager.setMatrixUniforms(program,pMatrix,mvMatrix.current);
-				gl.drawArrays(drawType,0,numOfVerts-1);
+				gl.drawArrays(drawType,0,numOfVerts);
 			
 			},
 			clone: function(){
