@@ -31,7 +31,7 @@ function initGraphics(){
 		this.height=height;
 	}
 	
-	Screen.prototype={
+	Screen.prototype=fillProperties(new Box,{
 		follower: null,
 		update: function(){
 			if(this.follower != null){
@@ -39,7 +39,7 @@ function initGraphics(){
 				this.y = (this.follower.y + (this.follower.height/2)) - (this.height/2);
 			}
 		}
-	}
+	});
 	
 	//creates a new canvas and adds it to the document
 	var createCanvas = function(width,height,z){
