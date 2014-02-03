@@ -14,7 +14,8 @@ Entities.add('rocket', Entities.create(
 					},x,y));
 					state.accel[0]=100;
 					state.tick = function(delta){
-						if(this.x>640 || this.x<0 || this.y>480 || this.y<0){ // map edges
+					var screen = graphics.getScreen('gl_main');
+						if(this.x>screen.width+screen.x || this.x<0 || this.y>screen.height+screen.y || this.y<0){
 							state.alive = false;
 						}
 					}
@@ -42,11 +43,11 @@ Entities.add('rocket', Entities.create(
 					{
 						if (mouse.pressed)
 						{
-						
-							dir[0] = Entities.player.getInstance(0).physState.x - mouse.x;
-							dir[1] = Entities.player.getInstance(0).physState.y - mouse.yInv;
-							Entities.rocket.newInstance(Entities.player.getInstance(0).physState.x,
-									Entities.player.getInstance(0).physState.y, dir);
+							var s = Entities.player.getInstance(0);
+							dir[0] = s.physState.x - mouse.x;
+							dir[1] = s.physState.y - mouse.yInv;
+							Entities.rocket.newInstance(s.physState.x + s.physState.width / 2,
+									s.physState.y + s.physState.height / 2, dir);
 						}
 					}
 				})()
@@ -55,10 +56,3 @@ Entities.add('rocket', Entities.create(
 );
 
 ticker.add(Entities.rocket.def);
-// ticker.add({
-// 	tick:function(delta){
-// 		if(mouse.pressed){
-// 			Entities.rocket.newInstance(player.physState.x,player.yInv);
-// 		}
-// 	}
-// })
