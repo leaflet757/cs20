@@ -35,11 +35,11 @@ function initGraphics(){
 		follower: null,
 		update: function(){
 			if(this.follower != null){
-				this.x = (this.follower.x + (this.follower.width/2)) - (this.width/2);
-				this.y = (this.follower.y + (this.follower.height/2)) - (this.height/2);
+				this.x = this.follower.cx - (this.width/2);
+				this.y = this.follower.cy  - (this.height/2);
 			}
 		}
-	});
+	})
 	
 	//creates a new canvas and adds it to the document
 	var createCanvas = function(width,height,z){
@@ -561,7 +561,6 @@ function initGraphics(){
 			gl.uniform4fv(this.getProgram('simple_point').color,vec4.set(simpleColorVec,checkNum(r,fr),checkNum(g,fg),checkNum(b,fb),checkNum(a,fa)));
 			this.setArrayBufferAsProgramAttribute('empty_point','simple','vertexPosition');
 			mvMatrix.push();
-			mvMatrix.identity();
 			mvMatrix.translate(x,y,z);
 			this.setMatrixUniforms('simple_point',pMatrix,mvMatrix.current);
 			gl.drawArrays(gl.POINTS,0,1);

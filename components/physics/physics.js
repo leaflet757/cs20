@@ -165,7 +165,9 @@ function initPhysics(){
 		return 	isMover(obj) && 
 				typeof obj.width == 'number' &&
 				typeof obj.height == 'number' &&
-				typeof obj.elasticity == 'number';
+				typeof obj.elasticity == 'number' &&
+				typeof obj.fineCheck == 'function' &&
+				typeof obj.onCollision == 'function';
 	}
 	
 	var isVec2d = function(obj){
@@ -197,8 +199,11 @@ function initPhysics(){
 		var ax = mover.accel[0]-u;
 		var ay = mover.accel[1]-v;
 		
-		mover.x += getDif(delta,mover.vel[0],ax);
-		mover.y += getDif(delta,mover.vel[1],ay);
+		var dx = getDif(delta,mover.vel[0],ax);
+		var dy = getDif(delta,mover.vel[1],ay);
+		
+		mover.x += dx;
+		mover.y += dy;
 		
 		mover.vel[0] += ax*delta;
 		mover.vel[1] += ay*delta;
@@ -232,60 +237,68 @@ function initPhysics(){
 				collisionSet.length = 0;
 				collidingLines.length = 0;
 				var co = colliders[i];
+				if(!co.doLineCheck) continue;
 				lineTree.get(collisionSet,co);
 				for(var j =0; j< collisionSet.length; j++){
 					var index = collisionSet[j];
-					if(Collisions.boxLine(co.x,co.y,co.width,co.height,lines[index],lines[index+1],lines[index+2],lines[index+3])){
+					if(Collisions.boxLine(co.x,co.y,co.width,co.height,lines[index],lines[index+1],lines[index+2],lines[index+3]) && co.fineCheck(lines[index],lines[index+1],lines[index+2],lines[index+3])){
 						collidingLines.push(index);
 					}
 				}
-				for(var j = 0; j<collidingLines.length; j++){
-					var index = collidingLines[j];
-					switch(getLineType(collidingLines[j])){
-						case 0://right
-							if(collidingLines.length == 1 || Math.abs(lines[index]-co.x) < Math.abs(co.vel[0]*delta)+Math.abs(co.width-co.pwidth)){
-								if(co.vel[0]<0){
-									co.vel[0] = -(co.vel[0]*co.elasticity);
-								}
-								if(co.x<lines[index]){
-									co.x = lines[index]
-								}
-								// console.log('right');
+				if(collidingLines.length>0){
+					co.onCollision();
+					if(co.adjust){
+						co.adjust(collidingLines);
+					}else{
+						for(var j = 0; j<collidingLines.length; j++){
+							var index = collidingLines[j];
+							switch(getLineType(collidingLines[j])){
+								case 0://right
+									if(collidingLines.length == 1 || Math.abs(lines[index]-co.x) < Math.abs(co.vel[0]*delta)+Math.abs(co.width-co.pwidth)){
+										if(co.vel[0]<0){
+											co.vel[0] = -(co.vel[0]*co.elasticity);
+										}
+										if(co.x<lines[index]){
+											co.x = lines[index]
+										}
+										// console.log('right');
+									}
+									break;
+								case 1:
+									if(collidingLines.length == 1 || Math.abs(lines[index]-(co.x+co.width)) < Math.abs(co.vel[0]*delta)+Math.abs(co.width-co.pwidth)){
+										if(co.vel[0]>0){
+											co.vel[0] = -(co.vel[0]*co.elasticity);
+										}
+										if(co.x+co.width > lines[index]){
+											co.x = lines[index] - co.width;
+										}
+										// console.log('left');
+									}
+									break;
+								case 2:
+									if(collidingLines.length == 1 || Math.abs(lines[index+1]-(co.y+co.height)) < Math.abs(co.vel[1]*delta)+Math.abs(co.height-co.pheight)){
+										if(co.vel[1]>0){
+											co.vel[1] = -(co.vel[1]*co.elasticity);
+										}
+										if(co.y+co.height > lines[index+1]){
+											co.y = lines[index+1]-co.height;
+										}
+										// console.log('down')
+									}
+									break;
+								case 3:
+									if(collidingLines.length == 1 || Math.abs(lines[index+1]-co.y) < Math.abs(co.vel[1]*delta)+Math.abs(co.height-co.pheight)){
+										if(co.vel[1]<0){
+											co.vel[1] = -(co.vel[1]*co.elasticity);
+										}
+										if(co.y < lines[index+1]){
+											co.y = lines[index+1];
+										}
+										// console.log('up')
+										break;
+									}
 							}
-							break;
-						case 1:
-							if(collidingLines.length == 1 || Math.abs(lines[index]-(co.x+co.width)) < Math.abs(co.vel[0]*delta)+Math.abs(co.width-co.pwidth)){
-								if(co.vel[0]>0){
-									co.vel[0] = -(co.vel[0]*co.elasticity);
-								}
-								if(co.x+co.width > lines[index]){
-									co.x = lines[index] - co.width;
-								}
-								// console.log('left');
-							}
-							break;
-						case 2:
-							if(collidingLines.length == 1 || Math.abs(lines[index+1]-(co.y+co.height)) < Math.abs(co.vel[1]*delta)+Math.abs(co.height-co.pheight)){
-								if(co.vel[1]>0){
-									co.vel[1] = -(co.vel[1]*co.elasticity);
-								}
-								if(co.y+co.height > lines[index+1]){
-									co.y = lines[index+1]-co.height;
-								}
-								// console.log('down')
-							}
-							break;
-						case 3:
-							if(collidingLines.length == 1 || Math.abs(lines[index+1]-co.y) < Math.abs(co.vel[1]*delta)+Math.abs(co.height-co.pheight)){
-								if(co.vel[1]<0){
-									co.vel[1] = -(co.vel[1]*co.elasticity);
-								}
-								if(co.y < lines[index+1]){
-									co.y = lines[index+1];
-								}
-								// console.log('up')
-								break;
-							}
+						}
 					}
 				}
 			}
@@ -296,12 +309,18 @@ function initPhysics(){
 		update: function(delta){
 			if(lines)doCollisionCheck(delta);
 			for(var i in movers){
-				move(movers[i],delta);
+				if(movers[i].doMove)move(movers[i],delta);
 			}
 			if(lines)doCollisionCheck(delta);
 			for(var i = 0; i<colliders.length; i++){
 				colliders[i].pwidth = colliders[i].width;
 				colliders[i].pheight = colliders[i].height;
+			}
+			if(colliderTree){
+				colliderTree.clear();
+				for(var i = 0; i< colliders.length; i++){
+					colliderTree.add(colliders[i]);
+				}
 			}
 			graphics.updateScreens();
 		},
@@ -332,6 +351,18 @@ function initPhysics(){
 				colliders.push(obj);
 			}else{
 				throw 'Physics.addCollider: invalid parameter: '+obj;
+			}
+		},
+		getColliders: function(array,x,y,width,height){
+			if(colliderTree){
+				colliderTree.get(array,x,y,width,height);
+				return array;
+			}
+		},
+		getCollidersRay: function(array,x1,y1,x2,y2){
+			if(colliderTree){
+				colliderTree.get(array,x1,y1,x2,y2);
+				return array;
 			}
 		},
 		remove: function(obj){
@@ -374,30 +405,8 @@ function initPhysics(){
 			movers.length = 1;
 		}
 	});
-	
 	gameComponents[0] = physics;
 }
-
-
-function PolygonState(x,y,polygon){
-	MovementState.call(this,x,y);
-	this.polygon = polygon;
-	return this;
-}
-
-function BasicCollider(x,y,width,height,elasticity){
-	this.x = x || 0;
-	this.y = y || 0;
-	this.width = width || 0;
-	this.height = height || 0;
-	this.pwidth = width || 0;
-	this.pheight = height || 0;
-	this.elasticity = elasticity || 0;
-}
-BasicCollider.prototype = fillProperties(new MovementState,{
-	width: 0,
-	height: 0
-});
 
 function MovementState(x,y){
 	if(typeof x != 'number' && typeof y != 'number'){
@@ -410,30 +419,106 @@ function MovementState(x,y){
 	this.accel = {0:0,1:0,length:2};
 	return this;
 }
-MovementState.prototype = {
-	setPos:function(x,y){
-		this.x = x;
-		this.y = y;
+MovementState.prototype = Object.defineProperties(
+	{
+		setPos:function(x,y){
+			this.x = x;
+			this.y = y;
+			return this;
+		},
+		setVel:function(x,y){
+			this.vel[0]=x;
+			this.vel[1]=y;
+			return this;
+		},
+		setAccel: function(x,y){
+			this.accel[0]=x;
+			this.accel[1]=y;
+			return this;
+		},
+		deccelerate: function(mag){
+			dir = Vector(this.vel);
+			this.accel[0] = math.cos(dir)*mag;
+			this.accel[1] = math.sin(dir)*mag;
+			return this;
+		},
+		set:function(x,y,vx,vy,ax,ay){
+			this.x = x;
+			this.y = y;
+			this.vel[0]=vx;
+			this.vel[1]=vy;
+			this.accel[0]=ax;
+			this.accel[1]=ay;
+			return this;
+		},
+		moveToward: function(x,y,speed){
+			x-=this.x;
+			y-=this.y;
+			var l = pythag(x,y);
+			this.vel[0] = speed * (x/l);
+			this.vel[1] = speed * (y/l);
+			return this;
+		},
+		accelerateToward: function(x,y,scalarAcceleration){
+			x-=this.x;
+			y-=this.y;
+			var l = pythag(x,y);
+			this.accel[0] = scalarAcceleration * (x/l);
+			this.accel[1] = scalarAcceleration * (y/l);
+			return this;
+		},
+		doMove:true
 	},
-	setVel:function(x,y){
-		this.vel[0]=x;
-		this.vel[1]=y;
-	},
-	setAccel: function(x,y){
-		this.accel[0]=x;
-		this.accel[1]=y;
-	},
-	deccelerate: function(mag){
-		dir = Vector(this.vel);
-		this.accel[0] = math.cos(dir)*mag;
-		this.accel[1] = math.sin(dir)*mag;
-	},
-	set:function(x,y,vx,vy,ax,ay){
-		this.x = x;
-		this.y = y;
-		this.vel[0]=vx;
-		this.vel[1]=vy;
-		this.accel[0]=ax;
-		this.accel[1]=ay;
+	{
+		speed:{
+			get: function(){
+				return Vector.getMag(this.vel);
+			},
+			set: function(mag){
+				Vector.setMag(this.vel,this.vel,mag);
+			}
+		},
+		dirVel:{
+			get: function(){
+				return Vector.getDir(this.vel);
+			},
+			set: function(theta){
+				Vector.setDir(this.vel,this.vel,theta);
+			}
+		},
+		scalarAccel:{
+			get: function(){
+				return Vector.getMag(this.accel);
+			},
+			set: function(mag){
+				Vector.setMag(this.accel,this.accel,mag);
+			}
+		},
+		dirAccel:{
+			get: function(){
+				return Vector.getDir(this.accel);
+			},
+			set: function(theta){
+				Vector.setDir(this.accel,this.accel,theta);
+			}
+		}
 	}
+);
+
+function BasicCollider(x,y,width,height,elasticity){
+	this.x = x || 0;
+	this.y = y || 0;
+	this.width = width || 0;
+	this.height = height || 0;
+	this.pwidth = width || 0;
+	this.pheight = height || 0;
+	this.elasticity = elasticity || 0;
 }
+BasicCollider.prototype = fillProperties(new MovementState(0,0),{
+	width: 0,
+	height: 0,
+	onCollision: function(){},
+	fineCheck: function(){return true;},
+	adjust: false,
+	doLineCheck: true
+});

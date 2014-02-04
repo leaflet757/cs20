@@ -14,8 +14,8 @@ Entities.add('rocket', Entities.create(
 					},x,y));
 					state.accel[0]=100;
 					state.tick = function(delta){
-					var screen = graphics.getScreen('gl_main');
-						if(this.x>screen.width+screen.x || this.x<0 || this.y>screen.height+screen.y || this.y<0){
+						var screen = graphics.getScreen('gl_main');
+						if(this.x>screen.width+screen.x || this.x<screen.x || this.y>screen.height+screen.y || this.y<screen.y){
 							state.alive = false;
 						}
 					}
@@ -25,9 +25,11 @@ Entities.add('rocket', Entities.create(
 				state.y = y;
 				state.vel[0]=0;
 				state.vel[1]=0;
-				state.accel[0]=100;
-				Vector.setDir(state.accel,state.accel,Vector.getDir(dir) + Math.PI);
-				
+				// state.accel[0]=100;
+				// state.accel[1]=0;
+				// Vector.setDir(state.accel,state.accel,dir);
+				state.moveToward(mouse.x,mouse.yInv,-100);
+				state.accelerateToward(mouse.x,mouse.yInv,100);
 				graphics.addToDisplay(state,'gl_main');
 				ticker.add(state);
 				physics.add(state);
@@ -44,8 +46,8 @@ Entities.add('rocket', Entities.create(
 						if (mouse.pressed)
 						{
 							var s = Entities.player.getInstance(0);
-							dir[0] = s.physState.x - mouse.x;
-							dir[1] = s.physState.y - mouse.yInv;
+							dir[0] = mouse.x - s.physState.x;
+							dir[1] = mouse.yInv - s.physState.y;
 							Entities.rocket.newInstance(s.physState.x + s.physState.width / 2,
 									s.physState.y + s.physState.height / 2, dir);
 						}

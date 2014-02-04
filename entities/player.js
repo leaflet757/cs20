@@ -4,19 +4,21 @@ Entities.player = (function(){
 	transitionSound.gain = 0.1;
 	//creates a circle with the given number of sides and radius
 	var generateCircle = function(numOfVerts,radius){
-		numOfVerts-=1;
+		numOfVerts-=2;
 		var verts = new Array();
 		verts.push(0,0,0);
 		var current = vec3.set(vec3.create(),0,radius,0);
 		
 		var rotation = mat4.create();
 		mat4.identity(rotation);
-		mat4.rotateZ(rotation,rotation,(Math.PI*2)/(numOfVerts-2));
+		mat4.rotateZ(rotation,rotation,(Math.PI*2)/(numOfVerts+1));
 		
 		for(var i = 0;i<numOfVerts; i++){
 			verts.push(current[0]);verts.push(current[1]);verts.push(current[2]);
 			vec3.transformMat4(current,current,rotation);
 		}
+		
+		verts.push(0,radius,0);
 		return verts;
 	}
 	
@@ -60,10 +62,11 @@ Entities.player = (function(){
 			verts.push(temp[0],temp[1],temp[2]);
 		}
 		verts.push(pc[0],pc[1],pc[2]);
-		for(var j = 1; j<=sides+1; j++){
-			vec3.lerp(temp,pc,pa,(1/(sides))*j);
+		for(var j = 1; j<=sides; j++){
+			vec3.lerp(temp,pc,pa,pSides*j);
 			verts.push(temp[0],temp[1],temp[2]);
 		}
+		verts.push(pa[0],pa[1],pa[2]);
 		
 		// verts.push(0,radius,0);
 		console.log("verts "  + verts.length+ ' '+ numOfVerts);
@@ -82,9 +85,9 @@ Entities.player = (function(){
 		var sides = div;
 		var bottom = div + mod +(sides%2);
 		
-		var topP = 1/top;
-		var sideP = 1/sides;
-		var bottomP = 1/bottom;
+		var topP = 1/(top+1);
+		var sideP = 1/(sides+1);
+		var bottomP = 1/(bottom+1);
 		
 		var dist = Math.sqrt((radius*radius)/2);
 		
@@ -194,17 +197,55 @@ Entities.player = (function(){
 			},{});
 		
 		animator.setCurrentKeyframe('triangle');
+		
+		var follower = new Box(x+animator.x-(animator.width/2),y+animator.y-(animator.height/2),animator.width,animator.height);
+		this.sbox = follower;
+		var state = new BasicCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5);
+		state.cx = x;
+		state.cy = y;
+		var setState
+		(function(){
+			var stateX = x+animator.x, stateY= y+animator.y;
+			Object.defineProperties(state,{
+				x:{
+					get:function(){
+						return stateX;
+					},
+					set:function(x){
+						this.cx+= x-stateX;
+						stateX = x;
+					}
+				},
+				y:{
+					get:function(){
+						return stateY;
+					},
+					set:function(y){
+						
+						this.cy += y-stateY;
+						stateY = y;
+					}
+				},
+				width:{
+					get:function(){
+						return animator.width;
+					},
+					set:function(){}
+				},
+				height:{
+					get:function(){
+						return animator.height;
+					},
+					set:function(){}
+				}
+			})
 			
-		var state = new MovementState(x+animator.x-(animator.width/2),y+animator.y-(animator.height/2));
-		state.width = animator.width;
-		state.height = animator.height;
-		state.elasticity=0.5;
-		var setState = function(){
-			state.x += (state.width-animator.width)/2;
-			state.y += (state.height-animator.height)/2;
-			state.width = animator.width;
-			state.height = animator.height;
-		}
+			
+			setState = function(){
+				stateX = state.cx+animator.x;
+				stateY = state.cy+animator.y;
+			}
+		})();
 		var acceleration = 800;
 		var drag = 0.01;
 		
@@ -267,7 +308,7 @@ Entities.player = (function(){
 			}
 			
 			var mx= mouse.x,my=mouse.yInv;
-			theta = Vector.getDir(vec2.set(mvec,mx-(state.x+(state.width/2)),my-(state.y+(state.height/2))))-r;
+			theta = Vector.getDir(vec2.set(mvec,mx-state.cx,my-state.cy))-r;
 			animator.theta = theta;
 		}
 		
@@ -278,8 +319,8 @@ Entities.player = (function(){
 			this.draw=function(gl,delta,screen,manager,pMatrix,mvMatrix){
 				setState();
 				mvMatrix.identity(mvMatrix);
-				mvMatrix.translate(state.x+state.width/2,state.y+state.height/2,0);
-				manager.point(state.x+state.width/2,state.y+state.height/2,-1,6,1,1,1,1);
+				mvMatrix.translate(state.cx,state.cy,0);
+				manager.point(0,0,-1,6,1,1,1,1);
 				mvMatrix.rotateZ(theta);
 				animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
 				// mvMatrix.identity();
@@ -290,15 +331,14 @@ Entities.player = (function(){
 					set: function(){
 					},
 					get: function(){
-						
-						return state.x+(state.width/2)+animator.x;
+						return state.x;
 					}
 				},
 				y:{
 					set: function(){
 					},
 					get: function(){
-						return state.y+(state.height/2)+animator.y;
+						return state.y;
 					}
 				},
 				width:{

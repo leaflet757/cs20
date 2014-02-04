@@ -12,6 +12,7 @@ function Box(x,y,width,height){
 	if(typeof y == 'number') this.y = y;
 	if(typeof width == 'number') this.width = width;
 	if(typeof height == 'number') this.height = height;
+	return this;
 }
 Box.prototype=Object.defineProperties({
 	width: 0,
@@ -203,6 +204,16 @@ function GLPolygon(vecArray,itemSize){
 }
 
 Vector = {
+	setUnit: function(out,a){
+		var l = 0;
+		for(var i =0; i<a.length; a++){
+			l += a[i]*a[i];
+		}
+		for(var i =0; i<a.length; a++){
+			out[i] = a[i]/l;
+		}
+		return out;
+	},
 	getDir: function(vec){
 		//special cases
 		if(vec[0]==0 && vec[1]==0) return 0; //no angle
@@ -252,21 +263,37 @@ Vector = {
 	},
 	getMag: function(vec){
 		var mag = 0;
-		for(var i in vec){
+		for(var i = 0; i<vec.length; i++){
 			mag += vec[i]*vec[i];
 		}
 		return Math.sqrt(mag);
 	},
 	setDir: function(out,a,theta){
-		var m = this.getMag(a);
-        out[0] = Math.cos(theta)*m;
-		out[1] = Math.sin(theta)*m;
+		if(typeof theta == 'object'){
+			var l = Vector.getMag(a);
+			var lt = Vector.getMag(theta);
+			for(var i = 0; i<a.length; i++){
+				out[i] = l * (theta[i]/lt);
+			}
+			return out;
+			
+		}else{
+			var m = this.getMag(a);
+			if(m){
+				out[0] = Math.cos(theta)*m;
+				out[1] = Math.sin(theta)*m;
+			}
+		}
 		return out;
 	},
 	setMag: function(out,a,mag){
 		var m = this.getMag(a);
-		for(var i in a){
-			out[i] = mag*(a[i]/m);
+		if(m){
+			for(var i = 0; i<vec.length; i++){
+				out[i] = mag*(a[i]/m);
+			}
+		}else{
+			out[0]=mag;
 		}
 		return out;
 	}
