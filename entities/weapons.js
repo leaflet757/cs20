@@ -4,6 +4,7 @@ Entities.add('rocket', Entities.create(
 		return {
 			create: function(state,x,y,dir){
 				state.alive = true;
+				state.life = 10;
 				if(!state.first){
 					fillProperties(state, Entities.createStandardCollisionState(
 					{
@@ -13,9 +14,8 @@ Entities.add('rocket', Entities.create(
 					},x,y,16,16,1.1));
 					state.accel[0]=100;
 					state.tick = function(delta){
-						if(!graphics.getScreen('gl_main').collision(this)){
-							state.alive = false;
-						}
+						this.life-=delta;
+						this.alive = this.life>0;
 					}
 					state.first = true;
 				}
@@ -51,7 +51,7 @@ Entities.add('rocket', Entities.create(
 		};
 	})())
 );
-//ticker.add(Entities.rocket.def);
+ticker.add(Entities.rocket.def);
 
 // Mine -- 
 Entities.add('mine', Entities.create(
@@ -110,4 +110,4 @@ Entities.add('mine', Entities.create(
 		};
 	})())
 );
-ticker.add(Entities.mine.def);
+//ticker.add(Entities.mine.def);
