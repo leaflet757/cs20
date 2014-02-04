@@ -4,7 +4,7 @@ Entities.add('rocket', Entities.create(
 		return {
 			create: function(state,x,y,dir){
 				state.alive = true;
-				state.life = 10;
+				state.life = 20;
 				if(!state.first){
 					fillProperties(state, Entities.createStandardCollisionState(
 					{
@@ -51,39 +51,30 @@ Entities.add('rocket', Entities.create(
 		};
 	})())
 );
-ticker.add(Entities.rocket.def);
+//ticker.add(Entities.rocket.def);
 
 // Mine -- 
 Entities.add('mine', Entities.create(
 	(function(){
 		return {
-			create: function(state,x,y,dir){
+			create: function(state,x,y){
 				state.alive = true;
+				state.life = 1;
 				if(!state.first){
 					fillProperties(state, Entities.createStandardCollisionState(
 					{
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillEllipse(this.x+8,this.y+8,0,this.width,this.height,0,.5,1,1,1);
+							manager.fillEllipse(this.x,this.y,0,this.width,this.height,0,.5,1,.5,1);
 						}
 					},x,y,16,16,1.1));
-					//state.accel[0]=100;
 					state.tick = function(delta){
-						if(!graphics.getScreen('gl_main').collision(this)){
-							state.alive = false;
-						}
-						else
-						{
-						// grow in size
-						}
+						this.life-=delta; // Not a number??
+						this.alive = this.life>0;
 					}
 					state.first = true;
 				}
 				state.x = x;
 				state.y = y;
-				state.vel[0]=0;
-				state.vel[1]=0;
-				//state.moveToward(mouse.x,mouse.yInv,-100);
-				//state.accelerateToward(mouse.x,mouse.yInv,100);
 				graphics.addToDisplay(state,'gl_main');
 				ticker.add(state);
 				physics.add(state);
@@ -93,21 +84,14 @@ Entities.add('mine', Entities.create(
 				ticker.remove(state);
 				physics.remove(state);
 			},
-			tick: (function(){
-				var dir = {0:0,1:0,length:2};
-				return function(delta)
-					{
-						if (mouse.pressed)
-						{
-							var s = Entities.player.getInstance(0);
-							dir[0] = mouse.x - s.cx;
-							dir[1] = mouse.yInv - s.cy;
-							Entities.mine.newInstance(s.cx,
-									s.cy, dir);
-						}
-					}
-				})()
+			tick: function(delta){
+				if (mouse.pressed)
+				{
+					var s = Entities.player.getInstance(0);
+					Entities.mine.newInstance(s.cx, s.cy);
+				}
+			}
 		};
 	})())
 );
-//ticker.add(Entities.mine.def);
+ticker.add(Entities.mine.def);
