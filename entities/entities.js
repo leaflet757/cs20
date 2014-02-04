@@ -18,10 +18,20 @@ Entities = fillProperties(new Updatable(),{
 		return fillProperties(new GLDrawable(),fillProperties(new MovementState(x,y),obj));
 	},
 	/**
+	* combines properties from a GLDrawable and BasicCollider
+	*/
+	createStandardCollisionState: function(obj,x,y,width,height,elasticity){
+		return fillProperties(new GLDrawable(),fillProperties(new BasicCollider(x,y,width,height,elasticity),obj));
+	},
+	/**
 	*	does a type check then adds the entity to Entities as a property with the given name
 	*/
 	add: function(name,entity){
 		if(entity instanceof Entity){
+			Object.defineProperty(entity,'euid',{
+				writible: false,
+				value: uid()
+			});
 			this[name] = entity;
 		}else{
 			throw 'Entities: attempt to add non-entity'
@@ -88,8 +98,12 @@ EntityDef.prototype={
 	}
 }
 
-function EntityState(id){
+function EntityState(id,euid){
 	this.id = id;
+	Object.defineProperty(this,'euid',{
+			writible: false,
+			value: euid
+		});
 }
 EntityState.prototype={
 	alive:false,
@@ -123,7 +137,7 @@ Entity.prototype=(function(){
 				instance = this.instanceArray[this.position];
 				instance.id = instanceId++;
 			}else{
-				instance = new EntityState(instanceId++);
+				instance = new EntityState(instanceId++,this.euid);
 				this.instanceArray.push(instance);
 			}
 			instance.alive = true;

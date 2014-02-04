@@ -1,5 +1,6 @@
 
-Entities.player = (function(){
+
+Entities.add('player', Entities.create((function(){
 	var transitionSound=Sound.createSound(Sound.addBuffer('transition','resources/audio/transition.wav'),false);
 	transitionSound.gain = 0.1;
 	//creates a circle with the given number of sides and radius
@@ -143,244 +144,194 @@ Entities.player = (function(){
 		left:'a'
 	}
 	
-	var PlayerInstance = function(x,y){
-		
-		var verts = 32;
-		var radius = 32;
-		var posProps = 
-			{
-				attributeId: "vertexPosition",
-				items: verts,
-				itemSize: 3
-			}
-			
-		var colProps = 
-			{
-				attributeId: "vertexColor",
-				items: verts,
-				itemSize: 4
-			}	
-		
-		var circle = fillProperties(generateCircle(verts,32),posProps);
-		var circleColor = fillProperties(getColor(verts,0.0,0.0,1.0,1.0),colProps);
-		
-		var triangle = fillProperties(generateTriangle(verts,32),posProps);
-		var triangleColor = fillProperties(getColor(verts,1.0,0.0,0.0,1.0),colProps);
-		
-		var square = fillProperties(generateSquare(verts,32),posProps);
-		var squareColor = fillProperties(getColor(verts,0.0,1.0,0.0,1.0),colProps);
-		
-		var animator = new VertexAnimator('basic',
-			{
-				playerPosition:circle,
-				playerColor:circleColor
-			},{},verts);
-		
-		animator.setVertexAttribute('playerPosition',3);
-		
-		animator.addKeyframe('circle',
-			{
-				playerPosition:circle,
-				playerColor:circleColor
-			},{});
-			
-		animator.addKeyframe('triangle',
-			{
-				playerPosition:triangle,
-				playerColor:triangleColor
-			},{});
-			
-		animator.addKeyframe('square',
-			{
-				playerPosition:square,
-				playerColor:squareColor
-			},{});
-		
-		animator.setCurrentKeyframe('triangle');
-		
-		var follower = new Box(x+animator.x-(animator.width/2),y+animator.y-(animator.height/2),animator.width,animator.height);
-		this.sbox = follower;
-		var state = new BasicCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5);
-		state.cx = x;
-		state.cy = y;
-		var setState
-		(function(){
-			var stateX = x+animator.x, stateY= y+animator.y;
-			Object.defineProperties(state,{
-				x:{
-					get:function(){
-						return stateX;
-					},
-					set:function(x){
-						this.cx+= x-stateX;
-						stateX = x;
+	return {
+		create: function(state,x,y){
+			{//setup animator
+				var verts = 32;
+				var radius = 32;
+				var posProps = 
+					{
+						attributeId: "vertexPosition",
+						items: verts,
+						itemSize: 3
 					}
-				},
-				y:{
-					get:function(){
-						return stateY;
-					},
-					set:function(y){
-						
-						this.cy += y-stateY;
-						stateY = y;
-					}
-				},
-				width:{
-					get:function(){
-						return animator.width;
-					},
-					set:function(){}
-				},
-				height:{
-					get:function(){
-						return animator.height;
-					},
-					set:function(){}
-				}
-			})
+					
+				var colProps = 
+					{
+						attributeId: "vertexColor",
+						items: verts,
+						itemSize: 4
+					}	
+				
+				var circle = fillProperties(generateCircle(verts,32),posProps);
+				var circleColor = fillProperties(getColor(verts,0.0,0.0,1.0,1.0),colProps);
+				
+				var triangle = fillProperties(generateTriangle(verts,32),posProps);
+				var triangleColor = fillProperties(getColor(verts,1.0,0.0,0.0,1.0),colProps);
+				
+				var square = fillProperties(generateSquare(verts,32),posProps);
+				var squareColor = fillProperties(getColor(verts,0.0,1.0,0.0,1.0),colProps);
+				
+				var animator = new VertexAnimator('basic',
+					{
+						playerPosition:circle,
+						playerColor:circleColor
+					},{},verts);
+				
+				animator.setVertexAttribute('playerPosition',3);
+				
+				animator.addKeyframe('circle',
+					{
+						playerPosition:circle,
+						playerColor:circleColor
+					},{});
+					
+				animator.addKeyframe('triangle',
+					{
+						playerPosition:triangle,
+						playerColor:triangleColor
+					},{});
+					
+				animator.addKeyframe('square',
+					{
+						playerPosition:square,
+						playerColor:squareColor
+					},{});
+				
+				animator.setCurrentKeyframe('triangle');
+			}
+			var updateCoords;
+			var acceleration = 800;
+			var drag = 0.01;
+			var theta = 0;
+			var r = Vector.getDir([triangle[3],triangle[4],triangle[5]]);
+			var mvec = [0,0];
+			var k = 1;
+			var pk = 0;
 			
-			
-			setState = function(){
-				stateX = state.cx+animator.x;
-				stateY = state.cy+animator.y;
-			}
-		})();
-		var acceleration = 800;
-		var drag = 0.01;
-		
-		this.physState = state;
-		state.dragConst = drag;
-		
-		var movementCheck = function(){//eightway directional movement
-			var count=0,angle=0;
-			if(keyboard[controls.down]){
-				count++;
-				angle+=Math.PI*(3/2);
-			}
-			if(keyboard[controls.up]){
-				count++;
-				angle+=Math.PI/2;
-			}
-			if(keyboard[controls.left]){
-				count++;
-				angle+=Math.PI;
-			}
-			if(keyboard[controls.right]){
-				count++;
+			var movementCheck = function(){//eightway directional movement
+				var count=0,angle=0;
 				if(keyboard[controls.down]){
-					angle+=Math.PI*2;
+					count++;
+					angle+=Math.PI*(3/2);
 				}
-			}
-			angle /= count;
-			if(count>0){
-				state.accel[0] = Math.cos(angle)*acceleration;
-				state.accel[1] = Math.sin(angle)*acceleration;
-			}else{
-				state.accel[0]=0;
-				state.accel[1]=0;
-			}
-		}
-		
-		var theta = 0;
-		var r = Vector.getDir([triangle[3],triangle[4],triangle[5]]);
-		var cx = animator.cx, cy = animator.cy;
-		var mvec = [0,0];
-		var k = 1;
-		var pk = 0;
-		this.tick = function(delta){
-			movementCheck();
-			if(keyboard._1 && k!=1){
-				transitionSound.play(0);
-				animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
-				pk=k;
-				k=1;
-			}else if(keyboard._2 && k!=2){
-				transitionSound.play(0);
-				animator.setCurrentKeyframe('square',(pk==2) ? 1-animator.getTimeTillNextKeyframe() : 1);
-				pk=k;
-				k=2;
-			}else if(keyboard._3 && k!=3){
-				transitionSound.play(0);
-				animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
-				pk=k;
-				k=3;
-			}
-			
-			var mx= mouse.x,my=mouse.yInv;
-			theta = Vector.getDir(vec2.set(mvec,mx-state.cx,my-state.cy))-r;
-			animator.theta = theta;
-		}
-		
-		var PlayerDrawable = function(){
-			this.glInit = function(manager){
-				animator.glInit(manager);
-			},
-			this.draw=function(gl,delta,screen,manager,pMatrix,mvMatrix){
-				setState();
-				mvMatrix.identity(mvMatrix);
-				mvMatrix.translate(state.cx,state.cy,0);
-				manager.point(0,0,-1,6,1,1,1,1);
-				mvMatrix.rotateZ(theta);
-				animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
-				// mvMatrix.identity();
-				// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
-			},
-			Object.defineProperties(this,{
-				x:{
-					set: function(){
-					},
-					get: function(){
-						return state.x;
-					}
-				},
-				y:{
-					set: function(){
-					},
-					get: function(){
-						return state.y;
-					}
-				},
-				width:{
-					set: function(){
-					},
-					get: function(){
-						return state.width;
-					}
-				},
-				height:{
-					set: function(){
-					},
-					get: function(){
-						return state.height;
+				if(keyboard[controls.up]){
+					count++;
+					angle+=Math.PI/2;
+				}
+				if(keyboard[controls.left]){
+					count++;
+					angle+=Math.PI;
+				}
+				if(keyboard[controls.right]){
+					count++;
+					if(keyboard[controls.down]){
+						angle+=Math.PI*2;
 					}
 				}
-			});
-			return this;
-		}
-		PlayerDrawable.prototype = new GLDrawable();
+				angle /= count;
+				if(count>0){
+					state.accel[0] = Math.cos(angle)*acceleration;
+					state.accel[1] = Math.sin(angle)*acceleration;
+				}else{
+					state.accel[0]=0;
+					state.accel[1]=0;
+				}
+			}
 		
-		this.drawable = new PlayerDrawable();
-		
-		return this;
-	}
-	PlayerInstance.prototype = {
-	}
-	
-	var instances = {};
-	var currid = 0;
-	
-	return fillProperties({
-		newInstance:function(x,y){
-			instances[currid] = new PlayerInstance(x,y);
-			graphics.addToDisplay(instances[currid].drawable,'gl_main');
-			physics.add(instances[currid].physState);
-			ticker.add(instances[currid]);
-			graphics.getScreen('gl_main').follower = instances[currid].physState;
-			return currid++;
+			Object.defineProperties(
+					fillProperties(fillProperties(state,fillProperties(new GLDrawable(),new BasicCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5))),
+						{
+							cx: x,
+							cy: y,
+							tick: function(){
+								movementCheck();
+								if(keyboard._1 && k!=1){
+									transitionSound.play(0);
+									animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
+									pk=k;
+									k=1;
+								}else if(keyboard._2 && k!=2){
+									transitionSound.play(0);
+									animator.setCurrentKeyframe('square',(pk==2) ? 1-animator.getTimeTillNextKeyframe() : 1);
+									pk=k;
+									k=2;
+								}else if(keyboard._3 && k!=3){
+									transitionSound.play(0);
+									animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
+									pk=k;
+									k=3;
+								}
+								
+								var mx= mouse.x,my=mouse.yInv;
+								theta = Vector.getDir(vec2.set(mvec,mx-state.cx,my-state.cy))-r;
+								animator.theta = theta;
+							},
+							glInit: function(manager){
+								animator.glInit(manager);
+							},
+							draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
+								updateCoords();
+								mvMatrix.identity(mvMatrix);
+								mvMatrix.translate(state.cx,state.cy,0);
+								manager.point(0,0,-1,6,1,1,1,1);
+								mvMatrix.rotateZ(theta);
+								animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+								// mvMatrix.identity();
+								// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
+							}
+						}),
+				(function(){
+					var stateX = x+animator.x, stateY= y+animator.y;
+					updateCoords = function(){
+						stateX = state.cx+animator.x;
+						stateY = state.cy+animator.y;
+					}
+					
+					return {
+						x:{
+							get:function(){
+								return stateX;
+							},
+							set:function(x){
+								this.cx+= x-stateX;
+								stateX = x;
+							}
+						},
+						y:{
+							get:function(){
+								return stateY;
+							},
+							set:function(y){
+								
+								this.cy += y-stateY;
+								stateY = y;
+							}
+						},
+						width:{
+							get:function(){
+								return animator.width;
+							},
+							set:function(){}
+						},
+						height:{
+							get:function(){
+								return animator.height;
+							},
+							set:function(){}
+						}
+					}
+				})());
+			graphics.addToDisplay(state,'gl_main');
+			physics.add(state);
+			ticker.add(state);
+			graphics.getScreen('gl_main').follower = state;
 		},
-		getInstance: function(id){
-			return instances[id];
+		destroy: function(state){
+			graphics.removeFromDisplay(state,'gl_main');
+			physics.remove(state);
+			ticker.remove(state);
+			if(graphics.getScreen('gl_main').follower == state)graphics.getScreen('gl_main').follower == null;
 		}
-	})
-})();
+	};
+})()))

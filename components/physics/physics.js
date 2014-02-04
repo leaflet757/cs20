@@ -333,7 +333,6 @@ function initPhysics(){
 			if(isCollider(obj)){
 				colliders.push(obj);
 				c = true;
-				console.log('added collider')
 			}
 			if(!c){
 				throw 'Physics.add: invalid parameter: '+obj;
@@ -513,6 +512,8 @@ function BasicCollider(x,y,width,height,elasticity){
 	this.pwidth = width || 0;
 	this.pheight = height || 0;
 	this.elasticity = elasticity || 0;
+	this.vel = {0:0,1:0,length:2};
+	this.accel = {0:0,1:0,length:2};
 }
 BasicCollider.prototype = fillProperties(new MovementState(0,0),{
 	width: 0,

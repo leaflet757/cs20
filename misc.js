@@ -28,9 +28,9 @@ function checkNum(a,b){
 	return (typeof a === 'number') ? a : b;
 }
 
-var iuid = (function(){
+var uid = (function(){
 	var next = 0;
 	return function(){
-		return next
+		return next++;
 	}
 })();

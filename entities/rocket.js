@@ -4,18 +4,15 @@ Entities.add('rocket', Entities.create(
 			create: function(state,x,y,dir){
 				state.alive = true;
 				if(!state.first){
-					fillProperties(state, Entities.createStandardState(
+					fillProperties(state, Entities.createStandardCollisionState(
 					{
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillRect(this.x,this.y,0,this.width,this.height,0,.5,1,1,1);
-						},
-						width: 16,
-						height: 16
-					},x,y));
+							manager.fillRect(this.x+8,this.y+8,0,this.width,this.height,0,.5,1,1,1);
+						}
+					},x,y,16,16,1.1));
 					state.accel[0]=100;
 					state.tick = function(delta){
-						var screen = graphics.getScreen('gl_main');
-						if(this.x>screen.width+screen.x || this.x<screen.x || this.y>screen.height+screen.y || this.y<screen.y){
+						if(!graphics.getScreen('gl_main').collision(this)){
 							state.alive = false;
 						}
 					}
@@ -25,9 +22,6 @@ Entities.add('rocket', Entities.create(
 				state.y = y;
 				state.vel[0]=0;
 				state.vel[1]=0;
-				// state.accel[0]=100;
-				// state.accel[1]=0;
-				// Vector.setDir(state.accel,state.accel,dir);
 				state.moveToward(mouse.x,mouse.yInv,-100);
 				state.accelerateToward(mouse.x,mouse.yInv,100);
 				graphics.addToDisplay(state,'gl_main');
@@ -46,10 +40,10 @@ Entities.add('rocket', Entities.create(
 						if (mouse.pressed)
 						{
 							var s = Entities.player.getInstance(0);
-							dir[0] = mouse.x - s.physState.x;
-							dir[1] = mouse.yInv - s.physState.y;
-							Entities.rocket.newInstance(s.physState.x + s.physState.width / 2,
-									s.physState.y + s.physState.height / 2, dir);
+							dir[0] = mouse.x - s.cx;
+							dir[1] = mouse.yInv - s.cy;
+							Entities.rocket.newInstance(s.cx,
+									s.cy, dir);
 						}
 					}
 				})()

@@ -78,7 +78,7 @@ function initInput(){
 			onPress:function(){
 				if(!pressed){
 					pressed = true;
-					Entities.player.getInstance(0).physState.set(0,0,0,0,0,0);
+					Entities.player.getInstance(0).set(0,0,0,0,0,0);
 				}
 			},
 			onRelease:function(){

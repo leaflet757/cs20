@@ -15,7 +15,7 @@ Entities.add('clickBox',Entities.create(
 						},x,y));
 					state.accel[0]=100;
 					state.tick = function(delta){
-						if(this.x>640){
+						if(!graphics.getScreen('gl_main').collision(this)){
 							state.alive = false;
 						}
 					}
