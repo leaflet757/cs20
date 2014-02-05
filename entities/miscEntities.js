@@ -43,7 +43,7 @@ Entities.add('clickBox',Entities.create(
 ticker.add({
 	tick:function(delta){
 		theta += Math.PI/180
-		if(mouse.pressed){
+		if(mouse.right){
 			Entities.clickBox.newInstance(mouse.x,mouse.yInv);
 		}
 	}

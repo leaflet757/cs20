@@ -207,6 +207,10 @@ function initPhysics(){
 		
 		mover.vel[0] += ax*delta;
 		mover.vel[1] += ay*delta;
+		
+		if(mover.maxSpeed){
+			if(Vector.getMag(mover.vel)>mover.maxSpeed) Vector.setMag(mover.vel,mover.vel,mover.maxSpeed);
+		}
 	}
 	
 	//assumes lines in CCW order and are all orthogonal to the x and y axis

@@ -10,7 +10,7 @@ Entities.add('rocket', Entities.create(
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
 							manager.fillRect(this.x+8,this.y+8,0,this.width,this.height,0,.5,1,1,1);
 						}
-					},x,y,16,16,1.1));
+					},x,y,16,16,1));
 					state.accel[0]=100;
 					state.tick = function(delta){
 						this.life-=delta;
