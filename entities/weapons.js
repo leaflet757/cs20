@@ -94,7 +94,6 @@ Entities.add('mine', Entities.create(
 		};
 	})())
 );
-<<<<<<< HEAD
 //ticker.add(Entities.mine.def);
 
 // Beam --
@@ -140,6 +139,3 @@ Entities.add('beam', Entities.create(
 	})())
 );
 //ticker.add(Entities.beam.def);
-=======
-ticker.add(Entities.mine.def);
->>>>>>> 7de144c8d870b4f6d002823864fec7ee2c5a8b32

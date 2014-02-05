@@ -204,3 +204,4 @@ Entity.prototype=(function(){
 importS('entities/player.js');
 importS('entities/miscEntities.js');
 importS('entities/weapons.js');
+importS('entities/enemies.js');
