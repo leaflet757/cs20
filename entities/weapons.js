@@ -1,30 +1,161 @@
 // Rocket -- 
 Entities.add('rocket', Entities.create(
 	(function(){
+		var buffered = false;
 		return {
 			create: function(state,x,y,dir){
 				state.alive = true;
-				state.life = 20;
+				state.life = 5;
+				state.theta = Vector.getDir(dir) - Math.PI / 2;
+				state.delay = 0.5;
+				state.fired = false;
+				state.mx = mouse.x;
+				state.my = mouse.yInv;
 				if(!state.first){
 					fillProperties(state, Entities.createStandardCollisionState(
 					{
+						glInit: function(manager)
+						{
+							if (!buffered)
+							{
+								this.animator.glInit(manager);
+								buffered = true;
+							}
+						},
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillRect(this.x+8,this.y+8,0,this.width,this.height,0,.5,1,1,1);
+						//	manager.fillTriangle(this.x+8,this.y+8,0,this.width,this.height,Vector.getDir(dir) - Math.PI / 2,.5,1,1,1);
+							mvMatrix.translate(this.x, this.y, 0);
+							mvMatrix.rotateZ(this.theta);
+							this.animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+						
 						}
 					},x,y,16,16,1));
-					state.accel[0]=100;
+					
 					state.tick = function(delta){
 						this.life-=delta;
-						this.alive = this.life>0;
+						this.delay -= delta;
+						if (this.life<=0)
+						{
+							this.alive = false;
+						}
+						if (this.delay <= 0 && !this.fired)
+						{
+							this.accelerateToward(this.mx,this.my,800);
+							this.fired = true;
+						}
 					}
+					
+					state.animator = new VertexAnimator("basic", 
+						{
+						rocketColor: 
+							fillProperties([
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1
+							],
+							{
+								attributeId: "vertexColor",
+								items: 6,
+								itemSize: 4
+							}), 
+						rocketPosition: 
+							fillProperties([
+								0,0,0,
+								0,16,0,
+								-16,-16,0,
+								0,8,0,
+								16,-16,0,
+								0,16,0
+							],
+							{
+								attributeId: "vertexPosition",
+								items: 6,
+								itemSize: 3
+							})
+						},
+						{},6);
+						
+						state.animator.addKeyframe("slim", 
+						{
+						rocketColor: 
+							fillProperties([
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1
+							],
+							{
+								attributeId: "vertexColor",
+								items: 6,
+								itemSize: 4
+							}), 
+						rocketPosition: 
+							fillProperties([
+								0,0,0,
+								0,16,0,
+								-8,-16,0,
+								0,0,0,
+								8,-16,0,
+								0,16,0
+							],
+							{
+								attributeId: "vertexPosition",
+								items: 6,
+								itemSize: 3
+							})
+						},
+						{},6);
+						
+						state.animator.addKeyframe("fat", 
+						{
+						rocketColor: 
+							fillProperties([
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1,
+								0.5,1,1,1
+							],
+							{
+								attributeId: "vertexColor",
+								items: 6,
+								itemSize: 4
+							}), 
+						rocketPosition: 
+							fillProperties([
+								0,0,0,
+								0,16,0,
+								-16,-16,0,
+								0,-4,0,
+								16,-16,0,
+								0,16,0
+							],
+							{
+								attributeId: "vertexPosition",
+								items: 6,
+								itemSize: 3
+							})
+						},
+						{},6);
+						
+					
 					state.first = true;
 				}
+				state.animator.setCurrentKeyframe("fat",0);
+				state.animator.setCurrentKeyframe("slim", state.delay);
 				state.x = x;
 				state.y = y;
-				state.vel[0]=0;
-				state.vel[1]=0;
-				state.moveToward(mouse.x,mouse.yInv,-100);
-				state.accelerateToward(mouse.x,mouse.yInv,100);
+				state.vel[0]=Entities.player.getInstance(0).vel[0];
+				state.vel[1]=Entities.player.getInstance(0).vel[1];
+				state.accel[0] = 0;
+				state.accel[1] = 0;
+				//state.moveToward(state.mx, state.my, 50);
 				graphics.addToDisplay(state,'gl_main');
 				ticker.add(state);
 				physics.add(state);
@@ -36,15 +167,18 @@ Entities.add('rocket', Entities.create(
 			},
 			tick: (function(){
 				var dir = {0:0,1:0,length:2};
+				var time = 0.5;
 				return function(delta)
 					{
-						if (mouse.pressed)
+						time -= delta;
+						if (mouse.pressed && time <= 0)
 						{
 							var s = Entities.player.getInstance(0);
 							dir[0] = mouse.x - s.cx;
 							dir[1] = mouse.yInv - s.cy;
 							Entities.rocket.newInstance(s.cx,
 									s.cy, dir);
+							time = 0.5;
 						}
 					}
 				})()

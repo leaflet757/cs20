@@ -40,7 +40,7 @@ Entities.add('clickBox',Entities.create(
 	})())
 );
 
-<<<<<<< HEAD
+
 // ticker.add({
 // 	tick:function(delta){
 // 		theta += Math.PI/180
@@ -49,13 +49,3 @@ Entities.add('clickBox',Entities.create(
 // 		}
 // 	}
 // })
-=======
-ticker.add({
-	tick:function(delta){
-		theta += Math.PI/180
-		if(mouse.right){
-			Entities.clickBox.newInstance(mouse.x,mouse.yInv);
-		}
-	}
-})
->>>>>>> 7de144c8d870b4f6d002823864fec7ee2c5a8b32

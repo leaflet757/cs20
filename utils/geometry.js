@@ -289,7 +289,7 @@ Vector = {
 	setMag: function(out,a,mag){
 		var m = this.getMag(a);
 		if(m){
-			for(var i = 0; i<vec.length; i++){
+			for(var i = 0; i<a.length; i++){
 				out[i] = mag*(a[i]/m);
 			}
 		}else{
