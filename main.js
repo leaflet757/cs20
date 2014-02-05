@@ -183,6 +183,8 @@ function initScene(){
 		height: 512
 	});
 	
+	Entities.follower.newInstance(400,400);
+	
 	graphics.addToDisplay(testMap,"gl_main")
 }
 

@@ -51,7 +51,7 @@ Entities.add('rocket', Entities.create(
 		};
 	})())
 );
-//ticker.add(Entities.rocket.def);
+ticker.add(Entities.rocket.def);
 
 // Mine -- 
 Entities.add('mine', Entities.create(
@@ -94,4 +94,52 @@ Entities.add('mine', Entities.create(
 		};
 	})())
 );
+<<<<<<< HEAD
+//ticker.add(Entities.mine.def);
+
+// Beam --
+Entities.add('beam', Entities.create(
+	(function(){
+		return {
+			create: function(state,x,y){
+				state.alive = true;
+				state.life = 1;
+				if(!state.first){
+					fillProperties(state, Entities.createStandardCollisionState(
+					{
+						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+							manager.fillEllipse(this.x,this.y,0,this.width,this.height,0,.5,1,.5,1);
+							
+						}
+					},x,y,16,16,1.1));
+					state.tick = function(delta){
+						this.life-=delta; // Not a number??
+						this.alive = this.life>0;
+					}
+					state.first = true;
+				}
+				state.x = x;
+				state.y = y;
+				graphics.addToDisplay(state,'gl_main');
+				ticker.add(state);
+				physics.add(state);
+			},
+			destroy: function(state){
+				graphics.removeFromDisplay(state,'gl_main');
+				ticker.remove(state);
+				physics.remove(state);
+			},
+			tick: function(delta){
+				if (mouse.pressed)
+				{
+					var s = Entities.player.getInstance(0);
+					Entities.beam.newInstance(s.cx, s.cy);
+				}
+			}
+		};
+	})())
+);
+//ticker.add(Entities.beam.def);
+=======
 ticker.add(Entities.mine.def);
+>>>>>>> 7de144c8d870b4f6d002823864fec7ee2c5a8b32

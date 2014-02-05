@@ -40,6 +40,16 @@ Entities.add('clickBox',Entities.create(
 	})())
 );
 
+<<<<<<< HEAD
+// ticker.add({
+// 	tick:function(delta){
+// 		theta += Math.PI/180
+// 		if(mouse.pressed){
+// 			Entities.clickBox.newInstance(mouse.x,mouse.yInv);
+// 		}
+// 	}
+// })
+=======
 ticker.add({
 	tick:function(delta){
 		theta += Math.PI/180
@@ -48,3 +58,4 @@ ticker.add({
 		}
 	}
 })
+>>>>>>> 7de144c8d870b4f6d002823864fec7ee2c5a8b32
