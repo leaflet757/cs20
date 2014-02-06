@@ -411,15 +411,60 @@ function initPhysics(){
 	gameComponents[0] = physics;
 }
 
-function MovementState(x,y){
-	if(typeof x != 'number' && typeof y != 'number'){
-		x = 0
-		y = 0
-	}
-	this.x = x;
-	this.y = y;
+function MovementState(x,y,theta){
+	x = x || 0;
+	y = y || 0;
+	theta = theta || 0;
+	this.children = [];
 	this.vel = {0:0,1:0,length:2};
 	this.accel = {0:0,1:0,length:2};
+	Object.defineProperties(this,{
+		x:{
+			get:function(){
+				return x;
+			},
+			set:function(nx){
+				var dif = nx - x;
+				x = nx;
+				for(var i in this.children){
+					this.children[i].x+=dif;
+				}
+			},
+			configurable:true
+		},
+		y:{
+			get:function(){
+				return y;
+			},
+			set:function(ny){
+				var dif = ny - y;
+				y = ny;
+				for(var i in this.children){
+					this.children[i].y+=dif;
+				}
+			},
+			configurable:true
+		},
+		theta:{
+			get:function(){
+				return theta;
+			},
+			set:function(ntheta){
+				var dif = ntheta - theta;
+				theta = ntheta;
+				var c = Math.cos(dif);
+				var s = Math.sin(dif);
+				for(var i in this.children){
+					var x = this.children[i].x;
+					var y = this.children[i].y;
+					this.children.x = x*c - y*s;
+					this.children.y = x*s + y*c;
+				}
+			},
+			configurable:true
+		}
+	})
+	
 	return this;
 }
 MovementState.prototype = Object.defineProperties(
@@ -470,6 +515,22 @@ MovementState.prototype = Object.defineProperties(
 			this.accel[1] = scalarAcceleration * (y/l);
 			return this;
 		},
+		addChild: function(child){
+			if(typeof child.x == 'number' && typeof child.y == 'number' && typeof child.theta == 'number'){
+				this.children.push(child);
+				return child;
+			}else{
+				throw 'invalid attempt to add child to movement state'
+			}
+		},
+		removeChild:function(child){
+			for(var i=0; i<this.children.length; i++){
+				if(this.children[i]==child){
+					this.children.splice(i,1);
+				}
+			}
+			return child;
+		},
 		doMove:true
 	},
 	{
@@ -519,11 +580,11 @@ function BasicCollider(x,y,width,height,elasticity){
 	this.vel = {0:0,1:0,length:2};
 	this.accel = {0:0,1:0,length:2};
 }
-BasicCollider.prototype = fillProperties(new MovementState(0,0),{
+BasicCollider.prototype = fillProperties(new Box(),fillProperties(new MovementState(0,0),{
 	width: 0,
 	height: 0,
 	onCollision: function(){},
 	fineCheck: function(){return true;},
 	adjust: false,
 	doLineCheck: true
-});
+}));

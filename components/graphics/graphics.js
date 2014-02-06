@@ -247,6 +247,8 @@ function initGraphics(){
 		var shaders = {};
 		var programs = {};
 		var buffers = {};
+		var textures = {};
+		
 		var currentProgram = null;
 		var getShader = function(id){
 			var shaderScript = document.getElementById(id);
@@ -459,6 +461,78 @@ function initGraphics(){
 			gl.vertexAttribPointer(this.getProgram(programName).attribArrays[attributeName], buffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
 		
+		this.addTexture = (function(){
+			var handleTexture = function(text){
+				gl.bindTexture(gl.TEXTURE_2D, text);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, text.image);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+			}
+			
+			return function(fileName){
+				var text = gl.createTexture();
+				text.loaded = false;
+				text.image = new Image();
+				text.image.onload = function(){
+					handleTexture(text);
+				}
+				text.image.src = fileName;
+				textures[fileName] = text;
+				return fileName;
+			}
+		})();
+		
+		this.getTexture = function(fileName){
+			if(textures[fileName]){
+				return textures[fileName];
+			}else{
+				throw 'texture not found'
+			}
+		}
+		
+		this.bindTexture = function(fileName){
+			if(textures[fileName]){
+				gl.bindTexture(gl.TEXTURE_2D, textures);
+			}else{
+				throw 'texture not found'
+			}
+		}
+		
+		this.removeTexture = function(fileName){
+			gl.deleteTexture(textures[fileName]);
+			delete textures[fileName];
+		}
+		
+		this.createSprite = (function(){
+			var Sprite = function(manager,texture){
+				this.draw = function(){
+					gl.enable(gl.BLEND);
+					gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+					manager.bindProgram('basic_texture');
+					manager.setArrayBufferAsProgramAttribute('primitive_rect','basic_texture','vertexPosition');
+					manager.setArrayBufferAsProgramAttribute('sprite_texture_coords','basic_texture','textureCoord');
+					
+					mvMatrix.push();
+						mvMatrix.translate(this.x+this.width/2,this.y+this.height/2,this.z || 0);
+						mvMatrix.scale(this.width,this.height,1);
+						manager.setMatrixUniforms('basic_texture',pMatrix,mvMatrix.current);
+					mvMatrix.pop();
+					
+					gl.activeTexture(gl.TEXTURE0);
+					gl.bindTexture(gl.TEXTURE_2D, texture);
+					gl.uniform1i(manager.getProgram('basic_texture').samplerUniform, 0);
+					
+					gl.drawArrays(gl.TRIANGLE_FAN,0,4);
+				}
+			}
+			Sprite.prototype = new Box();
+			
+			return function(name){
+				if(!textures[name])this.addTexture(name)
+				return new Sprite(this,textures[name]);
+			}
+		})();
 		//convenience functions
 		//----------------------------------------------------------------------------------------
 		var simpleColorVec = vec4.create();
@@ -642,6 +716,12 @@ function initGraphics(){
 					return verts;
 				})(),32,3);
 		
+			this.addArrayBuffer('sprite_texture_coords',false,[
+				1.0, 1.0, 0.0,
+				1.0, 0.0, 0.0,
+				0.0, 0.0, 0.0,
+				0.0, 1.0, 0.0
+			],4,3);
 			//load shaders
 			this.addShader('basic_fs','fs');
 			this.addShader('basic_vs','vs');
@@ -697,6 +777,20 @@ function initGraphics(){
 				prog.time = gl.getUniformLocation(prog, "time");
 			});
 			this.bindProgram('noise');
+			
+			this.addShader('text_fs','text_fs');
+			this.addShader('text_vs','text_vs');
+			this.addProgram('basic_texture','text_vs','text_fs',function(gl,prog){
+				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
+				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+				prog.attribArrays.textureCoord = gl.getAttribLocation(prog, "aTextureCoord");
+				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
+				
+				prog.sampler = gl.getUniformLocation(prog, 'uSampler');
+				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
+				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
+			});
+			this.bindProgram('basic_texture');
 		}
 	}
 	
