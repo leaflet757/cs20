@@ -416,3 +416,54 @@ Entities.add('wave', Entities.create(
 	})())
 );
 //ticker.add(Entities.wave.def);
+
+// beam -- 
+Entities.add('beam', Entities.create(
+	(function(){
+		return {
+			create: function(state,x,y){
+				state.life = 1;
+				state.alive = true;
+				state.theta = Vector.getDir({0: (mouse.x - this.x),1: (mouse.yInt - this.y)}) - Math.PI / 2;
+				if(!state.first){
+					fillProperties(state, Entities.createStandardCollisionState(
+					{
+						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+							manager.fillRect(this.x + this.width / 2,this.y,0,this.width,this.height,this.theta,0.7,0.2,0.7,1);
+							// ray
+							//this.misc.length = 0;
+							var p = Entities.player.getInstance(0);
+							var traceResult = physics.rayTrace(this.misc,p.x+p.width/2,p.y+p.height/2,mouse.x,mouse.yInv);
+							if(traceResult.length>3)traceResult[1].moveToward(p.cx,p.cy,-300);
+						}
+					},x,y,16,16,1.1));
+					state.tick = function(delta){
+						this.life -= delta;
+						this.alive = this.life > 0;
+					}
+					state.first = true;
+				}
+			
+				state.x = x;
+				state.y = y;
+				graphics.addToDisplay(state,'gl_main');
+				ticker.add(state);
+				physics.add(state);
+			},
+			destroy: function(state){
+				graphics.removeFromDisplay(state,'gl_main');
+				ticker.remove(state);
+				physics.remove(state);
+			},
+			tick: function(delta){
+				if (mouse.pressed)
+				{
+					var s = Entities.player.getInstance(0);
+					Entities.beam.newInstance(s.cx, s.cy);
+					
+				}
+			}
+		};
+	})())
+);
+ticker.add(Entities.beam.def);
