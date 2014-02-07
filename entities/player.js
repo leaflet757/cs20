@@ -241,13 +241,19 @@ Entities.add('player', Entities.create((function(){
 			
 			// TODO: weapon manager
 			// var weaponManager = new WeaponManager();
-// 			
-// 			var weaponsCheck = function() { // fires currently selected weapon
-// 				if (mouse.pressed)
-// 				{
-// 					weaponManager.fire();
-// 				}
-// 			}
+			var a = new BeamWeapon();
+			var weaponsCheck = function() { // fires currently selected weapon
+				if (mouse.pressed)
+				{
+					//weaponManager.fire();
+					
+					a.fire();
+				}
+				else
+				{
+					a.holdFire();
+				}
+			}
 		
 			Object.defineProperties(
 					fillProperties(fillProperties(state,fillProperties(new GLDrawable(),new BasicCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5))),
@@ -256,7 +262,7 @@ Entities.add('player', Entities.create((function(){
 							cy: y,
 							tick: function(){
 								movementCheck();
-//								weaponsCheck();
+								weaponsCheck();
 								
 								if(keyboard._1 && k!=1){
 									transitionSound.play(0);
