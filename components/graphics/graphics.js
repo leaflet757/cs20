@@ -58,14 +58,19 @@ function initGraphics(){
 				drawable.y+drawable.height > screen.y) || !do_screen_test;
 	}
 	
+	var zComp = function(a,b){
+		return a.z - b.z;
+	}
 	//constructor for objects representing the different canvases with a 2d context
 	var Display = function (id,display){
 		this.id=id;
 		this.display = display;
 		//this is the screen object for this display
 		this.screen = new Screen(0,0,display.width,display.height);
-		//the drawables to be drawn on this display
+		//the drawables to be drawn on this display without a z-index
 		this.drawables = new Array();
+		//the sorted drawables
+		this.zDrawables = new Array();
 		//context for the visible canvas
 		this.contextFinal = this.display.getContext("2d");
 		//creates a buffer canvas
@@ -78,8 +83,16 @@ function initGraphics(){
 		//add a drawable to this display
 		this.add=function(obj){
 			if(obj.isDrawable){
-				this.drawables.push(obj)
-				return this.drawables.length-1
+				if(typeof obj.z == 'number'){
+					var i = 0;
+					for(;i<this.zDrawables.length; i++){
+						if(this.zDrawables[i].z<obj.z) break;
+					}
+					this.zDrawables.splice(i,0,obj);
+				}else{
+					this.drawables.push(obj)
+					return this.drawables.length-1
+				}
 			}else{
 				console.error('failed to add drawable')
 				return -1;
@@ -88,10 +101,19 @@ function initGraphics(){
 		
 		//remove a drawable from the display
 		this.remove=function(obj){
-			for(var i in this.drawables){
-				if(this.drawables[i]===obj){
-					this.drawables.splice(i,1);
-					break;
+			if(typeof obj.z == 'number'){
+				for(var i in this.zDrawables){
+					if(this.zDrawables[i]===obj){
+						this.zDrawables.splice(i,1);
+						break;
+					}
+				}
+			}else{
+				for(var i in this.drawables){
+					if(this.drawables[i]===obj){
+						this.drawables.splice(i,1);
+						break;
+					}
 				}
 			}
 		}
@@ -521,12 +543,27 @@ function initGraphics(){
 					
 					gl.activeTexture(gl.TEXTURE0);
 					gl.bindTexture(gl.TEXTURE_2D, texture);
-					gl.uniform1i(manager.getProgram('basic_texture').samplerUniform, 0);
+					var prog = manager.getProgram('basic_texture');
+					gl.uniform1i(prog.samplerUniform, 0);
+					gl.uniform1f(prog.alpha, this.alpha)
+					gl.uniform1f(prog.tintWeight,this.tintWeight);
+					gl.uniform3fv(prog.tint,this.tint);
 					
 					gl.drawArrays(gl.TRIANGLE_FAN,0,4);
 				}
 			}
-			Sprite.prototype = new Box();
+			Sprite.prototype = fillProperties(new Box(),
+				{
+					tint: [0,0,0],
+					tintWeight: 0,
+					alpha: 1,
+					setTint: function(r,g,b,a){
+						this.tint[0]=r;
+						this.tint[1]=g;
+						this.tint[2]=b;
+					}
+				}
+			);
 			
 			return function(name){
 				if(!textures[name])this.addTexture(name)
@@ -670,7 +707,7 @@ function initGraphics(){
 		}
 	
 	
-		//sets up primitives and generic buffers
+		//sets up shaders, primitives, and generic buffers
 		{
 			this.addArrayBuffer('empty_point',true,[0.0,0.0,0.0],1,3);//for drawing single points
 			
@@ -787,6 +824,9 @@ function initGraphics(){
 				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
 				
 				prog.sampler = gl.getUniformLocation(prog, 'uSampler');
+				prog.tint = gl.getUniformLocation(prog, 'uTint');
+				prog.alpha = gl.getUniformLocation(prog, 'uAlpha');
+				prog.tintWeight = gl.getUniformLocation(prog, 'uTintWeight');
 				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
 				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
 			});
@@ -803,6 +843,8 @@ function initGraphics(){
 		this.screen = new Screen(0,0,display.width,display.height);
 		//the drawables to be drawn on this display
 		this.drawables = new Array();
+		//the sorted drawables
+		this.zDrawables = new Array();
 		//context for the visible canvas
 		var gl;
 		//this display's glManager
@@ -833,25 +875,39 @@ function initGraphics(){
 		
 		//add a drawable to this display
 		this.add=function(obj){
+			
 			if(obj.isDrawable){
-				obj.glInit(manager);
-				this.drawables.push(obj)
-				return this.drawables.length-1
-			}else if(obj.isGLDrawable){
-				this.drawables.push(obj)
-				return this.drawables.length-1
+				if(obj.isGLDrawable) obj.glInit(manager);
+				
+				if(typeof obj.z == 'number'){
+					var i = 0;
+					for(;i<this.zDrawables.length; i++){
+						if(this.zDrawables[i].z<obj.z) break;
+					}
+					this.zDrawables.splice(i,0,obj);
+				}else{
+					this.drawables.push(obj)
+				}
 			}else{
-				console.error('failed to add drawable')
-				return -1;
+				console.error('failed to add drawable '+obj)
 			}
 		}
 		
 		//remove a drawable from the display
 		this.remove=function(obj){
-			for(var i in this.drawables){
-				if(this.drawables[i]===obj){
-					this.drawables.splice(i,1);
-					break;
+			if(typeof obj.z == 'number'){
+				for(var i in this.zDrawables){
+					if(this.zDrawables[i]===obj){
+						this.zDrawables.splice(i,1);
+						break;
+					}
+				}
+			}else{
+				for(var i in this.drawables){
+					if(this.drawables[i]===obj){
+						this.drawables.splice(i,1);
+						break;
+					}
 				}
 			}
 			if(obj.isGLDrawable){
@@ -861,6 +917,20 @@ function initGraphics(){
 		
 		this.get=function(i){
 			return this.drawables[i];
+		}
+		
+		var drawSet = function(screen,drawables,delta){
+			for(var i in drawables){
+				var d = drawables[i];
+				if(d.visible && isOnScreen(screen,d)){
+					mvMatrix.identity(mvMatrix);
+					d.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+					if(mvMatrix.stackSize>0){
+						console.error("to many calls to push matrix or to few calls to pop matrix");
+						mvMatrix.reset();
+					}
+				}
+			}
 		}
 		
 		this.draw=function(delta){
@@ -876,21 +946,19 @@ function initGraphics(){
 			
 			if(draw_grid) manager.drawGrid(this.screen,grid_z,grid_w,grid_h,1);
 			
-			for(var i in this.drawables){
-				var d = this.drawables[i];
-				if(d.visible && isOnScreen(this.screen,d)){
-					mvMatrix.identity(mvMatrix);
-					d.draw(gl,delta,this.screen,manager,pMatrix,mvMatrix);
-					if(mvMatrix.stackSize>0){
-						console.error("to many calls to push matrix or to few calls to pop matrix");
-						mvMatrix.reset();
-					}
-				}
-			}
+			drawSet(this.screen, this.drawables, delta);
+			drawSet(this.screen, this.zDrawables, delta);
+			
 			if(draw_bounding_boxes){	
 				mvMatrix.identity();
 				for(var i in this.drawables){
 					var d = this.drawables[i];
+					if(d.visible && isOnScreen(this.screen,d)){
+						manager.strokeRect(d.x+(d.width/2),d.y+(d.height/2),0,d.width,d.height,0,1,1,1,1);
+					}
+				}
+				for(var i in this.zDrawables){
+					var d = this.zDrawables[i];
 					if(d.visible && isOnScreen(this.screen,d)){
 						manager.strokeRect(d.x+(d.width/2),d.y+(d.height/2),0,d.width,d.height,0,1,1,1,1);
 					}
