@@ -21,6 +21,7 @@ Entities.add('follower',Entities.create(
 					state.tick = function(delta){
 						var s = Entities.player.getInstance(0);
 						state.accelerateToward(s.cx, s.cy, 100);
+						// test collision code
 						var r = Entities.rocket;
 						for(var i = 0; i<r.position; i++){
 							if(this.collision(r.instanceArray[i])){
@@ -35,6 +36,7 @@ Entities.add('follower',Entities.create(
 								this.vel[1] += r.instanceArray[i].vel[1];
 							}
 						}
+						// ---- 
 					}
 					state.first = true;
 				}else{

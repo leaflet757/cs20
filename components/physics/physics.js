@@ -10,7 +10,7 @@ function initPhysics(){
 	var colliderTree;
 	
 	{
-		var quadNodeSizeLimit = 16;
+		var quadNodeSizeLimit = 4;
 		
 		var treeLineCheck = function(index,node){
 			var x = Math.min(lines[index],lines[index+2]);
@@ -138,12 +138,16 @@ function initPhysics(){
 				return array;
 			},
 			getRaySet: function(array,x1,y1,x2,y2){
-				if(Collision.boxRay(this.x,this.y,this.width,this.height,x1,y1,x2,y2)){
+				if(Collisions.boxRay(this.x,this.y,this.width,this.height,x1,y1,x2,y2)){
+					console.Log
 					if(this.ne!=null){
 						this.ne.getRaySet(array,x1,y1,x2,y2);
 						this.nw.getRaySet(array,x1,y1,x2,y2);
 						this.se.getRaySet(array,x1,y1,x2,y2);
 						this.sw.getRaySet(array,x1,y1,x2,y2);
+					}
+					for(var i = 0; i<this.objects.length; i++){
+						array.push(this.objects[i]);
 					}
 				}
 				return array;
@@ -309,117 +313,264 @@ function initPhysics(){
 		}
 	})();
 	
-	physics = fillProperties(new Updatable(),{
-		update: function(delta){
-			if(lines)doCollisionCheck(delta);
-			for(var i in movers){
-				if(movers[i].doMove)move(movers[i],delta);
-			}
-			if(lines)doCollisionCheck(delta);
-			for(var i = 0; i<colliders.length; i++){
-				colliders[i].pwidth = colliders[i].width;
-				colliders[i].pheight = colliders[i].height;
-			}
+	physics = fillProperties(new Updatable(),(function(){
+	
+		var radialForces = [];
+		
+		var queryArray = [];
+		
+		
+		
+		var miscVec = [];
+		
+		var doForces = function(){
 			if(colliderTree){
-				colliderTree.clear();
-				for(var i = 0; i< colliders.length; i++){
-					colliderTree.add(colliders[i]);
+				for(var i = 0; i<radialForces.length; i+=4){
+					var x = radialForces[i], y = radialForces[i+1], radius = radialForces[i+2], mag = radialForces[i+3];
+					queryArray.length = 0;
+					var effected = colliderTree.get(queryArray,x-(radius/2),y-(radius/2),radius,radius);
+					for(var i in effected){
+						var e = effected[i];
+						if(e.forcesEnabled){
+							miscVec[0] = (e.x+(e.width/2))-x;
+							miscVec[1] = (e.y+(e.height/2))-y;
+							if(Vector.getMag(miscVec)<radius){
+								var m = mag - (mag*(Vector.getMag(miscVec)/radius));
+								var theta = Vector.getDir(miscVec);
+								e.addForce(Math.cos(theta)*m,Math.sin(theta)*m);
+							}
+						}
+					}
 				}
 			}
-			graphics.updateScreens();
-		},
-		add: function(obj){
-			var c = false;
-			if(isMover(obj)){
-				movers.push(obj);
-				c = true;
-			}
-			if(isCollider(obj)){
-				colliders.push(obj);
-				c = true;
-			}
-			if(!c){
-				throw 'Physics.add: invalid parameter: '+obj;
-			}
-		},
-		addMover: function(obj){
-			if(isMover(obj)){
-				movers.push(obj);
-			}else{
-				throw 'Physics.addMover: invalid parameter: '+obj;
-			}
-		},
-		addCollider: function(obj){
-			if(isCollider(obj)){
-				colliders.push(obj);
-			}else{
-				throw 'Physics.addCollider: invalid parameter: '+obj;
-			}
-		},
-		getColliders: function(array,x,y,width,height){
-			if(colliderTree){
-				colliderTree.get(array,x,y,width,height);
-				return array;
-			}
-		},
-		getCollidersRay: function(array,x1,y1,x2,y2){
-			if(colliderTree){
-				colliderTree.get(array,x1,y1,x2,y2);
-				return array;
-			}
-		},
-		remove: function(obj){
-			for(var i=0; i<movers.length; i++){
-				if(movers[i]==obj){
-					movers.splice(i,1);
-					break;
-				}
-			}
-			for(var i=0; i<colliders.length; i++){
-				if(colliders[i]==obj){
-					colliders.splice(i,1);
-					break;
-				}
-			}
-		},
-		/**
-		*	sets the geometry to do collision checks against it a sorts it into a quad tree
-		* 	this function is expensive and should be called rarely
-		*/
-		setGeometry: function(newLines){
-			if(newLines.length%4 == 0){
-				console.log(newLines.length)
-				lines = newLines;
-				lineTree = new QuadTree(VecArray.getCorner(newLines,2,0),VecArray.getCorner(newLines,2,1),VecArray.getMaxDif(newLines,2,0),VecArray.getMaxDif(newLines,2,1));
-				colliderTree = new QuadTree(VecArray.getCorner(newLines,2,0),VecArray.getCorner(newLines,2,1),VecArray.getMaxDif(newLines,2,0),VecArray.getMaxDif(newLines,2,1));
-				
-				var temp = quadNodeSizeLimit;
-				quadNodeSizeLimit = 1;
-				for(var i = 0; i<lines.length; i+=4){
-					if(!lineTree.add(i))console.error("error adding lines");
-				}
-				quadNodeSizeLimit = temp;
-			}else{
-				throw 'physics.setGeometry: wrong number of indeces' 
-			}
-		},
-		clear: function(){
-			colliders.length = 1;
-			movers.length = 1;
+			radialForces.length = 0
 		}
-	});
+		
+		var sortX =0, sortY = 0;
+		var sortComp = function(a,b){
+			return pythag((a.x+(a.width/2))-sortX,(a.y+(a.height/2))-sortY)-pythag((b.x+(b.width/2))-sortX,(b.y+(b.height/2))-sortY);
+		}
+		return {
+			update: function(delta){
+				if(lines)doCollisionCheck(delta);
+				doForces();
+				for(var i in movers){
+					if(movers[i].doMove)move(movers[i],delta);
+				}
+				if(lines)doCollisionCheck(delta);
+				for(var i = 0; i<colliders.length; i++){
+					colliders[i].pwidth = colliders[i].width;
+					colliders[i].pheight = colliders[i].height;
+				}
+				if(colliderTree){
+					colliderTree.clear();
+					for(var i = 0; i< colliders.length; i++){
+						colliderTree.add(colliders[i]);
+					}
+				}
+				graphics.updateScreens();
+			},
+			add: function(obj){
+				var c = false;
+				if(isMover(obj)){
+					movers.push(obj);
+					c = true;
+				}
+				if(isCollider(obj)){
+					colliders.push(obj);
+					c = true;
+				}
+				if(!c){
+					throw 'Physics.add: invalid parameter: '+obj;
+				}
+			},
+			addMover: function(obj){
+				if(isMover(obj)){
+					movers.push(obj);
+				}else{
+					throw 'Physics.addMover: invalid parameter: '+obj;
+				}
+			},
+			addCollider: function(obj){
+				if(isCollider(obj)){
+					colliders.push(obj);
+				}else{
+					throw 'Physics.addCollider: invalid parameter: '+obj;
+				}
+			},
+			getColliders: function(array,x,y,width,height){
+				if(colliderTree){
+					colliderTree.get(array,x,y,width,height);
+					return array;
+				}
+			},
+			getCollidersRay: function(array,x1,y1,x2,y2){
+				if(colliderTree){
+					colliderTree.get(array,x1,y1,x2,y2);
+					return array;
+				}
+			},
+			remove: function(obj){
+				for(var i=0; i<movers.length; i++){
+					if(movers[i]==obj){
+						movers.splice(i,1);
+						break;
+					}
+				}
+				for(var i=0; i<colliders.length; i++){
+					if(colliders[i]==obj){
+						colliders.splice(i,1);
+						break;
+					}
+				}
+			},
+			/**
+			*	sets the geometry to do collision checks against it a sorts it into a quad tree
+			* 	this function is expensive and should be called rarely
+			*/
+			setGeometry: function(newLines){
+				if(newLines.length%4 == 0){
+					console.log(newLines.length)
+					lines = newLines;
+					lineTree = new QuadTree(VecArray.getCorner(newLines,2,0),VecArray.getCorner(newLines,2,1),VecArray.getMaxDif(newLines,2,0),VecArray.getMaxDif(newLines,2,1));
+					colliderTree = new QuadTree(VecArray.getCorner(newLines,2,0),VecArray.getCorner(newLines,2,1),VecArray.getMaxDif(newLines,2,0),VecArray.getMaxDif(newLines,2,1));
+					
+					var temp = quadNodeSizeLimit;
+					quadNodeSizeLimit = 1;
+					for(var i = 0; i<lines.length; i+=4){
+						if(!lineTree.add(i))console.error("error adding lines");
+					}
+					quadNodeSizeLimit = temp;
+				}else{
+					throw 'physics.setGeometry: wrong number of indeces' 
+				}
+			},
+			/**
+			*  Does a raytrace and puts all of the items intersecting the ray into an array in the order of intersection 
+			*  the ray is stopped by collision with geometry
+			*/
+			rayTrace: function(array,x1,y1,x2,y2){
+				var lineSet = lineTree.getRaySet(queryArray,x1,y1,x2,y2);
+				var line = null;
+				var p;
+				var dist = -1;
+				
+				for(var i in lineSet){
+					var xa = lines[lineSet[i]], ya = lines[lineSet[i]+1], xb = lines[lineSet[i]+2],yb = lines[lineSet[i]+3];
+					var res = Collisions.lineRay(xa,ya,xb,yb,x1,y1,x2,y2);
+					// console.log(res);
+					if(res && (dist<0 || Collision.pointDist(res[0],res[1],x1,y1)>dist)){
+						line = lineSet[i];
+						p = res;
+					}
+				}
+				
+				if(line == null || !p) throw 'ray trace error: can not find line'
+				lineSet.length = 0
+				
+				var collided = colliderTree.getRaySet(lineSet,x1,y1,x2,y2);
+				
+				for(var i  in collided){
+					var o = collided[i];
+					if(Collisions.boxBox(o.x,o.y,o.height,o.width,Math.min(x1,x2),Math.min(y1,y2),Math.abs(x1-x2),Math.abs(y1-y2)) && 
+							Collisions.boxLine(o.x,o.y,o.height,o.width,x1,y1,p[0],p[1]) && 
+							o.fineCheck(x1,y1,p[0],p[1])){
+						array.push(o);
+					}
+				}
+				
+				sortX = x1;
+				sortY = y1;
+				array.sort(sortComp);
+				array.push(p[0],p[1]);
+				
+				collided.length = 0;
+				return array;
+			},
+			/**
+			* does a raytrace through a given set 
+			*/
+			rayTraceSet: function(out,set,x1,y1,x2,y2){
+				for(var i in set){
+					var o = set[i];
+					if(Collisions.boxRay(o.x,o.y,o.height,o.width,x1,y1,x2,y2) && o.fineRayCheck(x1,y1,x2,y2)){
+						out.push(set[i]);
+					}
+				}
+				sortX = x1;
+				sortY = y1;
+				return out.sort(sortComp);
+			},
+			/**
+			*	creates a force that expands outward
+			*
+			*/
+			radialForce: function(x,y,radius,mag){
+				radialForces.push(x,y,radius,mag);
+			},
+			clear: function(){
+				colliders.length = 1;
+				movers.length = 1;
+			}
+		}
+	})());
 	gameComponents[0] = physics;
 }
 
-function MovementState(x,y){
-	if(typeof x != 'number' && typeof y != 'number'){
-		x = 0
-		y = 0
-	}
-	this.x = x;
-	this.y = y;
+function MovementState(x,y,theta){
+	x = x || 0;
+	y = y || 0;
+	theta = theta || 0;
+	this.children = [];
 	this.vel = {0:0,1:0,length:2};
 	this.accel = {0:0,1:0,length:2};
+	Object.defineProperties(this,{
+		x:{
+			get:function(){
+				return x;
+			},
+			set:function(nx){
+				var dif = nx - x;
+				x = nx;
+				for(var i in this.children){
+					this.children[i].x+=dif;
+				}
+			},
+			configurable:true
+		},
+		y:{
+			get:function(){
+				return y;
+			},
+			set:function(ny){
+				var dif = ny - y;
+				y = ny;
+				for(var i in this.children){
+					this.children[i].y+=dif;
+				}
+			},
+			configurable:true
+		},
+		theta:{
+			get:function(){
+				return theta;
+			},
+			set:function(ntheta){
+				var dif = ntheta - theta;
+				theta = ntheta;
+				var c = Math.cos(dif);
+				var s = Math.sin(dif);
+				for(var i in this.children){
+					var x = this.children[i].x;
+					var y = this.children[i].y;
+					this.children.x = x*c - y*s;
+					this.children.y = x*s + y*c;
+				}
+			},
+			configurable:true
+		}
+	})
+	
 	return this;
 }
 MovementState.prototype = Object.defineProperties(
@@ -470,6 +621,22 @@ MovementState.prototype = Object.defineProperties(
 			this.accel[1] = scalarAcceleration * (y/l);
 			return this;
 		},
+		addChild: function(child){
+			if(typeof child.x == 'number' && typeof child.y == 'number' && typeof child.theta == 'number'){
+				this.children.push(child);
+				return child;
+			}else{
+				throw 'invalid attempt to add child to movement state'
+			}
+		},
+		removeChild:function(child){
+			for(var i=0; i<this.children.length; i++){
+				if(this.children[i]==child){
+					this.children.splice(i,1);
+				}
+			}
+			return child;
+		},
 		doMove:true
 	},
 	{
@@ -519,11 +686,19 @@ function BasicCollider(x,y,width,height,elasticity){
 	this.vel = {0:0,1:0,length:2};
 	this.accel = {0:0,1:0,length:2};
 }
-BasicCollider.prototype = fillProperties(new MovementState(0,0),{
+BasicCollider.prototype = fillProperties(new Box(),fillProperties(new MovementState(0,0),{
 	width: 0,
 	height: 0,
+	mass: 1,
+	rayTraceEnabled: true,
+	forcesEnabled: true,
+	addForce: function(x,y){
+		this.accel[0]+=x/this.mass;
+		this.accel[1]+=y/this.mass;
+	},
 	onCollision: function(){},
-	fineCheck: function(){return true;},
+	fineCheck: function(x1,y1,x2,y2){return true;},
+	fineRayCheck: function(x1,y1,x2,y2){return true;},
 	adjust: false,
 	doLineCheck: true
-});
+}));

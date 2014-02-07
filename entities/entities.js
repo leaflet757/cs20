@@ -199,8 +199,7 @@ Entity.prototype=(function(){
 	}
 })();
 
-
-
+importS('entities/weaponManager.js');
 importS('entities/player.js');
 importS('entities/miscEntities.js');
 importS('entities/weapons.js');

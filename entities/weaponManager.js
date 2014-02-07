@@ -1,27 +1,39 @@
 function WeaponManager()
 {
- // instance
+	// instance variables
  this.weaponList = [];
  this.position = 0;
- this.currentWeapon = NULL;
+ this.currentWeapon = 'undefined'; // is entitiy
 }
 
 WeaponManager.prototype = 
 {
- // class
- fire: function() {
-	
- }, 
+ 	fire: function() {
+ 		console.log("fire");
+ 		return;
+ 	},
  
- add: function(tag) {
-	weaponList[position++] = tag;
-	if (this.currentWeapon == NULL)
-	{
-		currentWeapon = weaponList[0];
-	}
- },
- 
- clear: function() {
-	
- }
+ 	swap: function(index) {
+ 		if (index < this.position) {
+ 			this.currentWeapon = this.WeaponList[index];
+ 		} else {
+ 			console.error("unable to switch weapons");
+ 		}
+ 		return;
+ 	},
+ 	
+ 	add: function(item) {
+		this.weaponList[this.position++] = item;
+			if (currentWeapon == 'undefined') {
+				this.currentWeapon = this.weaponList[0];			
+			}
+ 		return;
+ 	},
+ 	
+ 	clear: function() {
+ 		this.position = 0;
+ 		this.weaponList = [];
+ 		this.currentWeapon = NULL;
+ 		return;
+ 	}
 }
