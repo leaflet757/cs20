@@ -20,7 +20,8 @@ function loadSource(){
 		'components/physics/physics.js',
 		'components/graphics/graphics.js',
 		'components/sound/sound.js',
-		'entities/entities.js'
+		'entities/entities.js',
+		'entities/map.js'
 	]
 	
 	for(var i in scriptSource){
@@ -153,35 +154,35 @@ function initScene(){
 	graphics.addToDisplay(cursor,"gl_main")
 	ticker.add(cursor);
 	
-	var testLines= [
-		0.0, 0.0,	512, 0.0,
-		512, 0.0,   512, 128,
-		512, 128,   640, 128,
-		640, 128,   640, 0,
-		640, 0,     1152, 0,
-		1152, 0,    1152, 512,
-		1152,512,   640, 512,
-		640, 512,   640, 394,
-		640, 394,   512, 394,
-		512, 394,   512, 512,
-		512, 512,   0.0, 512,
-		0.0, 512,	0.0, 0.0
-	]
+	// var testLines= [
+		// 0.0, 0.0,	512, 0.0,
+		// 512, 0.0,   512, 128,
+		// 512, 128,   640, 128,
+		// 640, 128,   640, 0,
+		// 640, 0,     1152, 0,
+		// 1152, 0,    1152, 512,
+		// 1152,512,   640, 512,
+		// 640, 512,   640, 394,
+		// 640, 394,   512, 394,
+		// 512, 394,   512, 512,
+		// 512, 512,   0.0, 512,
+		// 0.0, 512,	0.0, 0.0
+	// ]
 	
-	physics.setGeometry(testLines);
+	// physics.setGeometry(testLines);
 	
-	var testMap = fillProperties(new GLDrawable(),{
-		draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-			manager.stroke(1,1,0,1);
-			for(var i = 2; i<testLines.length; i+=2){
-				manager.line(testLines[i-2],testLines[i-1],testLines[i],testLines[i+1],98);
-			}
-		},
-		x: 0,
-		y: 0,
-		width: 512,
-		height: 512
-	});
+	// var testMap = fillProperties(new GLDrawable(),{
+		// draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+			// manager.stroke(1,1,0,1);
+			// for(var i = 2; i<testLines.length; i+=2){
+				// manager.line(testLines[i-2],testLines[i-1],testLines[i],testLines[i+1],98);
+			// }
+		// },
+		// x: 0,
+		// y: 0,
+		// width: 512,
+		// height: 512
+	// });
 	
 	var testSprite = fillProperties(new GLDrawable(),{
 		glInit: function(manager){
@@ -203,7 +204,10 @@ function initScene(){
 	
 	Entities.follower.newInstance(400,400);
 	
-	graphics.addToDisplay(testMap,"gl_main")
+	// graphics.addToDisplay(testMap,"gl_main")
+	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
+	physics.setGeometry(currentMap.lines);
+	graphics.addToDisplay(currentMap,'gl_main');
 }
 
 //initializes game
