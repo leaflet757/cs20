@@ -130,6 +130,39 @@
 				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 			}
 		</script>
+		<script id="text_vs" type="x-shader/x-vertex">
+			precision mediump float;
+			
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+			
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+			  
+			varying vec2 vTextureCoord;
+			
+			void main(void) {
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+				vTextureCoord = aTextureCoord;
+			}
+		</script>
+		<script id="text_fs" type="x-shader/x-fragment">
+			precision mediump float;
+			
+			varying vec2 vTextureCoord;
+      
+			uniform vec3 uTint;
+			uniform float uTintWeight;
+			uniform float uAlpha;
+			
+			uniform sampler2D uSampler;
+			  
+			void main(void) {
+				vec4 textel = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+				float textelWeight = 1.0-uTintWeight;
+				gl_FragColor = vec4((textel.r*textelWeight)+(uTint.r*uTintWeight),(textel.g*textelWeight)+(uTint.g*uTintWeight),(textel.b*textelWeight)+(uTint.b*uTintWeight),textel.a*uAlpha);
+			}
+		</script>
 		<script type="text/javascript" src="libraries/gl-matrix-min.js"></script>
 		<!--this script loads all of the source files for the game-->
 		<script type="text/javascript" src="main.js"></script>

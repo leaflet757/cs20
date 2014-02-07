@@ -214,32 +214,36 @@ Vector = {
 		}
 		return out;
 	},
-	getDir: function(vec){
-		//special cases
-		if(vec[0]==0 && vec[1]==0) return 0; //no angle
-		if(vec[0]==0){
-			if(vec[1]>0) return Math.PI/2;
-			if(vec[1]<0) return Math.PI*(3/2);
+	getDir: function(x,y){
+		if(typeof x == 'object'){
+			y = x[1];
+			x = x[0];
 		}
-		if(vec[1]==0){
-			if(vec[0]>0) return 0;
-			if(vec[0]<0) return Math.PI;
+		//special cases
+		if(x==0 && y==0) return 0; //no angle
+		if(x==0){
+			if(y>0) return Math.PI/2;
+			if(y<0) return Math.PI*(3/2);
+		}
+		if(y==0){
+			if(x>0) return 0;
+			if(x<0) return Math.PI;
 		}
 		
 		//general case
 		var quad,theta;
 		//atan in quadrant
-		theta = Math.atan(Math.abs(vec[1])/Math.abs(vec[0]));
+		theta = Math.atan(Math.abs(y)/Math.abs(x));
 		
 		//get quadrant
-		if(vec[0]>0){
-			if(vec[1]>0){
+		if(x>0){
+			if(y>0){
 				quad = 1;
 			}else{
 				quad = 4;
 			}
 		}else{
-			if(vec[1]>0){
+			if(y>0){
 				quad = 2;
 			}else{
 				quad = 3;
@@ -296,6 +300,13 @@ Vector = {
 			out[0]=mag;
 		}
 		return out;
+	},
+	dist: function(a,b){
+		var m =0;
+		for(var i = 0; i<a.length; i++){
+			m+=(a[i]-b[i])*(a[i]-b[i])
+		}
+		return Math.sqrt(m);
 	}
 }
 

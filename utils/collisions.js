@@ -98,19 +98,16 @@ var Collisions = {
 		this.lineRes.getRes(xa1,ya1,xa2,ya2,xb1,yb1,xb2,yb2);
 		if(this.comp(this.lineRes.denom,0)){
 			return false;
-		}else if((this.lineRes.ua<0) || (this.lineRes.ub<0)){
-			//console.log(this.lineRes.ua+' '+this.lineRes.ub)
+		}else if((this.lineRes.ua<0) || (this.lineRes.ua>1) || (this.lineRes.ub<0)){
+			// console.log(this.lineRes.ua+' '+this.lineRes.ub)
 			return false;
 		}else{
-			if(this.pointOnLine(this.lineRes.point.x,this.lineRes.point.y,xa1,ya1,xa2,ya2)){
-				if(point instanceof Point){
-					point.x = this.lineRes.point.x;
-					point.y = this.lineRes.point.y;
-				}else{
-					return this.lineRes.point; //values of object will change
-				}
+			if(point){
+				point[0] = this.lineRes.point[0];
+				point[1] = this.lineRes.point[1];
+				return point;
 			}else{
-				return false;
+				return this.lineRes.point; //values of object will change
 			}
 		}
 	},
@@ -144,28 +141,6 @@ var Collisions = {
 		}
 	},
 	circleLine: function(xc,yc,radius,xa,ya,xb,yb){
-		if(typeof xc == 'object' && typeof yc == 'object'){
-			var obj1 = xc,
-				obj2 = yc;
-			xc = obj1.x;
-			yc = obj1.y;
-			radius = obj1.radius;
-			xa = obj2.pointA.x;
-			ya = obj2.pointA.y;
-			xb = obj2.pointB.x;
-			yb = obj2.pointB.y;
-		}else{
-			for(var i = 0; i<arguments.length; i++){
-				if(typeof arguments[i] != 'number'){
-					console.trace();
-					throw new Error('Collisions.boxBox: invalid argument type: '+typeof arguments[i])
-				}
-			}
-			if(arguments.length!=7){
-				console.trace();
-				throw new Error('Collisions.boxBox: wrong number of arguments')
-			}
-		}
 		this.circLineRes.getRes(xc,yc,radius,xa,ya,xb,yb);
 		if(this.circLineRes.delta<0){
 			return false;
@@ -180,25 +155,19 @@ var Collisions = {
 		if(this.pointInBox(xc,yc,xb,yb,width,height)){
 			return true;
 		}else{
-			var p=0;
+			if(this.pointInCircle(xb,yb,xc,yc,radius)) return true;
+			if(this.pointInCircle(xb+width,yb,xc,yc,radius)) return true;
+			if(this.pointInCircle(xb+width,yb+height,xc,yc,radius)) return true;
+			if(this.pointInCircle(xb,yb+height,xc,yc,radius)) return true;
 			if(this.circleLine(xc,yc,radius,xb,yb,xb+width,yb)){return true}
 			if(this.circleLine(xc,yc,radius,xb+width,yb,xb+width,yb+height)){return true}
 			if(this.circleLine(xc,yc,radius,xb+width,yb+height,xb,yb+height)){return true}
-			if(this.circleLine(xc,yc,radius,xb,yb,xb,yb+height)){return true}
+			if(this.circleLine(xc,yc,radius,xb,yb+height,xb,yb)){return true}
 		}
 		return false;
 	},
 	pointInCircle: function(x,y,xc,xy,radius){
-		if(typeof x == 'object' && typeof y == 'object'){
-			var circle = x,
-				point = y;
-			x = point.x;
-			y = point.y;
-			xc = circle.x;
-			xy = circle.y;
-			radius = circle.radius;
-		}
-		return this.pointDistance(xc,xy,x,y)<radius;
+		return this.pointDist(xc,xy,x,y)<radius;
 	},
 	pointInBox: function(x,y,xb,yb,width,height){
 		return (x>xb) && (x<xb+width) && (y>yb) && (y<yb+height);
@@ -214,10 +183,10 @@ var Collisions = {
 	boxRay: function(x,y,width,height,xa,ya,xb,yb){
 		return 	(this.pointInBox(xa,ya,x,y,width,height))					||
 				(this.pointInBox(xb,yb,x,y,width,height)) 					||
-				(this.lineLine(x,y,x+width,y,xa,ya,xb,yb))  				||
-				(this.lineLine(x+width,y,x+width,y+height,xa,ya,xb,yb)) 	||
-				(this.lineLine(x+width,y+height,x,y+height,xa,ya,xb,yb)) 	||
-				(this.lineLine(x,y,x,y+height,xa,ya,xb,yb)); 
+				(this.lineRay(x,y,x+width,y,xa,ya,xb,yb))  				||
+				(this.lineRay(x+width,y,x+width,y+height,xa,ya,xb,yb)) 	||
+				(this.lineRay(x+width,y+height,x,y+height,xa,ya,xb,yb)) 	||
+				(this.lineRay(x,y+height,x,y,xa,ya,xb,yb)); 
 	},
 	pointOnLine: function(x,y,ax,ay,bx,by){
 		if(ax==bx){

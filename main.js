@@ -183,6 +183,24 @@ function initScene(){
 		height: 512
 	});
 	
+	var testSprite = fillProperties(new GLDrawable(),{
+		glInit: function(manager){
+			this.sprite = manager.createSprite('resources/img/emberButton.png')
+			this.sprite.x = 128;
+			this.sprite.y = 128;
+			this.sprite.width = 128;
+			this.sprite.height = 128;
+		},
+		draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+			this.sprite.draw();
+		},
+		x: 128,
+		y: 128,
+		width: 128,
+		height: 128
+	});
+	// graphics.addToDisplay(testSprite,'gl_main');
+	
 	Entities.follower.newInstance(400,400);
 	
 	graphics.addToDisplay(testMap,"gl_main")
