@@ -227,11 +227,10 @@ Entities.add('mine', Entities.create(
 				state.alive = true;
 				state.life = 2;
 				
-				var blastbox.width = ;
-				blastbox.height = ;
-				blastbox.width = ;
-				blastbox.x = ;
-				blastbox.y = ;
+				var blastbox.width = 200;
+				blastbox.height = 200;
+				blastbox.x = x - 100;
+				blastbox.y = y - 100;
 				
 				if(!state.first){
 					fillProperties(state, Entities.createStandardState(
