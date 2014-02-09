@@ -161,6 +161,15 @@ function initPhysics(){
 					s+=this.sw.size();
 				}
 				return s;
+			},
+			draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
+				manager.strokeRect(this.x+this.width/2,this.y+this.height/2,-98,this.width,this.height,0,1,1,1,1);
+				if(this.ne!=null){
+					this.ne.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+					this.nw.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+					this.se.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+					this.sw.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+				}
 			}
 		});
 	}
@@ -319,8 +328,6 @@ function initPhysics(){
 		
 		var queryArray = [];
 		
-		
-		
 		var miscVec = [];
 		
 		var doForces = function(){
@@ -432,8 +439,8 @@ function initPhysics(){
 				if(newLines.length%4 == 0){
 					console.log(newLines.length)
 					lines = newLines;
-					lineTree = new QuadTree(VecArray.getCorner(newLines,2,0),VecArray.getCorner(newLines,2,1),VecArray.getMaxDif(newLines,2,0),VecArray.getMaxDif(newLines,2,1));
-					colliderTree = new QuadTree(VecArray.getCorner(newLines,2,0),VecArray.getCorner(newLines,2,1),VecArray.getMaxDif(newLines,2,0),VecArray.getMaxDif(newLines,2,1));
+					lineTree = new QuadTree(VecArray.getCorner(newLines,2,0)-8,VecArray.getCorner(newLines,2,1)-8,VecArray.getMaxDif(newLines,2,0)+16,VecArray.getMaxDif(newLines,2,1)+16);
+					colliderTree = new QuadTree(VecArray.getCorner(newLines,2,0)-8,VecArray.getCorner(newLines,2,1)-8,VecArray.getMaxDif(newLines,2,0)+16,VecArray.getMaxDif(newLines,2,1)+16);
 					
 					var temp = quadNodeSizeLimit;
 					quadNodeSizeLimit = 1;
@@ -507,6 +514,9 @@ function initPhysics(){
 			*/
 			radialForce: function(x,y,radius,mag){
 				radialForces.push(x,y,radius,mag);
+			},
+			draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
+				if(lineTree) lineTree.draw(gl,delta,screen,manager,pMatrix,mvMatrix)
 			},
 			clear: function(){
 				colliders.length = 1;
