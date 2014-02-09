@@ -239,13 +239,12 @@ Entities.add('player', Entities.create((function(){
 				}
 			}
 			
-			// TODO: weapon manager
+			// weapon manager
 			// This section is used for weapons testing
-			// var weaponManager = new WeaponManager();
 			var a = new WeaponManager();
 			a.add(new BeamWeapon());
 			a.add(new RocketWeapon());
-			a.add(new WaveWeapon());
+			a.add(new MineWeapon());
 			var weaponsCheck = function() { // fires currently selected weapon
 				if (mouse.left)
 				{

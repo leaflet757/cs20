@@ -54,7 +54,6 @@ Entities.add('rocket', Entities.create(
 							mvMatrix.translate(this.x, this.y, 0);
 							mvMatrix.rotateZ(this.theta);
 							this.animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
-						
 						}
 					},x,y,16,16,1));
 					
@@ -227,25 +226,34 @@ Entities.add('mine', Entities.create(
 			create: function(state,x,y){
 				state.alive = true;
 				state.life = 2;
+				
+				var blastbox.width = ;
+				blastbox.height = ;
+				blastbox.width = ;
+				blastbox.x = ;
+				blastbox.y = ;
+				
 				if(!state.first){
-					fillProperties(state, Entities.createStandardCollisionState(
+					fillProperties(state, Entities.createStandardState(
 					{
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillEllipse(this.x,this.y,0,this.width,this.height,0,.5,1,.5,1);
+							manager.fillEllipse(this.x+this.width/2,this.y+this.height/2,0,16,16,0,.5,1,.5,1);
 						}
 					},x,y,16,16,1.1));
 					state.tick = function(delta){
 						this.life-=delta;
 						this.alive = this.life>0;
 						if (!this.alive) {
-							// explosion
+							for (var i = 0; i < 50; i++)
+								Entities.explosion.newInstance(state.x, state.y);
+							// collision check
 						}
 					}
 					
 					state.first = true;
 				}
-				state.x = x;
-				state.y = y;
+				state.x = x - state.width/2;
+				state.y = y - state.height/2;
 				graphics.addToDisplay(state,'gl_main');
 				ticker.add(state);
 				physics.add(state);
@@ -258,7 +266,6 @@ Entities.add('mine', Entities.create(
 		};
 	})())
 );
-//ticker.add(Entities.mine.def);
 
 // WaveWeapon -- 
 function WaveWeapon(){
@@ -267,6 +274,8 @@ function WaveWeapon(){
 	var theta = 0;
 	var thickness = 156;
 	var length = 100;
+	var radius = 128;
+	var wAngle = 40;
 	
 	graphics.addToDisplay(this, 'gl_main');
 	
@@ -280,12 +289,6 @@ function WaveWeapon(){
 	};
 	this.fire = function() {
 		this.visible = true;
-		var hits = [];
-		var p = Entities.player.getInstance(0);
-		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		//if (traceResult.length > 1) traceResult[1].moveToward(p.cx,p.cy,-300);
-		vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy);
-		//traceResult[0].accelerateToward(vec[0]*-1, vec[1]*-1, 100);
 	};
 	this.holdFire = function() {
 		this.visible = false;
@@ -300,82 +303,83 @@ function BeamWeapon(){
 	var theta = 0;
 	var thickness = 4;
 	var length = 512;
+	var hits = [];
 	
-	var animator = new VertexAnimator("basic", 
-		{
-			beamColor: 
-				fillProperties(// TODO: change to triangular verticies
-					[0,1,0,1,
-					0,1,0,1,
-					0,1,0,1],
-					{
-						attributeId: "vertexColor",
-						items: 3,
-						itemSize: 4
-					}), 
-			beamPosition: 
-				fillProperties([
-					0,0,0,
-					1,1,0,
-					-1,1,0],
-					{
-						attributeId: "vertexPosition",
-						items: 3,
-						itemSize: 3
-					})
-			},
-		{},6);					
-	animator.addKeyframe("active", 
-			{
-				beamColor: 
-					fillProperties([
-						0,1,0,1,
-						0,1,0,1,
-						0,1,0,1],
-					{
-						attributeId: "vertexColor",
-						items: 3,
-						itemSize: 4
-				}), 
-				beamPosition: 
-					fillProperties([
-						0,0,0,
-						1,512,0,
-						-1,-512,0],
-					{
-						attributeId: "vertexPosition",
-						items: 3,
-						itemSize: 3
-					})
-				},
-		{},6);					
-	animator.addKeyframe("starting", 
-		{
-			beamColor: 
-			fillProperties(
-				[0,1,0,1,
-				0,1,0,1,
-				0,1,0,1],
-				{
-					attributeId: "vertexColor",
-					items: 3,
-					itemSize: 4
-				}), 
-			beamPosition: 
-			fillProperties([
-				0,0,0,
-				1,1,0,
-				-1,1,0],
-				{
-					attributeId: "vertexPosition",
-					items: 3,
-					itemSize: 3
-			})
-		},
-		{},6);
-	
- 	animator.setCurrentKeyframe("starting",0);
- 	animator.setCurrentKeyframe("active", 5);
+//	 var animator = new VertexAnimator("basic", 
+// 		{
+// 			beamColor: 
+// 				fillProperties(// TODO: change to triangular verticies
+// 					[0,1,0,1,
+// 					0,1,0,1,
+// 					0,1,0,1],
+// 					{
+// 						attributeId: "vertexColor",
+// 						items: 3,
+// 						itemSize: 4
+// 					}), 
+// 			beamPosition: 
+// 				fillProperties([
+// 					0,0,0,
+// 					1,1,0,
+// 					-1,1,0],
+// 					{
+// 						attributeId: "vertexPosition",
+// 						items: 3,
+// 						itemSize: 3
+// 					})
+// 			},
+// 		{},6);					
+// 	animator.addKeyframe("active", 
+// 			{
+// 				beamColor: 
+// 					fillProperties([
+// 						0,1,0,1,
+// 						0,1,0,1,
+// 						0,1,0,1],
+// 					{
+// 						attributeId: "vertexColor",
+// 						items: 3,
+// 						itemSize: 4
+// 				}), 
+// 				beamPosition: 
+// 					fillProperties([
+// 						0,0,0,
+// 						1,512,0,
+// 						-1,-512,0],
+// 					{
+// 						attributeId: "vertexPosition",
+// 						items: 3,
+// 						itemSize: 3
+// 					})
+// 				},
+// 		{},6);					
+// 	animator.addKeyframe("starting", 
+// 		{
+// 			beamColor: 
+// 			fillProperties(
+// 				[0,1,0,1,
+// 				0,1,0,1,
+// 				0,1,0,1],
+// 				{
+// 					attributeId: "vertexColor",
+// 					items: 3,
+// 					itemSize: 4
+// 				}), 
+// 			beamPosition: 
+// 			fillProperties([
+// 				0,0,0,
+// 				1,1,0,
+// 				-1,1,0],
+// 				{
+// 					attributeId: "vertexPosition",
+// 					items: 3,
+// 					itemSize: 3
+// 			})
+// 		},
+// 		{},6);
+//  	animator.setCurrentKeyframe("starting",0);
+//  	animator.setCurrentKeyframe("active", 5);
+ 	
 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
@@ -388,7 +392,7 @@ function BeamWeapon(){
 	};
 	this.fire = function() {
 		this.visible = true;
-		var hits = [];
+		hits.length = 0;
 		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
@@ -396,12 +400,51 @@ function BeamWeapon(){
 		
 		//vec2.set(vec, (mouse.x - (p.cx - p.x)), (mouse.yInv - (p.cy - p.y)));
 		//p.accelerateToward(vec[0], vec[1], -100);
-		
-		animator.unpause();
 	};
 	this.holdFire = function() {
 		this.visible = false;
-		animator.pause();
 	}
 }
 BeamWeapon.prototype = new GLDrawable();
+
+
+// Temp: Explosion
+Entities.add('explosion', Entities.create(
+	(function(){
+		return {
+			create: function(state,x,y){
+				state.alive = true;
+				state.life = 0.5;
+				var width = 24;
+				var height = 24;
+				if(!state.first){
+					fillProperties(state, Entities.createStandardState(
+					{
+						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+							manager.fillEllipse(this.x,this.y,0,width,height,0,1,0.5,0,1);
+						}
+					},x,y,width,height,1.1));
+					state.tick = function(delta){
+						this.life-=delta;	
+						this.alive = this.life>0;
+						
+					}
+					
+					state.first = true;
+				}
+				state.x = x;
+				state.y = y;
+				state.vel[0] = Math.random()*400 - 200;
+				state.vel[1] = Math.random()*400 - 200;
+				graphics.addToDisplay(state,'gl_main');
+				ticker.add(state);
+				physics.add(state);
+			},
+			destroy: function(state){
+				graphics.removeFromDisplay(state,'gl_main');
+				ticker.remove(state);
+				physics.remove(state);
+			}
+		};
+	})())
+);
