@@ -227,7 +227,8 @@ Entities.add('mine', Entities.create(
 				state.alive = true;
 				state.life = 2;
 				
-				var blastbox.width = 200;
+				var blastbox = new Object();
+				blastbox.width = 200;
 				blastbox.height = 200;
 				blastbox.x = x - 100;
 				blastbox.y = y - 100;
@@ -302,6 +303,8 @@ function BeamWeapon(){
 	var theta = 0;
 	var thickness = 4;
 	var length = 512;
+	var endX = 0;
+	var endY = 0;
 	var hits = [];
 	
 //	 var animator = new VertexAnimator("basic", 
@@ -383,11 +386,12 @@ function BeamWeapon(){
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		var p = Entities.player.getInstance(0);
-		mvMatrix.push();
-		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-		mvMatrix.rotateZ(theta + Math.PI / 2);
-		manager.fillRect(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0,1,0,1);
-		mvMatrix.pop();
+		//mvMatrix.push();
+		//theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
+		//mvMatrix.rotateZ(theta + Math.PI / 2);
+		//manager.fillRect(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0,1,0,1);
+		manager.line(p.cx, p.cy, endX, endY,0,0,1,0,1);
+		//mvMatrix.pop();
 	};
 	this.fire = function() {
 		this.visible = true;
@@ -396,6 +400,9 @@ function BeamWeapon(){
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
 		if (traceResult.length > 3) traceResult[1].accelerateToward(p.cx,p.cy,-80);
+		
+		endX = traceResult[traceResult.length - 2];
+		endY = traceResult[traceResult.length - 1];
 		
 		//vec2.set(vec, (mouse.x - (p.cx - p.x)), (mouse.yInv - (p.cy - p.y)));
 		//p.accelerateToward(vec[0], vec[1], -100);

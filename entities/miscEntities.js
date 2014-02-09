@@ -1,4 +1,3 @@
-
 Entities.add('clickBox',Entities.create(
 	(function(){
 		return {
@@ -32,36 +31,5 @@ Entities.add('clickBox',Entities.create(
 		};
 	})())
 );
-
-
-// ticker.add({
-<<<<<<< HEAD
-// 	misc: [],
-// 	tick:function(delta){
-// 		if(mouse.left){
-// 			Entities.clickBox.newInstance(mouse.x,mouse.yInv);
-// 		}
-// 		if(mouse.right){
-// 			this.misc.length = 0;
-// 			var p = Entities.player.getInstance(0);
-// 			var traceResult = physics.rayTrace(this.misc,p.x+p.width/2,p.y+p.height/2,mouse.x,mouse.yInv);
-// 			if(traceResult.length>3)traceResult[1].moveToward(p.cx,p.cy,-300);
-// 		}
-// 	}
-=======
-	// misc: [],
-	// tick:function(delta){
-		// if(mouse.left){
-			// Entities.clickBox.newInstance(mouse.x,mouse.yInv);
-		// }
-		// if(mouse.right){
-			// this.misc.length = 0;
-			// var p = Entities.player.getInstance(0);
-			// var traceResult = physics.rayTrace(this.misc,p.x+p.width/2,p.y+p.height/2,mouse.x,mouse.yInv);
-			// if(traceResult.length>3)traceResult[1].moveToward(p.cx,p.cy,-300);
-		// }
-	// }
->>>>>>> master
-// })
 
 
