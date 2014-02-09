@@ -23,6 +23,9 @@ Entities = fillProperties(new Updatable(),{
 	createStandardCollisionState: function(obj,x,y,width,height,elasticity){
 		return fillProperties(new GLDrawable(),fillProperties(new BasicCollider(x,y,width,height,elasticity),obj));
 	},
+	createPolygonCollisionState: function(obj,x,y,width,height,elasticity,verts,itemSize){
+		return fillProperties(new GLDrawable(),fillProperties(new PolygonCollider(x,y,width,height,elasticity,verts,itemSize),obj));
+	},
 	/**
 	*	does a type check then adds the entity to Entities as a property with the given name
 	*/

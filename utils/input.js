@@ -16,6 +16,12 @@ var input = {
 				k.press(e);
 			},		
 			false);
+		element.addEventListener(
+			'keypress',
+			function(e){
+				e.preventDefault();
+			},		
+			false);
 	},
 	Mouse: function(element,frame){
 		var rect = frame.getBoundingClientRect();

@@ -436,6 +436,25 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 					theta = t;
 					rotateVerts(dif);
 				}
+			},
+			getVerts: {
+				value: function(array,offsetX,offsetY,startOffset,endOffset){
+					startOffset = startOffset || 0;
+					endOffset = endOffset || 0;
+					vertCheck();
+					if(changed){
+						getVerts();
+					}
+					for(var i = startOffset*vertexSize; i<verts.length-(endOffset*vertexSize); i+=vertexSize){
+						for(var j = 0; j<vertexSize; j++){
+							array.push(verts[i+j]);
+						}
+						array[array.length-vertexSize]+=offsetX;
+						array[(array.length+1)-vertexSize]+=offsetY;
+					}
+					return array;
+				},
+				writable: false
 			}
 		}
 	})());

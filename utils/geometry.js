@@ -8,10 +8,10 @@
 *This function defines a box with a location width and height
 */
 function Box(x,y,width,height){
-	if(typeof x == 'number') this.x = x;
-	if(typeof y == 'number') this.y = y;
-	if(typeof width == 'number') this.width = width;
-	if(typeof height == 'number') this.height = height;
+	this.x = x || 0;
+	this.y = y || 0;
+	this.width = width || 0;
+	this.height = height || 0;
 	return this;
 }
 Box.prototype=Object.defineProperties({
@@ -48,6 +48,24 @@ Box.prototype=Object.defineProperties({
 				(x+width<this.x+this.width) &&
 				(y > this.y) &&
 				(y+height < this.y+this.height);
+	},
+	scale: function(w,h){
+		w = w || 1;
+		h = h || w;
+		this.scaleW(w);
+		this.scaleH(h);
+	},
+	scaleW: function(w){
+		var n = this.width*w;
+		var dif = n-this.width;
+		this.x-=(dif/2)
+		this.width = n;
+	},
+	scaleH: function(h){
+		var n = this.height*h;
+		var dif = n-this.height;
+		this.y-=(dif/2)
+		this.height = n;
 	}
 },
 {

@@ -89,6 +89,38 @@ function initInput(){
 		})()
 	);
 	
+	keyboard.addKeyListener(9,'tab',(function(){
+		var pressed = false;
+		var mapView = false;
+		var scaleFactor = 10;
+		return {
+			onPress:function(){
+				if(!pressed){
+					pressed = true;
+					if(graphics){
+						var screen = graphics.getScreen('gl_main');
+						if(screen){
+							if(mapView){
+								screen.scale(1/scaleFactor);
+								mapView = false;
+								Loop.paused = false; 
+							}else{
+								
+								console.log('press')
+								
+								ticker.addTimer(function(){screen.scale(scaleFactor);mapView = true;Loop.paused = true; console.log('here');},0,0,false);
+							}
+						}
+					}
+				}
+			},
+			onRelease:function(){
+				pressed = false;
+			}
+		}
+		})()
+	);
+	
 	mouse = new input.Mouse(window,document.getElementById("Display"));
 }
 

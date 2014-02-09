@@ -47,16 +47,17 @@ function initLoop(){
 		var delta = Math.min((n-previousTime)*0.001,0.064);//floored at 15fps
 		// var delta =.016;
 		previousTime = n;
-		if(!paused){
-			for(var i in updatables){
-				updatables[i].preupdate(delta)
-			}
-			for(var i in updatables){
-				updatables[i].update(delta)
-			}
-			for(var i in updatables){
-				updatables[i].postupdate(delta)
-			}
+		if(paused){
+			delta = 0;
+		}
+		for(var i in updatables){
+			updatables[i].preupdate(delta)
+		}
+		for(var i in updatables){
+			updatables[i].update(delta)
+		}
+		for(var i in updatables){
+			updatables[i].postupdate(delta)
 		}
 	}
 	
