@@ -139,7 +139,6 @@ function initPhysics(){
 			},
 			getRaySet: function(array,x1,y1,x2,y2){
 				if(Collisions.boxRay(this.x,this.y,this.width,this.height,x1,y1,x2,y2)){
-					console.Log
 					if(this.ne!=null){
 						this.ne.getRaySet(array,x1,y1,x2,y2);
 						this.nw.getRaySet(array,x1,y1,x2,y2);
@@ -477,29 +476,33 @@ function initPhysics(){
 			rayTrace: function(array,x1,y1,x2,y2){
 				var lineSet = lineTree.getRaySet(queryArray,x1,y1,x2,y2);
 				var line = null;
-				var p;
+				var px,py;
 				var dist = -1;
 				
-				for(var i in lineSet){
+				//console.log(lineSet.length);
+				for(var i = 0; i<lineSet.length; i++){
 					var xa = lines[lineSet[i]], ya = lines[lineSet[i]+1], xb = lines[lineSet[i]+2],yb = lines[lineSet[i]+3];
 					var res = Collisions.lineRay(xa,ya,xb,yb,x1,y1,x2,y2);
 					// console.log(res);
-					if(res && (dist<0 || Collision.pointDist(res[0],res[1],x1,y1)>dist)){
+					var tempDist = pythag(res[0]-x1,res[1]-y1);
+					if(res && (dist<0 || tempDist<dist)){
+						dist = tempDist;
 						line = lineSet[i];
-						p = res;
+						px = res[0];
+						py = res[1];
 					}
 				}
 				
-				if(line == null || !p) throw 'ray trace error: can not find line'
+				if(line == null || !px) throw 'ray trace error: can not find line'
 				lineSet.length = 0
 				
 				var collided = colliderTree.getRaySet(lineSet,x1,y1,x2,y2);
 				
 				for(var i  in collided){
 					var o = collided[i];
-					if(Collisions.boxBox(o.x,o.y,o.height,o.width,Math.min(x1,x2),Math.min(y1,y2),Math.abs(x1-x2),Math.abs(y1-y2)) && 
-							Collisions.boxLine(o.x,o.y,o.height,o.width,x1,y1,p[0],p[1]) && 
-							o.fineCheck(x1,y1,p[0],p[1])){
+					if(Collisions.boxBox(o.x,o.y,o.height,o.width,Math.min(x1,px),Math.min(y1,py),Math.abs(x1-px),Math.abs(y1-py)) &&
+							Collisions.boxLine(o.x,o.y,o.height,o.width,x1,y1,px,py) && 
+							o.fineCheck(x1,y1,px,py)){
 						array.push(o);
 					}
 				}
@@ -507,7 +510,7 @@ function initPhysics(){
 				sortX = x1;
 				sortY = y1;
 				array.sort(sortComp);
-				array.push(p[0],p[1]);
+				array.push(px,py);
 				
 				collided.length = 0;
 				return array;

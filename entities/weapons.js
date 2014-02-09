@@ -1,3 +1,31 @@
+// RocketWeapon -- 
+function RocketWeapon(){
+	var time = 0;
+	var p = Entities.player.getInstance(0);
+	var dir = {0:0, 1:0, length:2};
+	
+	ticker.add(
+		{tick:function (delta) {
+			if (time > 0)
+				time-=delta;
+		}
+	});
+	
+	this.fire = function() {
+		if (time <= 0) {
+			time = 0.5;
+			dir[0] = mouse.x - p.cx;
+			dir[1] = mouse.yInv - p.cy;
+			Entities.rocket.newInstance(p.cx,p.cy, dir);
+		}
+	};
+	
+	this.holdFire = function() {
+		
+	};
+}
+RocketWeapon.prototype = {};
+
 // Rocket -- 
 Entities.add('rocket', Entities.create(
 	(function(){
@@ -26,7 +54,6 @@ Entities.add('rocket', Entities.create(
 							mvMatrix.translate(this.x, this.y, 0);
 							mvMatrix.rotateZ(this.theta);
 							this.animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
-						
 						}
 					},x,y,16,16,1));
 					
@@ -162,28 +189,35 @@ Entities.add('rocket', Entities.create(
 				graphics.removeFromDisplay(state,'gl_main');
 				ticker.remove(state);
 				physics.remove(state);
-			},
-			tick: (function(){
-				var dir = {0:0,1:0,length:2};
-				var time = 0.5;
-				return function(delta)
-					{
-						time -= delta;
-						if (mouse.pressed && time <= 0)
-						{
-							var s = Entities.player.getInstance(0);
-							dir[0] = mouse.x - s.cx;
-							dir[1] = mouse.yInv - s.cy;
-							Entities.rocket.newInstance(s.cx,
-									s.cy, dir);
-							time = 0.5;
-						}
-					}
-				})()
+			}
 		};
 	})())
 );
-//ticker.add(Entities.rocket.def);
+
+// MineWeapon -- 
+function MineWeapon(){
+	var time = 0;
+	var p = Entities.player.getInstance(0);
+	
+	ticker.add(
+		{tick:function (delta) {
+			if (time > 0)
+				time-=delta;
+		}
+	});
+	
+	this.fire = function() {
+		if (time <= 0) {
+			Entities.mine.newInstance(p.cx,p.cy);
+			time = 1;
+		}
+	};
+	
+	this.holdFire = function() {
+		
+	};
+}
+MineWeapon.prototype = {};
 
 // Mine -- 
 Entities.add('mine', Entities.create(
@@ -191,27 +225,35 @@ Entities.add('mine', Entities.create(
 		return {
 			create: function(state,x,y){
 				state.alive = true;
-				state.life = 1;
+				state.life = 2;
+				
+				var blastbox = new Object();
+				blastbox.width = 200;
+				blastbox.height = 200;
+				blastbox.x = x - 100;
+				blastbox.y = y - 100;
+				
 				if(!state.first){
-					fillProperties(state, Entities.createStandardCollisionState(
+					fillProperties(state, Entities.createStandardState(
 					{
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillEllipse(this.x,this.y,0,this.width,this.height,0,.5,1,.5,1);
+							manager.fillEllipse(this.x+this.width/2,this.y+this.height/2,0,16,16,0,.5,1,.5,1);
 						}
 					},x,y,16,16,1.1));
 					state.tick = function(delta){
-						this.life-=delta; // Not a number??
+						this.life-=delta;
 						this.alive = this.life>0;
+						if (!this.alive) {
+							for (var i = 0; i < 50; i++)
+								Entities.explosion.newInstance(state.x, state.y);
+							// collision check
+						}
 					}
-					
-					// animator creation
 					
 					state.first = true;
 				}
-				
-				// animator initialization
-				state.x = x;
-				state.y = y;
+				state.x = x - state.width/2;
+				state.y = y - state.height/2;
 				graphics.addToDisplay(state,'gl_main');
 				ticker.add(state);
 				physics.add(state);
@@ -220,172 +262,186 @@ Entities.add('mine', Entities.create(
 				graphics.removeFromDisplay(state,'gl_main');
 				ticker.remove(state);
 				physics.remove(state);
-			},
-			tick: function(delta){
-				if (mouse.pressed)
-				{
-					var s = Entities.player.getInstance(0);
-					Entities.mine.newInstance(s.cx, s.cy);
-				}
 			}
 		};
 	})())
 );
-//ticker.add(Entities.mine.def);
 
-// TODO:Wave -- 
-Entities.add('wave', Entities.create(
+// WaveWeapon -- 
+function WaveWeapon(){
+	var visible = false;
+	var vec = vec2.create();
+	var theta = 0;
+	var thickness = 156;
+	var length = 100;
+	var radius = 128;
+	var wAngle = 40;
+	
+	graphics.addToDisplay(this, 'gl_main');
+	
+	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
+		var p = Entities.player.getInstance(0);
+		mvMatrix.push();
+		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
+		mvMatrix.rotateZ(theta + Math.PI / 2);
+		manager.fillTriangle(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0.6,0,1,1);
+		mvMatrix.pop();
+	};
+	this.fire = function() {
+		this.visible = true;
+	};
+	this.holdFire = function() {
+		this.visible = false;
+	}
+}
+WaveWeapon.prototype = new GLDrawable();
+
+// BeamWeapon -- TODO:Make Pretty
+function BeamWeapon(){
+	var visible = false;
+	var vec = vec2.create();
+	var theta = 0;
+	var thickness = 4;
+	var length = 512;
+	var endX = 0;
+	var endY = 0;
+	var hits = [];
+	
+//	 var animator = new VertexAnimator("basic", 
+// 		{
+// 			beamColor: 
+// 				fillProperties(// TODO: change to triangular verticies
+// 					[0,1,0,1,
+// 					0,1,0,1,
+// 					0,1,0,1],
+// 					{
+// 						attributeId: "vertexColor",
+// 						items: 3,
+// 						itemSize: 4
+// 					}), 
+// 			beamPosition: 
+// 				fillProperties([
+// 					0,0,0,
+// 					1,1,0,
+// 					-1,1,0],
+// 					{
+// 						attributeId: "vertexPosition",
+// 						items: 3,
+// 						itemSize: 3
+// 					})
+// 			},
+// 		{},6);					
+// 	animator.addKeyframe("active", 
+// 			{
+// 				beamColor: 
+// 					fillProperties([
+// 						0,1,0,1,
+// 						0,1,0,1,
+// 						0,1,0,1],
+// 					{
+// 						attributeId: "vertexColor",
+// 						items: 3,
+// 						itemSize: 4
+// 				}), 
+// 				beamPosition: 
+// 					fillProperties([
+// 						0,0,0,
+// 						1,512,0,
+// 						-1,-512,0],
+// 					{
+// 						attributeId: "vertexPosition",
+// 						items: 3,
+// 						itemSize: 3
+// 					})
+// 				},
+// 		{},6);					
+// 	animator.addKeyframe("starting", 
+// 		{
+// 			beamColor: 
+// 			fillProperties(
+// 				[0,1,0,1,
+// 				0,1,0,1,
+// 				0,1,0,1],
+// 				{
+// 					attributeId: "vertexColor",
+// 					items: 3,
+// 					itemSize: 4
+// 				}), 
+// 			beamPosition: 
+// 			fillProperties([
+// 				0,0,0,
+// 				1,1,0,
+// 				-1,1,0],
+// 				{
+// 					attributeId: "vertexPosition",
+// 					items: 3,
+// 					itemSize: 3
+// 			})
+// 		},
+// 		{},6);
+//  	animator.setCurrentKeyframe("starting",0);
+//  	animator.setCurrentKeyframe("active", 5);
+ 	
+	graphics.addToDisplay(this, 'gl_main');
+	
+	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
+		var p = Entities.player.getInstance(0);
+		//mvMatrix.push();
+		//theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
+		//mvMatrix.rotateZ(theta + Math.PI / 2);
+		//manager.fillRect(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0,1,0,1);
+		manager.line(p.cx, p.cy, endX, endY,0,0,1,0,1);
+		//mvMatrix.pop();
+	};
+	this.fire = function() {
+		this.visible = true;
+		hits.length = 0;
+		var p = Entities.player.getInstance(0);
+		
+		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
+		if (traceResult.length > 3) traceResult[1].accelerateToward(p.cx,p.cy,-80);
+		
+		endX = traceResult[traceResult.length - 2];
+		endY = traceResult[traceResult.length - 1];
+		
+		//vec2.set(vec, (mouse.x - (p.cx - p.x)), (mouse.yInv - (p.cy - p.y)));
+		//p.accelerateToward(vec[0], vec[1], -100);
+	};
+	this.holdFire = function() {
+		this.visible = false;
+	}
+}
+BeamWeapon.prototype = new GLDrawable();
+
+
+// Temp: Explosion
+Entities.add('explosion', Entities.create(
 	(function(){
-		var buffered = false;
 		return {
-			create: function(state,x,y,dir){
+			create: function(state,x,y){
 				state.alive = true;
-				state.life = 0.3;
-				state.theta = Vector.getDir(dir);
-				state.delay = 0.15;
-				state.fired = false;
-				state.mx = mouse.x;
-				state.my = mouse.yInv;
+				state.life = 0.5;
+				var width = 24;
+				var height = 24;
 				if(!state.first){
-					fillProperties(state, Entities.createStandardCollisionState(
+					fillProperties(state, Entities.createStandardState(
 					{
-						glInit: function(manager)
-						{
-							if (!buffered)
-							{
-								this.animator.glInit(manager);
-								buffered = true;
-							}
-						},
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							mvMatrix.translate(this.x, this.y, 0);
-							mvMatrix.rotateZ(this.theta);
-							this.animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
-						
+							manager.fillEllipse(this.x,this.y,0,width,height,0,1,0.5,0,1);
 						}
-					},x,y,16,16,1));
-					
+					},x,y,width,height,1.1));
 					state.tick = function(delta){
-						this.life-=delta;
-						this.delay -= delta;
-						if (this.life<=0)
-						{
-							this.alive = false;
-						}
-						if (this.delay <= 0 && !this.fired)
-						{
-							this.fired = true;
-						}
+						this.life-=delta;	
+						this.alive = this.life>0;
+						
 					}
-					
-					state.animator = new VertexAnimator("basic", 
-						{
-						waveColor: 
-							fillProperties([
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1
-							],
-							{
-								attributeId: "vertexColor",
-								items: 5,
-								itemSize: 4
-							}), 
-						wavePosition: 
-							fillProperties([
-								0,0,0,
-								0,16,0,
-								-16,-16,0,
-								0,8,0,
-								16,-16,0,
-								0,16,0
-							],
-							{
-								attributeId: "vertexPosition",
-								items: 5,
-								itemSize: 3
-							})
-						},
-						{},5);
-						
-						state.animator.addKeyframe("small", 
-						{
-						waveColor: 
-							fillProperties([
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1
-							],
-							{
-								attributeId: "vertexColor",
-								items: 5,
-								itemSize: 4
-							}), 
-						wavePosition: 
-							fillProperties([
-								0,0,0,
-								4,7,0,
-								8,0,0,
-								4,-7,0,
-								0,0,0
-							],
-							{
-								attributeId: "vertexPosition",
-								items: 5,
-								itemSize: 3
-							})
-						},
-						{},5);
-						
-						state.animator.addKeyframe("large", 
-						{
-						waveColor: 
-							fillProperties([
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1,
-								0.5,1,1,1
-							],
-							{
-								attributeId: "vertexColor",
-								items: 5,
-								itemSize: 4
-							}), 
-						wavePosition: 
-							fillProperties([
-								0,0,0,
-								35,35,0,
-								64,0,0,
-								35,-35,0,
-								0,0,0
-							],
-							{
-								attributeId: "vertexPosition",
-								items: 5,
-								itemSize: 3
-							})
-						},
-						{},5);
-						
 					
 					state.first = true;
 				}
-				state.animator.setCurrentKeyframe("small",0);
-				state.animator.setCurrentKeyframe("large", state.delay);
 				state.x = x;
 				state.y = y;
-				state.vel[0]=Entities.player.getInstance(0).vel[0];
-				state.vel[1]=Entities.player.getInstance(0).vel[1];
-				state.accel[0] = 0;
-				state.accel[1] = 0;
+				state.vel[0] = Math.random()*400 - 200;
+				state.vel[1] = Math.random()*400 - 200;
 				graphics.addToDisplay(state,'gl_main');
 				ticker.add(state);
 				physics.add(state);
@@ -394,25 +450,7 @@ Entities.add('wave', Entities.create(
 				graphics.removeFromDisplay(state,'gl_main');
 				ticker.remove(state);
 				physics.remove(state);
-			},
-			tick: (function(){
-				var dir = {0:0,1:0,length:2};
-				var time = 0.5;
-				return function(delta)
-					{
-						time -= delta;
-						if (mouse.pressed && time <= 0)
-						{
-							var s = Entities.player.getInstance(0);
-							dir[0] = mouse.x - s.cx;
-							dir[1] = mouse.yInv - s.cy;
-							Entities.wave.newInstance(s.cx,
-									s.cy, dir);
-							time = 0.5;
-						}
-					}
-				})()
+			}
 		};
 	})())
 );
-//ticker.add(Entities.wave.def);
