@@ -23,6 +23,7 @@ WeaponManager.prototype =
  	// Changes Weapon to the specified Index starting at 0
  	swap: function(index) {
  		if (index < this.position) {
+ 			this.currentWeapon.holdFire();
  			this.currentWeapon = this.weaponList[index];
  		} else {
  			console.error("Weapon does not exist in slot: " + index);

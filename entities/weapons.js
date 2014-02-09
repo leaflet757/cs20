@@ -392,10 +392,10 @@ function BeamWeapon(){
 		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		if (traceResult.length > 3) traceResult[1].moveToward(p.cx,p.cy,-300);
+		if (traceResult.length > 3) traceResult[1].accelerateToward(p.cx,p.cy,-80);
 		
-		vec2.set(vec, (mouse.x - (p.cx - p.x)), (mouse.yInv - (p.cy - p.y)));
-		p.accelerateToward(vec[0], vec[1], -100);
+		//vec2.set(vec, (mouse.x - (p.cx - p.x)), (mouse.yInv - (p.cy - p.y)));
+		//p.accelerateToward(vec[0], vec[1], -100);
 		
 		animator.unpause();
 	};
