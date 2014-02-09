@@ -175,7 +175,7 @@ function initPhysics(){
 	}
 	
 	var isCollider = function(obj){
-		return 	isMover(obj) && 
+		return 	isMover(obj) &&  
 				typeof obj.width == 'number' &&
 				typeof obj.height == 'number' &&
 				typeof obj.elasticity == 'number' &&
@@ -265,7 +265,7 @@ function initPhysics(){
 				if(collidingLines.length>0){
 					co.onCollision();
 					if(co.adjust){
-						co.adjust(collidingLines);
+						co.adjust(collidingLines,lines,getLineType);
 					}else{
 						for(var j = 0; j<collidingLines.length; j++){
 							var index = collidingLines[j];
@@ -330,9 +330,9 @@ function initPhysics(){
 		
 		var miscVec = [];
 		
-		var doForces = function(){
+		var doForces = function(delta){
 			if(colliderTree){
-				for(var i = 0; i<radialForces.length; i+=4){
+				for(var i = 0; i<radialForces.length; i+=5){
 					var x = radialForces[i], y = radialForces[i+1], radius = radialForces[i+2], mag = radialForces[i+3];
 					queryArray.length = 0;
 					var effected = colliderTree.get(queryArray,x-(radius/2),y-(radius/2),radius,radius);
@@ -348,9 +348,15 @@ function initPhysics(){
 							}
 						}
 					}
+					radialForces[i+4]-=delta;
+				}
+				for(var i = 0; i<radialForces.length; i+=5){
+					if(radialForces[i+4]<=0){
+						radialForces.splice(i,5);
+					}
 				}
 			}
-			radialForces.length = 0
+			
 		}
 		
 		var sortX =0, sortY = 0;
@@ -360,7 +366,7 @@ function initPhysics(){
 		return {
 			update: function(delta){
 				if(lines)doCollisionCheck(delta);
-				doForces();
+				doForces(delta);
 				for(var i in movers){
 					if(movers[i].doMove)move(movers[i],delta);
 				}
@@ -413,7 +419,19 @@ function initPhysics(){
 			},
 			getCollidersRay: function(array,x1,y1,x2,y2){
 				if(colliderTree){
-					colliderTree.get(array,x1,y1,x2,y2);
+					colliderTree.getRaySet(array,x1,y1,x2,y2);
+					return array;
+				}
+			},
+			getLines: function(array,x,y,width,height){
+				if(lineTree){
+					lineTree.get(array,x,y,width,height);
+					return array;
+				}
+			},
+			getLinesRay: function(array,x1,y1,x2,y2){
+				if(lineTree){
+					lineTree.getRaySet(array,x1,y1,x2,y2);
 					return array;
 				}
 			},
@@ -512,8 +530,8 @@ function initPhysics(){
 			*	creates a force that expands outward
 			*
 			*/
-			radialForce: function(x,y,radius,mag){
-				radialForces.push(x,y,radius,mag);
+			radialForce: function(x,y,radius,mag,t){
+				radialForces.push(x,y,radius,mag,t || 0);
 			},
 			draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
 				if(lineTree) lineTree.draw(gl,delta,screen,manager,pMatrix,mvMatrix)
@@ -712,3 +730,55 @@ BasicCollider.prototype = fillProperties(new Box(),fillProperties(new MovementSt
 	adjust: false,
 	doLineCheck: true
 }));
+
+function PolygonCollider(x,y,width,height,elasticity,verts,itemSize){
+	this.x = x || 0;
+	this.y = y || 0;
+	this.width = width || 0;
+	this.height = height || 0;
+	this.pwidth = width || 0;
+	this.pheight = height || 0;
+	this.elasticity = elasticity || 0;
+	this.verts = verts;
+	this.itemSize = itemSize;
+	this.vel = {0:0,1:0,length:2};
+	this.accel = {0:0,1:0,length:2};
+}
+PolygonCollider.prototype = fillProperties(new BasicCollider(),
+{
+	// fineCheck: function(x1,y1,x2,y2){
+		// return Collisions.polygonLine(x1,y1,x2,y2,this.verts,this.itemSize);
+	// },
+	// fineRayCheck: function(x1,y1,x2,y2){
+		// return Collisions.polygonRay(x1,y1,x2,y2,this.verts,this.itemSize);
+	// },
+	// adjust: function(collidingLines,lines,getLineType){
+		// for(var i = 0; i<collidingLines.length; i++){
+			// var verts = this.verts;
+			// var dist=0;
+			// var x1 = lines[collidingLines[i]],y1 = lines[collidingLines[i]+1],
+				// x2 = lines[collidingLines[i]+2], y2 = lines[collidingLines[i]+3];
+			
+			// switch(getLineType(collidingLines[i])){
+				// case 0://right
+					// if(this.vel[0]>0){
+						// for(var i = 0; i<verts; i+=this.itemSize){
+							// if(verts[i]>x1 && verts[i+1]>=y1 && verts[i+1]<=y2 && dist<verts[i]-x1){
+								// dist = verts[i]-x1;
+							// }
+						// }
+						
+						
+						
+					// }
+					// break;
+				// case 1://left
+					// break;
+				// case 2://down
+					// break;
+				// case 3://up
+					// break;
+			// }
+		// }
+	// }
+})

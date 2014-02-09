@@ -30,8 +30,7 @@ function initGraphics(){
 		this.width=width;
 		this.height=height;
 	}
-	
-	Screen.prototype=fillProperties(new Box,{
+	Screen.prototype=fillProperties(new Box(),{
 		follower: null,
 		update: function(){
 			if(this.follower != null){

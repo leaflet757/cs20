@@ -47,9 +47,6 @@ Entities.add('player', Entities.create((function(){
 		var pa = vec3.set(vec3.create(),0,radius,0);
 		var pc = vec3.set(vec3.create(),radius*Math.sin((Math.PI*2)/3),radius*Math.cos((Math.PI*2)/3),0);
 		var pb = vec3.set(vec3.create(),radius*Math.sin((Math.PI*4)/3),radius*Math.cos((Math.PI*4)/3),0);
-		console.log(vec3.str(pa));
-		console.log(vec3.str(pb));
-		console.log(vec3.str(pc));
 		var temp = vec3.create();
 		
 		verts.push(pa[0],pa[1],pa[2]);
@@ -68,9 +65,6 @@ Entities.add('player', Entities.create((function(){
 			verts.push(temp[0],temp[1],temp[2]);
 		}
 		verts.push(pa[0],pa[1],pa[2]);
-		
-		// verts.push(0,radius,0);
-		console.log("verts "  + verts.length+ ' '+ numOfVerts);
 		
 		return verts;
 	}
@@ -250,7 +244,7 @@ Entities.add('player', Entities.create((function(){
 // 			}
 		
 			Object.defineProperties(
-					fillProperties(fillProperties(state,fillProperties(new GLDrawable(),new BasicCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5))),
+					fillProperties(fillProperties(state,fillProperties(new GLDrawable(),new PolygonCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5,null,3))),
 						{
 							cx: x,
 							cy: y,
@@ -299,7 +293,7 @@ Entities.add('player', Entities.create((function(){
 						stateX = state.cx+animator.x;
 						stateY = state.cy+animator.y;
 					}
-					
+					var verts = new Array();
 					return {
 						x:{
 							get:function(){
@@ -329,6 +323,13 @@ Entities.add('player', Entities.create((function(){
 						height:{
 							get:function(){
 								return animator.height;
+							},
+							set:function(){}
+						},
+						verts:{
+							get:function(){
+								verts.length = 0;
+								return animator.getVerts(verts,this.cx,this.cy,1,1);
 							},
 							set:function(){}
 						}

@@ -204,7 +204,7 @@ var Collisions = {
 	},
 	pointInPolygon: function(x,y,verts,itemSize){//raytrace test
 		var c = 0,l;
-		if(this.lineRay(verts[0],verts[1],verts[vert.length-itemSize],verts[vert.length+1-itemSize],x,y,x+1,y)){
+		if(this.lineRay(verts[0],verts[1],verts[verts.length-itemSize],verts[verts.length+1-itemSize],x,y,x+1,y)){
 			c++;
 		}
 		for(var i =itemSize; i<verts.length; i+=itemSize){
@@ -237,17 +237,35 @@ var Collisions = {
 		if(this.pointInPolygon(x1,y1,verts,itemSize) || this.pointInPolygon(x2,y2,verts,itemSize)){
 			return true;
 		}
-		if(this.boxBox(x1,y1,Math.abs(x1-x2),Math.abs(y1-y2),verts[0],verts[1],Math.abs(verts[0]-verts[verts.length-itemSize]),Math.abs(verts[0]-verts[verts.length-itemSize]))){
-			if(this.lineLine(x1,y1,x2,y2,verts[0],verts[1],verts[vert.length-itemSize],verts[vert.length+1-itemSize])){
+		if(this.boxBox(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x1-x2),Math.abs(y1-y2),
+				Math.min(verts[0],verts[verts.length-itemSize]),Math.min(verts[0],verts[verts.length-itemSize]),
+				Math.abs(verts[0]-verts[verts.length-itemSize]),Math.abs(verts[0]-verts[verts.length-itemSize]))){
+			if(this.lineLine(x1,y1,x2,y2,verts[0],verts[1],verts[verts.length-itemSize],verts[verts.length+1-itemSize])){
 				return true;
 			}
 		}
+		
 		for(var i =itemSize; i<verts.length; i+=itemSize){
-			var l = polygon.edges[o];
-			if(this.boxBox(x1,y1,Math.abs(x1-x2),Math.abs(y1-y2),verts[i-itemSize],verts[i+1-itemSize],Math.abs(verts[i]-verts[i-itemSize]),Math.abs(verts[i+1]-verts[i+1-itemSize]))){//quick check
-				if(this.lineLine(x1,y1,x2,y2,verts[i-itemSize],verts[i+1-itemSize],verts[i],verts[i+1])){
+			if(this.boxBox(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x1-x2),Math.abs(y1-y2),
+					Math.min(verts[i],verts[i-itemSize]),Math.min(verts[i+1],verts[i+1-itemSize]),
+					Math.abs(verts[i]-verts[i-itemSize]),Math.abs(verts[i+1]-verts[i+1-itemSize]))){//quick check
+				if(this.lineLine(x1,y1,x2,y2,verts[i-itemSize],verts[(i+1)-itemSize],verts[i],verts[i+1])){
 					return true;
 				}
+			}
+		}
+		return false;
+	},
+	polygonRay: function(x1,y1,x2,y2,verts,itemSize){
+		if(this.pointInPolygon(x1,y1,verts,itemSize)){
+			return true;
+		}
+		if(this.lineRay(verts[0],verts[1],verts[verts.length-itemSize],verts[verts.length+1-itemSize],x1,y1,x2,y2)){
+			return true;
+		}
+		for(var i =itemSize; i<verts.length; i+=itemSize){
+			if(this.lineRay(verts[i-itemSize],verts[i+1-itemSize],verts[i],verts[i+1],x1,y1,x2,y2)){
+				return true;
 			}
 		}
 		return false;
