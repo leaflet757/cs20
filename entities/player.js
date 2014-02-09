@@ -240,10 +240,14 @@ Entities.add('player', Entities.create((function(){
 			}
 			
 			// TODO: weapon manager
+			// This section is used for weapons testing
 			// var weaponManager = new WeaponManager();
-			var a = new BeamWeapon();
+			var a = new WeaponManager();
+			a.add(new BeamWeapon());
+			a.add(new RocketWeapon());
+			a.add(new WaveWeapon());
 			var weaponsCheck = function() { // fires currently selected weapon
-				if (mouse.pressed)
+				if (mouse.left)
 				{
 					//weaponManager.fire();
 					
@@ -253,6 +257,9 @@ Entities.add('player', Entities.create((function(){
 				{
 					a.holdFire();
 				}
+				if(mouse.right){
+ 					Entities.clickBox.newInstance(mouse.x,mouse.yInv);
+ 				}
 			}
 		
 			Object.defineProperties(
@@ -269,16 +276,19 @@ Entities.add('player', Entities.create((function(){
 									animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=1;
+									a.swap(0);
 								}else if(keyboard._2 && k!=2){
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('square',(pk==2) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=2;
+									a.swap(1);
 								}else if(keyboard._3 && k!=3){
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=3;
+									a.swap(2);
 								}
 								
 								var mx= mouse.x,my=mouse.yInv;
