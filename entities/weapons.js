@@ -34,7 +34,7 @@ Entities.add('rocket', Entities.create(
 		return {
 			create: function(state,x,y,dir){
 				state.alive = true;
-				state.life = 5;
+				state.fuse = 5;
 				state.theta = Vector.getDir(dir) - Math.PI / 2;
 				state.delay = 0.5;
 				state.fired = false;
@@ -59,9 +59,9 @@ Entities.add('rocket', Entities.create(
 					},x,y,16,16,1));
 					
 					state.tick = function(delta){
-						this.life-=delta;
+						this.fuse-=delta;
 						this.delay -= delta;
-						if (this.life<=0)
+						if (this.fuse<=0)
 						{
 							this.alive = false;
 						}
@@ -69,6 +69,14 @@ Entities.add('rocket', Entities.create(
 						{
 							this.accelerateToward(this.mx,this.my,800);
 							this.fired = true;
+						}
+						for (var e in Entities) {
+							if (e.isEnemy) {
+								e.life -= damage;
+								if (e.life <= 0) {
+									e.alive = false;
+								}
+							}
 						}
 					}
 					
@@ -273,6 +281,7 @@ Entities.add('mine', Entities.create(
 function WaveWeapon(){
 	var p = Entities.player.getInstance(0);
 	var damage = 0.3;
+	var damagePer = 1;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
@@ -317,7 +326,7 @@ function WaveWeapon(){
 				// addforce
 				// find direction if direction is legal
 				for (var i = 0; i < a.length; i++) {
-					if (a[i] != p)
+					if (a[i] != p && a[i].isEnemy)
 					{
 						var dist = Math.sqrt(Math.pow(a[i].x - p.cx,2) + Math.pow(a[i].y - p.cy,2));
 						if (dist < radius) {
@@ -328,6 +337,10 @@ function WaveWeapon(){
 								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {					
 								Vector.setMag(evec, evec, 1);
 								a[i].addForce(mag*evec[0],mag*evec[1]);
+								a[i].life -= damagePer*damage;
+								if (a[i].life <= 0) {
+									a[i].alive = false;
+								}
 							}
 						}
 					}
@@ -343,6 +356,7 @@ function WaveWeapon(){
 	
 	ticker.add({
 		tick: function(delta) {
+			damagePer = delta
 			if (reload > 0) {
 				reload -= delta;
 			}
@@ -383,7 +397,13 @@ function BeamWeapon(){
 		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		if (traceResult.length > 3) traceResult[1].accelerateToward(p.cx,p.cy,-80);
+		if (traceResult.length > 3) {
+			traceResult[1].accelerateToward(p.cx,p.cy,-80);
+			traceResult[1].life -= damage;
+			if (traceResult[1].life <= 0) {
+				traceResult[1].alive = false;
+			}
+		}
 		
 		endX = traceResult[traceResult.length - 2];
 		endY = traceResult[traceResult.length - 1];

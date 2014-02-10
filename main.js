@@ -243,6 +243,10 @@ function initScene(){
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
 	currentMap.init();
 	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }
