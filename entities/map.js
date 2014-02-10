@@ -93,8 +93,8 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 		west: null,
 		connected: false
 	}
+
 	this.room = new Room(null,null,null,null,0,0);
-	
 }
 Map.prototype=fillProperties(new GLDrawable(),{
 	draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
