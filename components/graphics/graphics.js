@@ -54,7 +54,7 @@ function initGraphics(){
 		return (drawable.x < screen.x+screen.width 		&& 
 				drawable.x+drawable.width > screen.x 	&&
 				drawable.y < screen.y+screen.height 	&&
-				drawable.y+drawable.height > screen.y) || !do_screen_test;
+				drawable.y+drawable.height > screen.y) || !do_screen_test || drawable.boundless;
 	}
 	
 	var zComp = function(a,b){
