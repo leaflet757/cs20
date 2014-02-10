@@ -278,7 +278,7 @@ function WaveWeapon(){
 	var thickness = 156;
 	var length = 100;
 	var radius = 128;
-	var mag = 1;
+	var mag = 150;
 	var wAngle = 50 * Math.PI/180;
 	var eAngle = 0;
 	
@@ -286,6 +286,7 @@ function WaveWeapon(){
 	var duration = 1;
 	var forceTime = 1;
 	
+	var newA = true;
 	var a = [];
 	
 	graphics.addToDisplay(this, 'gl_main');
@@ -307,6 +308,7 @@ function WaveWeapon(){
 			this.visible = true;
 			// check for enemies
 			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
+			newA = true;
 			if (enemies.length > 1) {
 				// addforce
 				// find direction if direction is legal
@@ -319,8 +321,9 @@ function WaveWeapon(){
 							if ((eAngle > theta && eAngle < wAngle + theta) || 
 								(eAngle - 2*Math.PI < theta && eAngle - 2*Math.PI > -wAngle + theta) ||
 								((eAngle > theta - 2*Math.PI && eAngle < wAngle + theta - 2*Math.PI) || 
-								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {
-								a[i].addForce(evec[0], evec[1]);
+								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {					
+								Vector.setMag(evec, evec, 1);
+								a[i].addForce(mag*evec[0],mag*evec[1]);
 							}
 						}
 					}
@@ -341,9 +344,12 @@ function WaveWeapon(){
 				reload -= delta;
 			}
 			
-			for (var i = 0; i < a.length; i++) {
-				a[i].accel[0] = 0;
-				a[i].accel[1] = 0;
+			if (newA){	
+				for (var i = 0; i < a.length; i++) {
+					a[i].accel[0] = 0;
+					a[i].accel[1] = 0;
+				}
+				newA = false;
 			}
 		}
 	});
