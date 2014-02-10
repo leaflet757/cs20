@@ -267,23 +267,25 @@ Entities.add('player', Entities.create((function(){
 							tick: function(){
 								movementCheck();
 								weaponsCheck();
-								
+								var change = (!animator.animating);
 								if(keyboard._1 && k!=1){
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
-									pk=k;
+									if(change)pk = k
 									k=1;
 									a.swap(0);
 								}else if(keyboard._2 && k!=2){
+									// if(!animator.animating) pk=2
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('square',(pk==2) ? 1-animator.getTimeTillNextKeyframe() : 1);
-									pk=k;
+									if(change)pk = k
 									k=2;
 									a.swap(1);
 								}else if(keyboard._3 && k!=3){
+									// if(!animator.animating) pk=3
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
-									pk=k;
+									if(change)pk = k
 									k=3;
 									a.swap(2);
 								}

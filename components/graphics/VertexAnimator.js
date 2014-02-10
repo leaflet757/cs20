@@ -455,6 +455,12 @@ var VertexAnimator = function(program,attributeArrays,uniforms,numOfVerts,setUni
 					return array;
 				},
 				writable: false
+			},
+			animating: {
+				set: function(){},
+				get:function(){
+					return sequence.animating;
+				}
 			}
 		}
 	})());
