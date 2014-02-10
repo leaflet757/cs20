@@ -3,6 +3,10 @@
 Entities.add('player', Entities.create((function(){
 	var transitionSound=Sound.createSound(Sound.addBuffer('transition','resources/audio/transition.wav'),false);
 	transitionSound.gain = 0.1;
+	var blipSound=Sound.createSound(Sound.addBuffer('blip','resources/audio/blip.wav'),false);
+	blipSound.gain = 0.05;
+	var playerExplosion=Sound.createSound(Sound.addBuffer('explosion','resources/audio/playerExplosion.wav'),false);
+	playerExplosion.gain = 0.5;
 	//creates a circle with the given number of sides and radius
 	var generateCircle = function(numOfVerts,radius){
 		numOfVerts-=2;
@@ -307,6 +311,12 @@ Entities.add('player', Entities.create((function(){
 								manager.fillRect(32+screen.x,screen.y+screen.height/2,-99,16,(screen.height-32)*(this.life/100),0,1-(1*(this.life/100)),1*(this.life/100),0,1)
 								// mvMatrix.identity();
 								// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
+							},
+							onCollision: function(){
+								if(!blipSound.playing){
+									blipSound.play(0);
+									blipSound.gain = Vector.getMag(this.vel) * 0.00001
+								}
 							}
 						}),
 				(function(){
@@ -367,8 +377,10 @@ Entities.add('player', Entities.create((function(){
 			physics.remove(state);
 			ticker.remove(state);
 			if(graphics.getScreen('gl_main').follower == state)graphics.getScreen('gl_main').follower == null;
+			
+			playerExplosion.play(0);
 			for (var i = 0; i < 50; i++)
-				Entities.explosion.newInstance(state.cx, state.cy);
+				Entities.explosion.newInstance(state.cx, state.cy,2);
 			ticker.addTimer(function(){reinitScene()},2,0);
 		}
 	};

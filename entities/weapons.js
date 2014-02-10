@@ -418,9 +418,9 @@ BeamWeapon.prototype = new GLDrawable();
 Entities.add('explosion', Entities.create(
 	(function(){
 		return {
-			create: function(state,x,y){
+			create: function(state,x,y,life){
 				state.alive = true;
-				state.life = 0.5;
+				state.life = life || 0.5;
 				var width = 24;
 				var height = 24;
 				if(!state.first){
