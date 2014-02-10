@@ -254,7 +254,8 @@ Entities.add('player', Entities.create((function(){
  					Entities.clickBox.newInstance(mouse.x,mouse.yInv);
  				}
 			}
-		
+			
+			state.life = 100;
 			Object.defineProperties(
 					fillProperties(fillProperties(state,fillProperties(new GLDrawable(),new PolygonCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5,null,3))),
 						{
@@ -287,6 +288,10 @@ Entities.add('player', Entities.create((function(){
 								var mx= mouse.x,my=mouse.yInv;
 								theta = Vector.getDir(vec2.set(mvec,mx-state.cx,my-state.cy))-r;
 								animator.theta = theta;
+								
+								if(this.life<=0){
+									this.alive = 0;
+								}
 							},
 							glInit: function(manager){
 								animator.glInit(manager);
@@ -298,6 +303,8 @@ Entities.add('player', Entities.create((function(){
 								manager.point(0,0,-1,6,1,1,1,1);
 								mvMatrix.rotateZ(theta);
 								animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+								mvMatrix.identity()
+								manager.fillRect(32+screen.x,screen.y+screen.height/2,-99,16,(screen.height-32)*(this.life/100),0,1-(1*(this.life/100)),1*(this.life/100),0,1)
 								// mvMatrix.identity();
 								// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
 							}
@@ -360,6 +367,9 @@ Entities.add('player', Entities.create((function(){
 			physics.remove(state);
 			ticker.remove(state);
 			if(graphics.getScreen('gl_main').follower == state)graphics.getScreen('gl_main').follower == null;
+			for (var i = 0; i < 50; i++)
+				Entities.explosion.newInstance(state.cx, state.cy);
+			ticker.addTimer(function(){reinitScene()},2,0);
 		}
 	};
 })()))

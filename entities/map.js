@@ -2,7 +2,7 @@
 *	This file defines a map object for the current game
 */
 
-function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, connectorWidth){
+function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, connectorWidth, enemies){
 	var num= 0;
 	var lines= new Array();
 	this.lines = lines;
@@ -45,45 +45,45 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 		this.east =  (east!=null) ? east : this.east;
 		this.west = (west!=null) ? west : this.west;
 		
-		var width = minWidth + (Math.random() * (maxWidth - minWidth));
-		var height= minHeight + (Math.random() * (maxHeight - minHeight));
+		this.width = minWidth + (Math.random() * (maxWidth - minWidth));
+		this.height= minHeight + (Math.random() * (maxHeight - minHeight));
 		var cx = this.x + size/2;
 		var cy = this.y + size/2;
 		// top 
 		if( this.north != null) {
-			lines.push(cx+ width/2, cy + height/2, cx + connectorWidth/2, cy + height/2);
-			lines.push(cx +connectorWidth/2, cy + height/2, cx +connectorWidth/2, this.y + size);
-			lines.push(cx - connectorWidth/2, this.y + size, cx - connectorWidth/2, cy+ height/2);
-			lines.push(cx - connectorWidth/2, cy+ height/2, cx - width/2, cy+ height/2);
+			lines.push(cx+ this.width/2, cy + this.height/2, cx + connectorWidth/2, cy + this.height/2);
+			lines.push(cx +connectorWidth/2, cy + this.height/2, cx +connectorWidth/2, this.y + size);
+			lines.push(cx - connectorWidth/2, this.y + size, cx - connectorWidth/2, cy+ this.height/2);
+			lines.push(cx - connectorWidth/2, cy+ this.height/2, cx - this.width/2, cy+ this.height/2);
 		}else {
-			lines.push(cx+ width/2, cy + height/2, cx - width/2, cy+ height/2);	
+			lines.push(cx+ this.width/2, cy + this.height/2, cx - this.width/2, cy+ this.height/2);	
 		}
 		//left
 		if( this.west != null){
-			lines.push(cx - width/2, cy+ height/2, cx - width/2, cy + connectorWidth/2);
-			lines.push(cx - width/2, cy + connectorWidth/2, this.x, cy + connectorWidth/2);
-			lines.push(this.x, cy - connectorWidth/2, cx - width/2, cy - connectorWidth/2);
-			lines.push(cx - width/2, cy - connectorWidth/2, cx - width/2, cy - height/2);
+			lines.push(cx - this.width/2, cy+ this.height/2, cx - this.width/2, cy + connectorWidth/2);
+			lines.push(cx - this.width/2, cy + connectorWidth/2, this.x, cy + connectorWidth/2);
+			lines.push(this.x, cy - connectorWidth/2, cx - this.width/2, cy - connectorWidth/2);
+			lines.push(cx - this.width/2, cy - connectorWidth/2, cx - this.width/2, cy - this.height/2);
 		}else{
-			lines.push(cx - width/2, cy+ height/2, cx - width/2, cy - height/2);
+			lines.push(cx - this.width/2, cy+ this.height/2, cx - this.width/2, cy - this.height/2);
 		}
 		//bottom
 		if( this.south != null){
-			lines.push(cx - width/2, cy - height/2, cx- connectorWidth/2, cy - height/2);
-			lines.push(cx- connectorWidth/2, cy - height/2, cx- connectorWidth/2, this.y);
-			lines.push(cx + connectorWidth/2, this.y, cx + connectorWidth/2, cy - height/2);
-			lines.push(cx + connectorWidth/2, cy - height/2, cx + width/2, cy - height/2);
+			lines.push(cx - this.width/2, cy - this.height/2, cx- connectorWidth/2, cy - this.height/2);
+			lines.push(cx- connectorWidth/2, cy - this.height/2, cx- connectorWidth/2, this.y);
+			lines.push(cx + connectorWidth/2, this.y, cx + connectorWidth/2, cy - this.height/2);
+			lines.push(cx + connectorWidth/2, cy - this.height/2, cx + this.width/2, cy - this.height/2);
 		}else{
-			lines.push(cx - width/2, cy - height/2, cx + width/2, cy - height/2);
+			lines.push(cx - this.width/2, cy - this.height/2, cx + this.width/2, cy - this.height/2);
 		}
 		//right
 		if( this.east != null) {
-			lines.push(cx + width/2, cy - height/2, cx + width/2, cy - connectorWidth/2);
-			lines.push(cx + width/2, cy - connectorWidth/2, this.x + size, cy - connectorWidth/2);
-			lines.push(this.x+ size, cy + connectorWidth/2,cx + width/2, cy + connectorWidth/2);
-			lines.push(cx + width/2, cy + connectorWidth/2, cx+ width/2, cy + height/2);
+			lines.push(cx + this.width/2, cy - this.height/2, cx + this.width/2, cy - connectorWidth/2);
+			lines.push(cx + this.width/2, cy - connectorWidth/2, this.x + size, cy - connectorWidth/2);
+			lines.push(this.x+ size, cy + connectorWidth/2,cx + this.width/2, cy + connectorWidth/2);
+			lines.push(cx + this.width/2, cy + connectorWidth/2, cx+ this.width/2, cy + this.height/2);
 		}else{
-			lines.push(cx + width/2, cy - height/2, cx+ width/2, cy + height/2);
+			lines.push(cx + this.width/2, cy - this.height/2, cx+ this.width/2, cy + this.height/2);
 		}
 	}
 	Room.prototype = {
@@ -93,8 +93,20 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 		west: null,
 		connected: false
 	}
-
 	this.room = new Room(null,null,null,null,0,0);
+	
+	this.init = function(){
+		//create player
+		console.log(this.room.x+this.room.width/2,this.room.y + this.room.height/2)
+		Entities.player.newInstance(this.room.x+size/2,this.room.y + size/2);
+		
+		//add enemies
+		if(enemies){
+			var populate =function(room){
+				
+			}
+		}
+	}
 }
 Map.prototype=fillProperties(new GLDrawable(),{
 	draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
