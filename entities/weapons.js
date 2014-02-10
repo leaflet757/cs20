@@ -29,6 +29,7 @@ RocketWeapon.prototype = {};
 // Rocket -- 
 Entities.add('rocket', Entities.create(
 	(function(){
+		var damage = 1;
 		var buffered = false;
 		return {
 			create: function(state,x,y,dir){
@@ -222,6 +223,7 @@ MineWeapon.prototype = {};
 // Mine -- 
 Entities.add('mine', Entities.create(
 	(function(){
+		var damage = 5;
 		return {
 			create: function(state,x,y){
 				state.alive = true;
@@ -270,6 +272,7 @@ Entities.add('mine', Entities.create(
 // WaveWeapon -- 
 function WaveWeapon(){
 	var p = Entities.player.getInstance(0);
+	var damage = 0.3;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
@@ -277,7 +280,7 @@ function WaveWeapon(){
 	var length = 100;
 	var radius = 128;
 
-	var mag = 150;
+	var mag = 100;
 	var wAngle = 50 * Math.PI/180;
 	var eAngle = 0;
 	var evec = vec2.create();
@@ -358,6 +361,8 @@ WaveWeapon.prototype = new GLDrawable();
 
 // BeamWeapon --
 function BeamWeapon(){
+	var p = Entities.player.getInstance(0);
+	var damage = 0.7;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
@@ -370,7 +375,6 @@ function BeamWeapon(){
 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
-		var p = Entities.player.getInstance(0);
 		manager.line(p.cx, p.cy, endX, endY,0,0,1,0,1);
 	};
 	this.fire = function() {
