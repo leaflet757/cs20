@@ -21,7 +21,7 @@ function RocketWeapon(){
 	};
 	
 	this.holdFire = function() {
-		
+		// Empty
 	};
 }
 RocketWeapon.prototype = {};
@@ -223,7 +223,7 @@ function MineWeapon(){
 	};
 	
 	this.holdFire = function() {
-		
+		// Empty
 	};
 }
 MineWeapon.prototype = {};
