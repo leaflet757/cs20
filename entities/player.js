@@ -235,20 +235,20 @@ Entities.add('player', Entities.create((function(){
 			
 			// weapon manager
 			// This section is used for weapons testing
-			var a = new WeaponManager();
-			a.add(new BeamWeapon());
-			a.add(new RocketWeapon());
-			a.add(new MineWeapon());
+			var weaponManager = new WeaponManager();
+			weaponManager.add(new BeamWeapon());
+			weaponManager.add(new RocketWeapon());
+			weaponManager.add(new WaveWeapon());
 			var weaponsCheck = function() { // fires currently selected weapon
 				if (mouse.left)
 				{
 					//weaponManager.fire();
 					
-					a.fire();
+					weaponManager.fire();
 				}
 				else
 				{
-					a.holdFire();
+					weaponManager.holdFire();
 				}
 				if(mouse.right){
  					Entities.clickBox.newInstance(mouse.x,mouse.yInv);
@@ -269,19 +269,19 @@ Entities.add('player', Entities.create((function(){
 									animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=1;
-									a.swap(0);
+									weaponManager.swap(0);
 								}else if(keyboard._2 && k!=2){
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('square',(pk==2) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=2;
-									a.swap(1);
+									weaponManager.swap(1);
 								}else if(keyboard._3 && k!=3){
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=3;
-									a.swap(2);
+									weaponManager.swap(2);
 								}
 								
 								var mx= mouse.x,my=mouse.yInv;

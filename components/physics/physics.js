@@ -335,8 +335,8 @@ function initPhysics(){
 					var x = radialForces[i], y = radialForces[i+1], radius = radialForces[i+2], mag = radialForces[i+3];
 					queryArray.length = 0;
 					var effected = colliderTree.get(queryArray,x-(radius/2),y-(radius/2),radius,radius);
-					for(var i in effected){
-						var e = effected[i];
+					for(var j in effected){
+						var e = effected[j];
 						if(e.forcesEnabled){
 							miscVec[0] = (e.x+(e.width/2))-x;
 							miscVec[1] = (e.y+(e.height/2))-y;
@@ -347,6 +347,7 @@ function initPhysics(){
 							}
 						}
 					}
+					console.log(radialForces[i+4], delta);
 					radialForces[i+4]-=delta;
 				}
 				for(var i = 0; i<radialForces.length; i+=5){
@@ -534,7 +535,8 @@ function initPhysics(){
 			*
 			*/
 			radialForce: function(x,y,radius,mag,t){
-				radialForces.push(x,y,radius,mag,t || 0);
+				radialForces.push(x,y,radius,mag,0);
+				console.log(radialForces[radialForces.length - 1]);
 			},
 			draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
 				if(lineTree) lineTree.draw(gl,delta,screen,manager,pMatrix,mvMatrix)

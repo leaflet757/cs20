@@ -269,18 +269,27 @@ Entities.add('mine', Entities.create(
 
 // WaveWeapon -- 
 function WaveWeapon(){
+	var p = Entities.player.getInstance(0);
+	
 	var visible = false;
 	var vec = vec2.create();
+	var evec = vec2.create();
 	var theta = 0;
 	var thickness = 156;
 	var length = 100;
 	var radius = 128;
-	var wAngle = 40;
+	var mag = 1000;
+	var wAngle = 50;
+	
+	var reload = 0;
+	var duration = 1;
+	var forceTime = 1;
+	
+	var a = [];
 	
 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
-		var p = Entities.player.getInstance(0);
 		mvMatrix.push();
 		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
 		mvMatrix.rotateZ(theta + Math.PI / 2);
@@ -288,11 +297,47 @@ function WaveWeapon(){
 		mvMatrix.pop();
 	};
 	this.fire = function() {
-		this.visible = true;
+		if (reload<=0 && duration>0) {
+			duration -= 0.1;
+			if (duration < 0) {
+				reload = 0.8;
+				duration = 1;
+			}
+			this.visible = true;
+			// check for enemies
+			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
+			if (enemies.length > 1) {
+				// addforce
+				// find direction if direction is legal
+				for (var i = 0; i < a.length; i++) {
+					if (a[i] != p)
+					{
+						var eAngle = Vector.getDir(vec2.set(evec, a[i].cx - p.cx, a[i].cy - p.cy));
+						
+					}
+				}
+			}
+		} else {
+			this.visible = false;
+		}
 	};
+	
 	this.holdFire = function() {
 		this.visible = false;
-	}
+	};
+	
+	ticker.add({
+		tick: function(delta) {
+			if (reload > 0) {
+				reload -= delta;
+			}
+			
+			for (var i = 0; i < a.length; i++) {
+				a[i].accel[0] = 0;
+				a[i].accel[1] = 0;
+			}
+		}
+	});
 }
 WaveWeapon.prototype = new GLDrawable();
 
@@ -306,81 +351,6 @@ function BeamWeapon(){
 	var endX = 0;
 	var endY = 0;
 	var hits = [];
-	
-//	 var animator = new VertexAnimator("basic", 
-// 		{
-// 			beamColor: 
-// 				fillProperties(// TODO: change to triangular verticies
-// 					[0,1,0,1,
-// 					0,1,0,1,
-// 					0,1,0,1],
-// 					{
-// 						attributeId: "vertexColor",
-// 						items: 3,
-// 						itemSize: 4
-// 					}), 
-// 			beamPosition: 
-// 				fillProperties([
-// 					0,0,0,
-// 					1,1,0,
-// 					-1,1,0],
-// 					{
-// 						attributeId: "vertexPosition",
-// 						items: 3,
-// 						itemSize: 3
-// 					})
-// 			},
-// 		{},6);					
-// 	animator.addKeyframe("active", 
-// 			{
-// 				beamColor: 
-// 					fillProperties([
-// 						0,1,0,1,
-// 						0,1,0,1,
-// 						0,1,0,1],
-// 					{
-// 						attributeId: "vertexColor",
-// 						items: 3,
-// 						itemSize: 4
-// 				}), 
-// 				beamPosition: 
-// 					fillProperties([
-// 						0,0,0,
-// 						1,512,0,
-// 						-1,-512,0],
-// 					{
-// 						attributeId: "vertexPosition",
-// 						items: 3,
-// 						itemSize: 3
-// 					})
-// 				},
-// 		{},6);					
-// 	animator.addKeyframe("starting", 
-// 		{
-// 			beamColor: 
-// 			fillProperties(
-// 				[0,1,0,1,
-// 				0,1,0,1,
-// 				0,1,0,1],
-// 				{
-// 					attributeId: "vertexColor",
-// 					items: 3,
-// 					itemSize: 4
-// 				}), 
-// 			beamPosition: 
-// 			fillProperties([
-// 				0,0,0,
-// 				1,1,0,
-// 				-1,1,0],
-// 				{
-// 					attributeId: "vertexPosition",
-// 					items: 3,
-// 					itemSize: 3
-// 			})
-// 		},
-// 		{},6);
-//  	animator.setCurrentKeyframe("starting",0);
-//  	animator.setCurrentKeyframe("active", 5);
  	
 	graphics.addToDisplay(this, 'gl_main');
 	
