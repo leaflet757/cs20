@@ -94,7 +94,7 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 		connected: false
 	}
 	this.room = new Room(null,null,null,null,0,0);
-
+	
 	this.init = function(){
 		//create player
 		console.log(this.room.x+this.room.width/2,this.room.y + this.room.height/2)
