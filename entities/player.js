@@ -242,7 +242,7 @@ Entities.add('player', Entities.create((function(){
 			var a = new WeaponManager();
 			a.add(new BeamWeapon());
 			a.add(new MineWeapon());
-			a.add(new RocketWeapon());
+			a.add(new WaveWeapon());
 			var weaponsCheck = function() { // fires currently selected weapon
 				if (mouse.left)
 				{
