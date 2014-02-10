@@ -94,8 +94,7 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 		connected: false
 	}
 	this.room = new Room(null,null,null,null,0,0);
-	
-<<<<<<< HEAD
+
 	this.init = function(){
 		//create player
 		console.log(this.room.x+this.room.width/2,this.room.y + this.room.height/2)
@@ -108,8 +107,6 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 			}
 		}
 	}
-=======
->>>>>>> 4cd74ffa40285ae2f68d22f75dbe5b7c046214e4
 }
 Map.prototype=fillProperties(new GLDrawable(),{
 	draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
