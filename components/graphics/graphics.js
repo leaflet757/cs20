@@ -5,7 +5,7 @@
 initGraphics();
 var currentScreen;
 var draw_bounding_boxes  = true;
-var do_screen_test = false;
+var do_screen_test = true;
 var draw_grid = false;
 var grid_w = 64;
 var grid_h = 64;

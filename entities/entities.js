@@ -23,8 +23,46 @@ Entities = fillProperties(new Updatable(),{
 	createStandardCollisionState: function(obj,x,y,width,height,elasticity){
 		return fillProperties(new GLDrawable(),fillProperties(new BasicCollider(x,y,width,height,elasticity),obj));
 	},
+	/**
+	* used to create a standard collision state with fine collisions
+	*/
 	createPolygonCollisionState: function(obj,x,y,width,height,elasticity,verts,itemSize){
 		return fillProperties(new GLDrawable(),fillProperties(new PolygonCollider(x,y,width,height,elasticity,verts,itemSize),obj));
+	},
+	/**
+	*	provides a standard set of properties for enemies
+	*/
+	createStandardEnemy: function(obj,x,y,width,height,elasticity,life,scope){
+		var life = life || 100;
+		return Object.defineProperties(fillProperties(this.createStandardCollisionState(obj,x,y,width,height,elasticity),{
+					scope: scope || 1024,
+					getPlayer: function(){
+						return Entities.Player.getInstance(0);
+					}
+				}),{
+					life:{
+						get: function(){
+							return life;
+						},
+						set: function(nLife){
+							life = nLife;
+							if(life<=0){
+								this.alive = false;
+							}
+						}
+					},
+					isEnemy:{
+						value: true,
+						writable: false
+					},
+					inActiveScope: {
+						get: function(){
+							var p = this.getPlayer();
+							return (p && pythag(p.cx-(this.x+this.width/2),p.cy-(this.y+this.height/2))<this.scope);
+						},
+						set: function(){}
+					}
+				});
 	},
 	/**
 	*	does a type check then adds the entity to Entities as a property with the given name
