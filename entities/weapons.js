@@ -232,16 +232,19 @@ MineWeapon.prototype = {};
 Entities.add('mine', Entities.create(
 	(function(){
 		var damage = 5;
+		var a = []; // array for collision check
+		var blastbox = new Object();
+		blastbox.width = 200;
+		blastbox.height = 200;
+		blastbox.x = x - 100;
+		blastbox.y = y - 100;
+		
 		return {
 			create: function(state,x,y){
 				state.alive = true;
-				state.life = 2;
-				
-				var blastbox = new Object();
-				blastbox.width = 200;
-				blastbox.height = 200;
-				blastbox.x = x - 100;
-				blastbox.y = y - 100;
+				state.time = 2;
+				state.fuse = 0.5;
+				state.hasExploded = false;
 				
 				if(!state.first){
 					fillProperties(state, Entities.createStandardState(
@@ -251,12 +254,28 @@ Entities.add('mine', Entities.create(
 						}
 					},x,y,16,16,1.1));
 					state.tick = function(delta){
-						this.life-=delta;
-						this.alive = this.life>0;
-						if (!this.alive) {
-							for (var i = 0; i < 50; i++)
-								Entities.explosion.newInstance(state.x, state.y);
-							// collision check
+						this.time-=delta;
+						this.alive = this.time>0;
+						if (this.time < 0){
+							//this.visible = false; makes all instances invisible
+							this.fuse -= delta;
+							if (this.fuse < 0) {
+								var enemies = physics.getColliders(a,blastbox.x,blastbox.y,blastbox.width,blastbox.height);
+								for (var i = 0; i < enemies.length; i++) {
+									if (enemies[i].isEnemy) {
+										enemies[i].life -= damage;
+										if (enemies[i].life <= 0) enemies[i].alive = false;
+										else {
+											// add force	
+										}
+									}
+								}
+								this.alive = false;
+							} else if (!this.hasExploded) {
+								this.hasExploded = true;
+								for (var i = 0; i < 50; i++)
+									Entities.explosion.newInstance(state.x, state.y);
+							}
 						}
 					}
 					
