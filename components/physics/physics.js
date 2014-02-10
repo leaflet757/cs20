@@ -369,6 +369,10 @@ function initPhysics(){
 				doForces(delta);
 				for(var i in movers){
 					if(movers[i].doMove)move(movers[i],delta);
+					if(!movers[i].keepAccel){
+						movers[i].accel[0] = 0;
+						movers[i].accel[1] = 0;
+					}
 				}
 				if(lines)doCollisionCheck(delta);
 				for(var i = 0; i<colliders.length; i++){
