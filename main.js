@@ -79,7 +79,7 @@ function initInput(){
 			onPress:function(){
 				if(!pressed){
 					pressed = true;
-					Entities.player.getInstance(0).set(0,0,0,0,0,0);
+					Entities.player.getInstance(0).alive=false;
 				}
 			},
 			onRelease:function(){
@@ -105,10 +105,7 @@ function initInput(){
 								mapView = false;
 								Loop.paused = false; 
 							}else{
-								
-								console.log('press')
-								
-								ticker.addTimer(function(){screen.scale(scaleFactor);mapView = true;Loop.paused = true; console.log('here');},0,0,false);
+								ticker.addTimer(function(){screen.scale(scaleFactor);mapView = true;Loop.paused = true;},0,0,false);
 							}
 						}
 					}
@@ -139,7 +136,7 @@ function initScene(){
 	var currentScreen = graphics.getScreen('gl_main');
 	mouse.box = currentScreen;
 	
-	Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
+	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
 	
 	//fps counter using a simple low pass filter
 	var fpsCounter = (function(){
@@ -216,32 +213,48 @@ function initScene(){
 		// height: 512
 	// });
 	
-	var testSprite = fillProperties(new GLDrawable(),{
-		glInit: function(manager){
-			this.sprite = manager.createSprite('resources/img/emberButton.png')
-			this.sprite.x = 128;
-			this.sprite.y = 128;
-			this.sprite.width = 128;
-			this.sprite.height = 128;
-		},
-		draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-			this.sprite.draw();
-		},
-		x: 128,
-		y: 128,
-		width: 128,
-		height: 128
-	});
+	// var testSprite = fillProperties(new GLDrawable(),{
+		// glInit: function(manager){
+			// this.sprite = manager.createSprite('resources/img/emberButton.png')
+			// this.sprite.x = 128;
+			// this.sprite.y = 128;
+			// this.sprite.width = 128;
+			// this.sprite.height = 128;
+		// },
+		// draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
+			// this.sprite.draw();
+		// },
+		// x: 128,
+		// y: 128,
+		// width: 128,
+		// height: 128
+	// });
 	// graphics.addToDisplay(testSprite,'gl_main');
 	
-	Entities.follower.newInstance(400,400);
+	// Entities.follower.newInstance(400,400);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	
+	
 	
 	// graphics.addToDisplay(testMap,"gl_main")
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
+	currentMap.init();
+	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }
 
+function reinitScene(){
+	Entities.reset();
+	graphics.removeFromDisplay(currentMap,'gl_main');
+	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
+	currentMap.init();
+	physics.setGeometry(currentMap.lines);
+	graphics.addToDisplay(currentMap,'gl_main');
+}
 //initializes game
 loadSource();
 document.addEventListener("DOMContentLoaded", function(){initInput();init();}, false);

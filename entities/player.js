@@ -3,6 +3,10 @@
 Entities.add('player', Entities.create((function(){
 	var transitionSound=Sound.createSound(Sound.addBuffer('transition','resources/audio/transition.wav'),false);
 	transitionSound.gain = 0.1;
+	var blipSound=Sound.createSound(Sound.addBuffer('blip','resources/audio/blip.wav'),false);
+	blipSound.gain = 0.05;
+	var playerExplosion=Sound.createSound(Sound.addBuffer('explosion','resources/audio/playerExplosion.wav'),false);
+	playerExplosion.gain = 0.5;
 	//creates a circle with the given number of sides and radius
 	var generateCircle = function(numOfVerts,radius){
 		numOfVerts-=2;
@@ -235,26 +239,27 @@ Entities.add('player', Entities.create((function(){
 			
 			// weapon manager
 			// This section is used for weapons testing
-			var weaponManager = new WeaponManager();
-			weaponManager.add(new BeamWeapon());
-			weaponManager.add(new RocketWeapon());
-			weaponManager.add(new WaveWeapon());
+			var a = new WeaponManager();
+			a.add(new BeamWeapon());
+			a.add(new MineWeapon());
+			a.add(new WaveWeapon());
 			var weaponsCheck = function() { // fires currently selected weapon
 				if (mouse.left)
 				{
 					//weaponManager.fire();
 					
-					weaponManager.fire();
+					a.fire();
 				}
 				else
 				{
-					weaponManager.holdFire();
+					a.holdFire();
 				}
 				if(mouse.right){
  					Entities.clickBox.newInstance(mouse.x,mouse.yInv);
  				}
 			}
-		
+			
+			state.life = 100;
 			Object.defineProperties(
 					fillProperties(fillProperties(state,fillProperties(new GLDrawable(),new PolygonCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5,null,3))),
 						{
@@ -269,24 +274,28 @@ Entities.add('player', Entities.create((function(){
 									animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=1;
-									weaponManager.swap(0);
+									a.swap(0);
 								}else if(keyboard._2 && k!=2){
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('square',(pk==2) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=2;
-									weaponManager.swap(1);
+									a.swap(1);
 								}else if(keyboard._3 && k!=3){
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									pk=k;
 									k=3;
-									weaponManager.swap(2);
+									a.swap(2);
 								}
 								
 								var mx= mouse.x,my=mouse.yInv;
 								theta = Vector.getDir(vec2.set(mvec,mx-state.cx,my-state.cy))-r;
 								animator.theta = theta;
+								
+								if(this.life<=0){
+									this.alive = 0;
+								}
 							},
 							glInit: function(manager){
 								animator.glInit(manager);
@@ -298,8 +307,16 @@ Entities.add('player', Entities.create((function(){
 								manager.point(0,0,-1,6,1,1,1,1);
 								mvMatrix.rotateZ(theta);
 								animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
+								mvMatrix.identity()
+								manager.fillRect(32+screen.x,screen.y+screen.height/2,-99,16,(screen.height-32)*(this.life/100),0,1-(1*(this.life/100)),1*(this.life/100),0,1)
 								// mvMatrix.identity();
 								// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
+							},
+							onCollision: function(){
+								if(!blipSound.playing){
+									blipSound.play(0);
+									blipSound.gain = Vector.getMag(this.vel) * 0.00001
+								}
 							}
 						}),
 				(function(){
@@ -360,6 +377,11 @@ Entities.add('player', Entities.create((function(){
 			physics.remove(state);
 			ticker.remove(state);
 			if(graphics.getScreen('gl_main').follower == state)graphics.getScreen('gl_main').follower == null;
+			
+			playerExplosion.play(0);
+			for (var i = 0; i < 50; i++)
+				Entities.explosion.newInstance(state.cx, state.cy,2);
+			ticker.addTimer(function(){reinitScene()},2,0);
 		}
 	};
 })()))

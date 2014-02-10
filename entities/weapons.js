@@ -237,7 +237,7 @@ Entities.add('mine', Entities.create(
 					fillProperties(state, Entities.createStandardState(
 					{
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillEllipse(this.x+this.width/2,this.y+this.height/2,0,16,16,0,.5,1,.5,1);
+							manager.fillRect(this.x+this.width/2,this.y+this.height/2,0,16,16,0,.5,1,.5,1);
 						}
 					},x,y,16,16,1.1));
 					state.tick = function(delta){
@@ -270,17 +270,17 @@ Entities.add('mine', Entities.create(
 // WaveWeapon -- 
 function WaveWeapon(){
 	var p = Entities.player.getInstance(0);
-	
 	var visible = false;
 	var vec = vec2.create();
-	var evec = vec2.create();
 	var theta = 0;
 	var thickness = 156;
 	var length = 100;
 	var radius = 128;
+
 	var mag = 150;
 	var wAngle = 50 * Math.PI/180;
 	var eAngle = 0;
+	var evec = vec2.create();
 	
 	var reload = 0;
 	var duration = 1;
@@ -293,6 +293,7 @@ function WaveWeapon(){
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		mvMatrix.push();
+		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
 		mvMatrix.rotateZ(theta + Math.PI / 2);
 		manager.fillTriangle(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0.6,0,1,1);
 		mvMatrix.pop();
@@ -333,7 +334,6 @@ function WaveWeapon(){
 			this.visible = false;
 		}
 	};
-	
 	this.holdFire = function() {
 		this.visible = false;
 	};
@@ -356,7 +356,7 @@ function WaveWeapon(){
 }
 WaveWeapon.prototype = new GLDrawable();
 
-// BeamWeapon -- 
+// BeamWeapon --
 function BeamWeapon(){
 	var visible = false;
 	var vec = vec2.create();
@@ -384,9 +384,7 @@ function BeamWeapon(){
 		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		if (traceResult.length > 3) {
-			traceResult[1].accelerateToward(p.cx,p.cy,-80);
-		}
+		if (traceResult.length > 3) traceResult[1].accelerateToward(p.cx,p.cy,-80);
 		
 		endX = traceResult[traceResult.length - 2];
 		endY = traceResult[traceResult.length - 1];
@@ -405,16 +403,20 @@ BeamWeapon.prototype = new GLDrawable();
 Entities.add('explosion', Entities.create(
 	(function(){
 		return {
-			create: function(state,x,y){
+			create: function(state,x,y,life){
 				state.alive = true;
-				state.life = 0.5;
+				state.life = life || 0.5;
 				var width = 24;
 				var height = 24;
 				if(!state.first){
 					fillProperties(state, Entities.createStandardState(
 					{
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							manager.fillEllipse(this.x,this.y,0,width,height,0,1,0.5,0,1);
+							manager.fillEllipse(this.x,this.y,0,width/2,height/2,0,1,0.5,0,1);
+							gl.enable(gl.BLEND);
+							gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
+							manager.fillEllipse(this.x,this.y,0,width,height,0,1,0.5,0,0.5);
+							gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
 						}
 					},x,y,width,height,1.1));
 					state.tick = function(delta){
