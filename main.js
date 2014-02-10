@@ -231,6 +231,7 @@ function initScene(){
 	// });
 	// graphics.addToDisplay(testSprite,'gl_main');
 	
+	
 	// graphics.addToDisplay(testMap,"gl_main")
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
 	currentMap.init();
