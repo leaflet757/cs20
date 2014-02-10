@@ -231,7 +231,6 @@ function initScene(){
 	// });
 	// graphics.addToDisplay(testSprite,'gl_main');
 	
-<<<<<<< HEAD
 	// Entities.follower.newInstance(400,400);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
@@ -239,8 +238,6 @@ function initScene(){
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	
 	
-=======
->>>>>>> 4132b3277c58e64823837899e5f76aaa26dbcbe5
 	
 	// graphics.addToDisplay(testMap,"gl_main")
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
