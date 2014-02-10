@@ -278,8 +278,9 @@ function WaveWeapon(){
 	var thickness = 156;
 	var length = 100;
 	var radius = 128;
-	var mag = 1000;
-	var wAngle = 50;
+	var mag = 1;
+	var wAngle = 50 * Math.PI/180;
+	var eAngle = 0;
 	
 	var reload = 0;
 	var duration = 1;
@@ -291,13 +292,13 @@ function WaveWeapon(){
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		mvMatrix.push();
-		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
 		mvMatrix.rotateZ(theta + Math.PI / 2);
 		manager.fillTriangle(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0.6,0,1,1);
 		mvMatrix.pop();
 	};
 	this.fire = function() {
-		if (reload<=0 && duration>0) {
+		if (reload<=0 && duration>0) {	
+			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
 			duration -= 0.1;
 			if (duration < 0) {
 				reload = 0.8;
@@ -312,8 +313,16 @@ function WaveWeapon(){
 				for (var i = 0; i < a.length; i++) {
 					if (a[i] != p)
 					{
-						var eAngle = Vector.getDir(vec2.set(evec, a[i].cx - p.cx, a[i].cy - p.cy));
-						
+						var dist = Math.sqrt(Math.pow(a[i].x - p.cx,2) + Math.pow(a[i].y - p.cy,2));
+						if (dist < radius) {
+							var eAngle = Vector.getDir(vec2.set(evec, a[i].x - p.cx, a[i].y - p.cy));
+							if ((eAngle > theta && eAngle < wAngle + theta) || 
+								(eAngle - 2*Math.PI < theta && eAngle - 2*Math.PI > -wAngle + theta) ||
+								((eAngle > theta - 2*Math.PI && eAngle < wAngle + theta - 2*Math.PI) || 
+								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {
+								a[i].addForce(evec[0], evec[1]);
+							}
+						}
 					}
 				}
 			}
@@ -341,7 +350,7 @@ function WaveWeapon(){
 }
 WaveWeapon.prototype = new GLDrawable();
 
-// BeamWeapon -- TODO:Make Pretty
+// BeamWeapon -- 
 function BeamWeapon(){
 	var visible = false;
 	var vec = vec2.create();
@@ -369,7 +378,9 @@ function BeamWeapon(){
 		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		if (traceResult.length > 3) traceResult[1].accelerateToward(p.cx,p.cy,-80);
+		if (traceResult.length > 3) {
+			traceResult[1].accelerateToward(p.cx,p.cy,-80);
+		}
 		
 		endX = traceResult[traceResult.length - 2];
 		endY = traceResult[traceResult.length - 1];
