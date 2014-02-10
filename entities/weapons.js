@@ -371,12 +371,7 @@ function BeamWeapon(){
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		var p = Entities.player.getInstance(0);
-		//mvMatrix.push();
-		//theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-		//mvMatrix.rotateZ(theta + Math.PI / 2);
-		//manager.fillRect(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0,1,0,1);
 		manager.line(p.cx, p.cy, endX, endY,0,0,1,0,1);
-		//mvMatrix.pop();
 	};
 	this.fire = function() {
 		this.visible = true;
@@ -388,9 +383,6 @@ function BeamWeapon(){
 		
 		endX = traceResult[traceResult.length - 2];
 		endY = traceResult[traceResult.length - 1];
-		
-		//vec2.set(vec, (mouse.x - (p.cx - p.x)), (mouse.yInv - (p.cy - p.y)));
-		//p.accelerateToward(vec[0], vec[1], -100);
 	};
 	this.holdFire = function() {
 		this.visible = false;
@@ -399,7 +391,7 @@ function BeamWeapon(){
 BeamWeapon.prototype = new GLDrawable();
 
 
-// Temp: Explosion
+// Explosion
 Entities.add('explosion', Entities.create(
 	(function(){
 		return {
