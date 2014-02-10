@@ -337,7 +337,7 @@ function WaveWeapon(){
 	this.holdFire = function() {
 		this.visible = false;
 	};
-	
+	this.boundless = true;
 	ticker.add({
 		tick: function(delta) {
 			if (reload > 0) {
@@ -384,6 +384,7 @@ function BeamWeapon(){
 		endX = traceResult[traceResult.length - 2];
 		endY = traceResult[traceResult.length - 1];
 	};
+	this.boundless = true;
 	this.holdFire = function() {
 		this.visible = false;
 	}
