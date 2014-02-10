@@ -247,7 +247,6 @@ Entities.add('player', Entities.create((function(){
 				if (mouse.left)
 				{
 					//weaponManager.fire();
-					
 					a.fire();
 				}
 				else
