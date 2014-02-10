@@ -275,20 +275,59 @@ function WaveWeapon(){
 	var thickness = 156;
 	var length = 100;
 	var radius = 128;
-	var wAngle = 40;
+	var mag = 1;
+	var wAngle = 50 * Math.PI/180;
+	var eAngle = 0;
+	
+	var reload = 0;
+	var duration = 1;
+	var forceTime = 1;
+	
+	var a = [];
 	
 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		var p = Entities.player.getInstance(0);
 		mvMatrix.push();
-		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
 		mvMatrix.rotateZ(theta + Math.PI / 2);
 		manager.fillTriangle(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0.6,0,1,1);
 		mvMatrix.pop();
 	};
 	this.fire = function() {
 		this.visible = true;
+		if (reload<=0 && duration>0) {	
+			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
+			duration -= 0.1;
+			if (duration < 0) {
+				reload = 0.8;
+				duration = 1;
+			}
+			this.visible = true;
+			// check for enemies
+			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
+			if (enemies.length > 1) {
+				// addforce
+				// find direction if direction is legal
+				for (var i = 0; i < a.length; i++) {
+					if (a[i] != p)
+					{
+						var dist = Math.sqrt(Math.pow(a[i].x - p.cx,2) + Math.pow(a[i].y - p.cy,2));
+						if (dist < radius) {
+							var eAngle = Vector.getDir(vec2.set(evec, a[i].x - p.cx, a[i].y - p.cy));
+							if ((eAngle > theta && eAngle < wAngle + theta) || 
+								(eAngle - 2*Math.PI < theta && eAngle - 2*Math.PI > -wAngle + theta) ||
+								((eAngle > theta - 2*Math.PI && eAngle < wAngle + theta - 2*Math.PI) || 
+								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {
+								a[i].addForce(evec[0], evec[1]);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			this.visible = false;
+		}
 	};
 	this.holdFire = function() {
 		this.visible = false;
@@ -296,7 +335,7 @@ function WaveWeapon(){
 }
 WaveWeapon.prototype = new GLDrawable();
 
-// BeamWeapon -- TODO:Make Pretty
+// BeamWeapon -- 
 function BeamWeapon(){
 	var visible = false;
 	var vec = vec2.create();
@@ -399,7 +438,9 @@ function BeamWeapon(){
 		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		if (traceResult.length > 3) traceResult[1].accelerateToward(p.cx,p.cy,-80);
+		if (traceResult.length > 3) {
+			traceResult[1].accelerateToward(p.cx,p.cy,-80);
+		}
 		
 		endX = traceResult[traceResult.length - 2];
 		endY = traceResult[traceResult.length - 1];
