@@ -36,7 +36,7 @@ function initSound(){
 		this.stop = function(t){
 			if(playing){
 				source.stop(t);
-				console.log('stop')
+				playing = false;
 			}
 		}
 		return Object.defineProperties(this,{
