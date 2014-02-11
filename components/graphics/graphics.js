@@ -5,7 +5,7 @@
 initGraphics();
 var currentScreen;
 var draw_bounding_boxes  = true;
-var do_screen_test = false;
+var do_screen_test = true;
 var draw_grid = false;
 var grid_w = 64;
 var grid_h = 64;
@@ -574,12 +574,25 @@ function initGraphics(){
 		var simpleColorVec = vec4.create();
 		var sr=0,sg=0,sb=0,sa=1;
 		var fr=0,fg=0,fb=0,fa=1;
+		var drawMode = 0;
+		
+		this.CORNER = 1;
+		this.CENTER = 0;
+		
+		this.setDrawMode = function(mode){
+			if(mode == this.CENTER || mode == this.CORNER) drawMode = mode;
+		}
+		
 		this.drawPrimitive = function(x,y,z,width,height,theta,r,g,b,a,name,numOfVerts,drawType){
 			this.bindProgram('simple');
 			gl.uniform4fv(this.getProgram('simple').color,vec4.set(simpleColorVec,r,g,b,a));
 			this.setArrayBufferAsProgramAttribute(name,'simple','vertexPosition');
 			mvMatrix.push();
-			mvMatrix.translate(x,y,z);
+			if(drawMode==this.CORNER){
+				mvMatrix.translate(x+this.width/2,y+this.height/2,z);
+			}else{
+				mvMatrix.translate(x,y,z);
+			}
 			mvMatrix.scale(width,height,1);//default width and height is 1 so scaling is simple
 			if(theta && theta!=0){
 				mvMatrix.rotateZ(theta);
@@ -955,6 +968,7 @@ function initGraphics(){
 					if(d.visible && isOnScreen(this.screen,d)){
 						manager.strokeRect(d.x+(d.width/2),d.y+(d.height/2),0,d.width,d.height,0,1,1,1,1);
 					}
+					manager.setDrawMode(this.CENTER)
 				}
 				for(var i in this.zDrawables){
 					var d = this.zDrawables[i];
