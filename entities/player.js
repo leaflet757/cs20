@@ -258,7 +258,8 @@ Entities.add('player', Entities.create((function(){
  				}
 			}
 			
-			state.life = 100;
+			var life = 100;
+			state.maxLife = 100;
 			Object.defineProperties(
 					fillProperties(fillProperties(state,fillProperties(new GLDrawable(),new PolygonCollider(x+animator.x,y+animator.y,animator.width,animator.height,0.5,null,3))),
 						{
@@ -328,6 +329,15 @@ Entities.add('player', Entities.create((function(){
 					}
 					var verts = new Array();
 					return {
+						life:{
+							get: function(){
+								return life;
+							},
+							set: function(nLife){
+								life = Math.min(nLife,this.maxLife);
+							},
+							configurable: true
+						},
 						x:{
 							get:function(){
 								return stateX;
