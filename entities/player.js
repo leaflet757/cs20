@@ -241,7 +241,7 @@ Entities.add('player', Entities.create((function(){
 			// This section is used for weapons testing
 			var a = new WeaponManager();
 			a.add(new BeamWeapon());
-			a.add(new MineWeapon());
+			a.add(new RocketWeapon());
 			a.add(new WaveWeapon());
 			var weaponsCheck = function() { // fires currently selected weapon
 				if (mouse.left)
