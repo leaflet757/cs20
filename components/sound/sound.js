@@ -13,7 +13,7 @@ function initSound(){
 	var buffers = {};
 	
 	var Sound = function(bufferId,loop){
-		loop = loop || false;
+		this.loop = loop || false;
 		var gainNode = context.createGain();
 		var playing=false;
 		var source=null;
@@ -25,19 +25,33 @@ function initSound(){
 			if(buffers[bufferId].loaded){
 				source = context.createBufferSource(); // Create Sound Source
 				source.buffer = buffers[bufferId].data; // Add Buffered Data to Object
-				source.loop = loop;
+				source.loop = this.loop;
 				source.connect(gainNode);
 				source.onend = onendFunc;
 				gainNode.connect(globalGain);
 				source.start(0);
+				playing = true;
 			}
 		}
 		this.stop = function(t){
 			if(playing){
 				source.stop(t);
+				console.log('stop')
 			}
 		}
 		return Object.defineProperties(this,{
+			playing:{
+				get: function(){
+					return playing;
+				},
+				set: function(p){
+					if(playing && !p){
+						this.stop(0);
+					}else if(!playing && p){
+						this.play(0);
+					}
+				}
+			},
 			loaded:{
 				get:function(){
 					return buffers[bufferId].loaded;
