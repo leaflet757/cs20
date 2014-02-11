@@ -100,7 +100,7 @@ Entities.add('shooter_tank',Entities.create(
 						delay += delta;
 						// test collision code
 						if(pythag(s.cx-this.x,s.cy-this.y)<scope && delay >= 1) {
-							Entities.enemyBullet.newInstance(this.x + this.width/2, this.y + this.height/2);
+							Entities.enemyFollowBullet.newInstance(this.x + this.width/2, this.y + this.height/2);
 							delay = 0;
 						}
 						// ---- 

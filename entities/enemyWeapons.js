@@ -1,4 +1,4 @@
-Entities.add('enemyBullet', Entities.create(
+Entities.add('enemyFollowBullet', Entities.create(
 	(function(){
 		return {
 			// create gets called when Entities.tempBullet.newInstace gets called
