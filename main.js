@@ -216,7 +216,7 @@ function initScene(){
 		// height: 512
 	// });
 	
-	var testSprite = fillProperties(new GLDrawable(),{
+	/* var testSprite = fillProperties(new GLDrawable(),{
 		glInit: function(manager){
 			this.sprite = manager.createSprite('resources/img/emberButton.png')
 			this.sprite.x = 128;
@@ -231,20 +231,31 @@ function initScene(){
 		y: 128,
 		width: 128,
 		height: 128
-	});
+	}); */
 	// graphics.addToDisplay(testSprite,'gl_main');
-	
-	Entities.follower.newInstance(400,400);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.shooter.newInstance(800,800);
-	
 	
 	
 	// graphics.addToDisplay(testMap,"gl_main")
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
+	currentMap.init();
+	Entities.shooter_tank.newInstance(400,400);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	physics.setGeometry(currentMap.lines);
+	graphics.addToDisplay(currentMap,'gl_main');
+}
+
+function reinitScene(){
+	Entities.reset();
+	graphics.removeFromDisplay(currentMap,'gl_main');
+	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
+	currentMap.init();
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }
