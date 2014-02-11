@@ -248,6 +248,10 @@ function initScene(){
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 	Sound.addBuffer('test','resources/audio/laser4.wav')
