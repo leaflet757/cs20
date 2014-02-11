@@ -31,5 +31,3 @@ Entities.add('clickBox',Entities.create(
 		};
 	})())
 );
-
-

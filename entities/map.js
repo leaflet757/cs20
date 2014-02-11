@@ -1,7 +1,3 @@
-/**
-*	This file defines a map object for the current game
-*/
-
 function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, connectorWidth){
 	var num= 0;
 	var lines= new Array();
@@ -44,7 +40,7 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 		this.south =  (south!=null) ? south : this.south;
 		this.east =  (east!=null) ? east : this.east;
 		this.west = (west!=null) ? west : this.west;
-		
+
 		var width = minWidth + (Math.random() * (maxWidth - minWidth));
 		var height= minHeight + (Math.random() * (maxHeight - minHeight));
 		var cx = this.x + size/2;
