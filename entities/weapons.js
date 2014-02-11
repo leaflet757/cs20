@@ -337,7 +337,7 @@ function WaveWeapon(){
 	var length = 100;
 	var radius = 128;
 
-	var sound = Sound.createSound('wave_fire');
+	var sound = Sound.createSound('wave_fire', true);
 	sound.gain = 0.1;
 
 	var mag = 800;
@@ -365,7 +365,7 @@ function WaveWeapon(){
 	};
 	this.fire = function() {
 		if (reload<=0 && duration>0) {
-			if (!sound.playing && !hasFired) {	
+			if (!sound.playing && !hasFired) {
 				sound.play(0);
 				hasFired = true;
 			}
@@ -447,7 +447,7 @@ function BeamWeapon(){
 	var endX = 0;
 	var endY = 0;
 	var hits = [];
-	var sound = Sound.createSound('beam_fire');
+	var sound = Sound.createSound('beam_fire', true);
 	sound.gain = 0.1;
  	
 	graphics.addToDisplay(this, 'gl_main');
