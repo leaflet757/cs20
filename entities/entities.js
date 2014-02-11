@@ -246,3 +246,4 @@ importS('entities/miscEntities.js');
 importS('entities/weapons.js');
 importS('entities/enemies.js');
 importS('entities/pickups.js');
+importS('entities/enemyWeapons.js');
