@@ -21,7 +21,7 @@ function RocketWeapon(){
 	};
 	
 	this.holdFire = function() {
-		
+		// Empty
 	};
 }
 RocketWeapon.prototype = {};
@@ -214,7 +214,7 @@ function MineWeapon(){
 	};
 	
 	this.holdFire = function() {
-		
+		// Empty
 	};
 }
 MineWeapon.prototype = {};
@@ -269,18 +269,29 @@ Entities.add('mine', Entities.create(
 
 // WaveWeapon -- 
 function WaveWeapon(){
+	var p = Entities.player.getInstance(0);
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
 	var thickness = 156;
 	var length = 100;
 	var radius = 128;
-	var wAngle = 40;
+
+	var mag = 150;
+	var wAngle = 50 * Math.PI/180;
+	var eAngle = 0;
+	var evec = vec2.create();
+	
+	var reload = 0;
+	var duration = 1;
+	var forceTime = 1;
+	
+	var newA = true;
+	var a = [];
 	
 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
-		var p = Entities.player.getInstance(0);
 		mvMatrix.push();
 		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
 		mvMatrix.rotateZ(theta + Math.PI / 2);
@@ -288,15 +299,64 @@ function WaveWeapon(){
 		mvMatrix.pop();
 	};
 	this.fire = function() {
-		this.visible = true;
+		if (reload<=0 && duration>0) {	
+			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
+			duration -= 0.1;
+			if (duration < 0) {
+				reload = 0.8;
+				duration = 1;
+			}
+			this.visible = true;
+			// check for enemies
+			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
+			newA = true;
+			if (enemies.length > 1) {
+				// addforce
+				// find direction if direction is legal
+				for (var i = 0; i < a.length; i++) {
+					if (a[i] != p)
+					{
+						var dist = Math.sqrt(Math.pow(a[i].x - p.cx,2) + Math.pow(a[i].y - p.cy,2));
+						if (dist < radius) {
+							var eAngle = Vector.getDir(vec2.set(evec, a[i].x - p.cx, a[i].y - p.cy));
+							if ((eAngle > theta && eAngle < wAngle + theta) || 
+								(eAngle - 2*Math.PI < theta && eAngle - 2*Math.PI > -wAngle + theta) ||
+								((eAngle > theta - 2*Math.PI && eAngle < wAngle + theta - 2*Math.PI) || 
+								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {					
+								Vector.setMag(evec, evec, 1);
+								a[i].addForce(mag*evec[0],mag*evec[1]);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			this.visible = false;
+		}
 	};
 	this.holdFire = function() {
 		this.visible = false;
-	}
+	};
+	this.boundless = true;
+	ticker.add({
+		tick: function(delta) {
+			if (reload > 0) {
+				reload -= delta;
+			}
+			
+			if (newA){	
+				for (var i = 0; i < a.length; i++) {
+					a[i].accel[0] = 0;
+					a[i].accel[1] = 0;
+				}
+				newA = false;
+			}
+		}
+	});
 }
 WaveWeapon.prototype = new GLDrawable();
 
-// BeamWeapon -- TODO:Make Pretty
+// BeamWeapon --
 function BeamWeapon(){
 	var visible = false;
 	var vec = vec2.create();
@@ -306,92 +366,12 @@ function BeamWeapon(){
 	var endX = 0;
 	var endY = 0;
 	var hits = [];
-	
-//	 var animator = new VertexAnimator("basic", 
-// 		{
-// 			beamColor: 
-// 				fillProperties(// TODO: change to triangular verticies
-// 					[0,1,0,1,
-// 					0,1,0,1,
-// 					0,1,0,1],
-// 					{
-// 						attributeId: "vertexColor",
-// 						items: 3,
-// 						itemSize: 4
-// 					}), 
-// 			beamPosition: 
-// 				fillProperties([
-// 					0,0,0,
-// 					1,1,0,
-// 					-1,1,0],
-// 					{
-// 						attributeId: "vertexPosition",
-// 						items: 3,
-// 						itemSize: 3
-// 					})
-// 			},
-// 		{},6);					
-// 	animator.addKeyframe("active", 
-// 			{
-// 				beamColor: 
-// 					fillProperties([
-// 						0,1,0,1,
-// 						0,1,0,1,
-// 						0,1,0,1],
-// 					{
-// 						attributeId: "vertexColor",
-// 						items: 3,
-// 						itemSize: 4
-// 				}), 
-// 				beamPosition: 
-// 					fillProperties([
-// 						0,0,0,
-// 						1,512,0,
-// 						-1,-512,0],
-// 					{
-// 						attributeId: "vertexPosition",
-// 						items: 3,
-// 						itemSize: 3
-// 					})
-// 				},
-// 		{},6);					
-// 	animator.addKeyframe("starting", 
-// 		{
-// 			beamColor: 
-// 			fillProperties(
-// 				[0,1,0,1,
-// 				0,1,0,1,
-// 				0,1,0,1],
-// 				{
-// 					attributeId: "vertexColor",
-// 					items: 3,
-// 					itemSize: 4
-// 				}), 
-// 			beamPosition: 
-// 			fillProperties([
-// 				0,0,0,
-// 				1,1,0,
-// 				-1,1,0],
-// 				{
-// 					attributeId: "vertexPosition",
-// 					items: 3,
-// 					itemSize: 3
-// 			})
-// 		},
-// 		{},6);
-//  	animator.setCurrentKeyframe("starting",0);
-//  	animator.setCurrentKeyframe("active", 5);
  	
 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		var p = Entities.player.getInstance(0);
-		//mvMatrix.push();
-		//theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-		//mvMatrix.rotateZ(theta + Math.PI / 2);
-		//manager.fillRect(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0,1,0,1);
 		manager.line(p.cx, p.cy, endX, endY,0,0,1,0,1);
-		//mvMatrix.pop();
 	};
 	this.fire = function() {
 		this.visible = true;
@@ -403,10 +383,8 @@ function BeamWeapon(){
 		
 		endX = traceResult[traceResult.length - 2];
 		endY = traceResult[traceResult.length - 1];
-		
-		//vec2.set(vec, (mouse.x - (p.cx - p.x)), (mouse.yInv - (p.cy - p.y)));
-		//p.accelerateToward(vec[0], vec[1], -100);
 	};
+	this.boundless = true;
 	this.holdFire = function() {
 		this.visible = false;
 	}
@@ -414,13 +392,13 @@ function BeamWeapon(){
 BeamWeapon.prototype = new GLDrawable();
 
 
-// Temp: Explosion
+// Explosion
 Entities.add('explosion', Entities.create(
 	(function(){
 		return {
-			create: function(state,x,y){
+			create: function(state,x,y,life){
 				state.alive = true;
-				state.life = 0.5;
+				state.life = life || 0.5;
 				var width = 24;
 				var height = 24;
 				if(!state.first){
