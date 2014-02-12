@@ -1,6 +1,7 @@
 
 
 Entities.add('player', Entities.create((function(){
+
 	var transitionSound=Sound.createSound('transition',false);
 	transitionSound.gain = 0.1;
 	var blipSound=Sound.createSound('blip',false);
@@ -142,6 +143,8 @@ Entities.add('player', Entities.create((function(){
 		left:'a'
 	}
 	
+	var weaponManager = new WeaponManager();
+	
 	return {
 		create: function(state,x,y){
 			{//setup animator
@@ -237,25 +240,21 @@ Entities.add('player', Entities.create((function(){
 				}
 			}
 			
+			weaponManager.add(new BeamWeapon());
+			weaponManager.add(new RocketWeapon());
+			weaponManager.add(new WaveWeapon());
+			
 			// weapon manager
 			// This section is used for weapons testing
-			var a = new WeaponManager();
-			a.add(new BeamWeapon());
-			a.add(new RocketWeapon());
-			a.add(new WaveWeapon());
-			var weaponsCheck = function() { // fires currently selected weapon
+			var weaponsCheck = function() {
 				if (mouse.left)
 				{
-					//weaponManager.fire();
-					a.fire();
+					weaponManager.fire();
 				}
 				else
 				{
-					a.holdFire();
+					weaponManager.holdFire();
 				}
-				if(mouse.right){
- 					Entities.clickBox.newInstance(mouse.x,mouse.yInv);
- 				}
 			}
 			
 			var life = 100;
@@ -274,21 +273,21 @@ Entities.add('player', Entities.create((function(){
 									animator.setCurrentKeyframe('triangle',(pk==1) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									if(change)pk = k
 									k=1;
-									a.swap(0);
+									weaponManager.swap(0);
 								}else if(keyboard._2 && k!=2){
 									// if(!animator.animating) pk=2
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('square',(pk==2) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									if(change)pk = k
 									k=2;
-									a.swap(1);
+									weaponManager.swap(1);
 								}else if(keyboard._3 && k!=3){
 									// if(!animator.animating) pk=3
 									transitionSound.play(0);
 									animator.setCurrentKeyframe('circle',(pk==3) ? 1-animator.getTimeTillNextKeyframe() : 1);
 									if(change)pk = k
 									k=3;
-									a.swap(2);
+									weaponManager.swap(2);
 								}
 								
 								var mx= mouse.x,my=mouse.yInv;
@@ -388,7 +387,7 @@ Entities.add('player', Entities.create((function(){
 			physics.remove(state);
 			ticker.remove(state);
 			if(graphics.getScreen('gl_main').follower == state)graphics.getScreen('gl_main').follower == null;
-			
+			weaponManager.clear();
 			playerExplosion.play(0);
 			for (var i = 0; i < 50; i++)
 				Entities.explosion.newInstance(state.cx, state.cy,2);
