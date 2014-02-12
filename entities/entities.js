@@ -258,7 +258,7 @@ Entity.prototype=(function(){
 		reset:function(){
 			for(var i = 0; i<this.position; i++){
 				delete this.instances[this.instanceArray[i].id];
-				this.def.destroy(this.instanceArray[i]);
+				this.def.doDestroy(this.instanceArray[i]);
 			}
 			this.position = 0;
 		},
