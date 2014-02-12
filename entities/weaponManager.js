@@ -10,7 +10,8 @@ WeaponManager.prototype =
 {
 	// Fires the weapon: starting collision checks and drawing
  	fire: function() {
- 		this.currentWeapon.fire();
+ 		if (!Loop.paused)
+ 			this.currentWeapon.fire();
  		return;
  	},
  	

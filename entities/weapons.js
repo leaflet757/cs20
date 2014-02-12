@@ -1,5 +1,5 @@
 Sound.addBuffer('rocket_fire', 'resources/audio/weapon_sounds/rocket1.wav');
-Sound.addBuffer('beam_fire', 'resources/audio/weapon_sounds/beam2.wav');
+Sound.addBuffer('beam_fire', 'resources/audio/laser_temp.wav');
 Sound.addBuffer('wave_fire', 'resources/audio/weapon_sounds/wave.wav');
 Sound.addBuffer('mine_fire', 'resources/audio/weapon_sounds/mine_place.wav');
 Sound.addBuffer('explosion_fire', 'resources/audio/weapon_sounds/explosion1.wav');
@@ -447,7 +447,7 @@ function BeamWeapon(){
 	var endX = 0;
 	var endY = 0;
 	var hits = [];
-	var sound = Sound.createSound('beam_fire');
+	var sound = Sound.createSound('beam_fire', true);
 	sound.gain = 0.1;
  	
 	graphics.addToDisplay(this, 'gl_main');
