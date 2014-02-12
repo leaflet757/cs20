@@ -8,7 +8,7 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 	this.lines = lines;
 	var rooms= new Array();
 	var check = function(x,y){
-		for( i in rooms) {
+		for(var i in rooms) {
 			if( rooms[i].x == x && rooms[i].y == y){
 				return false;
 			}

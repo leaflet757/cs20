@@ -99,7 +99,7 @@ Entities.add('tempBullet', Entities.create(
 // Example creation
 // Entities.tempBullet.newInstance(Entities.player.getInstance(0).cx, Entities.player.getInstance(0).cy);
 
-Entities.add('shrink_frag',Entities.create(
+Entities.add('shrink_burst',Entities.create(
 	(function(){
 		return {
 			parent: Entities.basic_collider,
@@ -128,11 +128,11 @@ Entities.add('shrink_frag',Entities.create(
 				state.startHeight = height || 8;
 				state.height = state.startHeight;
 				
-				state.startLife = 1 || life;
+				state.startLife = life || 1;
 				state.life = state.startLife;
 				
 				state.alpha = 1;
-				state.dragConst = 0.1 || dragConst;
+				state.dragConst = dragConst || 0.1;
 				state.set(x,y,vx,vy,0,0);
 			},
 			update: function(state,delta){
@@ -141,14 +141,12 @@ Entities.add('shrink_frag',Entities.create(
 			}
 		}
 	})())
-).burst = (function(){
-	var miscVec = vec2.create();
-	return function(num,x,y,width,height,life,speed,r,g,b,dragConst,vx,vy){
-		vx = vx || 0;
-		vy = vy || 0;
-		for(var i =0; i<num; i++){
-			var theta = Math.random()*(Math.PI*2);
-			this.newInstance(x,y,width,height,life,vx+Math.cos(theta)*speed,vy+Math.sin(theta)*speed,r,g,b,dragConst);
-		}
+).burst = function(num,x,y,width,height,life,speed,r,g,b,dragConst,vx,vy){
+	vx = vx || 0;
+	vy = vy || 0;
+	
+	for(var i =0; i<num; i++){
+		var theta = Math.random()*(Math.PI*2);
+		this.newInstance(x,y,width,height,life,vx+Math.cos(theta)*speed,vy+Math.sin(theta)*speed,r,g,b,dragConst);
 	}
-})();
+}

@@ -261,8 +261,9 @@ function initScene(){
 	
 	// graphics.addToDisplay(testMap,"gl_main")
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
-	Entities.runner.def.max = 20;
-	currentMap.init([Entities.runner],32);
+	Entities.runner.def.max = 10;
+	Entities.enemy_direct_suicider.def.max = 10;
+	currentMap.init([Entities.runner,Entities.enemy_direct_suicider],32);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
@@ -280,7 +281,7 @@ function reinitScene(){
 	Entities.reset();
 	graphics.removeFromDisplay(currentMap,'gl_main');
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
-	currentMap.init([Entities.runner],32);
+	currentMap.init([Entities.runner,Entities.enemy_direct_suicider],32);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }
