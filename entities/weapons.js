@@ -321,8 +321,7 @@ Entities.add('mine', Entities.create(
 // WaveWeapon -- 
 function WaveWeapon(){
 	var p = Entities.player.getInstance(0);
-	var damage = 0.3;
-	var damagePer = 1;
+	var damage = 0.5;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
@@ -338,14 +337,10 @@ function WaveWeapon(){
 	var eAngle = 0;
 	var evec = vec2.create();
 	
-	var reload = 0;
-	var duration = 1;
-	var forceTime = 1;
+	var hasFired = true;
 	
 	var newA = true;
 	var a = [];
-	
-	var hasFired = false;
 	
 	graphics.addToDisplay(this, 'gl_main');
 	
@@ -357,18 +352,13 @@ function WaveWeapon(){
 		mvMatrix.pop();
 	};
 	this.fire = function() {
-		if (reload<=0 && duration>0) {
-			if (!sound.playing && !hasFired) {
+		if (!hasFired) {
+			hasFired = true;
+			if (!sound.playing) {
 				sound.play(0);
-				hasFired = true;
 			}
 			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-			duration -= 0.1;
-			if (duration < 0) {
-				reload = 0.8;
-				duration = 1;
-				hasFired = false;
-			}
+			
 			this.visible = true;
 			// check for enemies
 			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
@@ -390,7 +380,7 @@ function WaveWeapon(){
 								//a[i].addForce(mag*evec[0],mag*evec[1]);
 								a[i].vel[0] = evec[0] * mag;
 								a[i].vel[1] = evec[1] * mag;
-								if(a[i].life)a[i].life -= damagePer*damage;
+								if(a[i].life)a[i].life -= damage;
 								if (a[i].life <= 0) {
 									a[i].alive = false;
 								}
@@ -407,15 +397,11 @@ function WaveWeapon(){
 		if (sound.playing)
 			sound.stop(0);
 		this.visible = false;
+		hasfired = false;
 	};
 	this.boundless = true;
 	ticker.add({
 		tick: function(delta) {
-			damagePer = delta
-			if (reload > 0) {
-				reload -= delta;
-			}
-			
 			if (newA){	
 				for (var i = 0; i < a.length; i++) {
 					a[i].accel[0] = 0;
@@ -475,7 +461,6 @@ function BeamWeapon(){
 	}
 }
 BeamWeapon.prototype = new GLDrawable();
-
 
 // Explosion
 Entities.add('explosion', Entities.create(
