@@ -1,32 +1,41 @@
-Entities.add('clickBox',Entities.create(
+Entities.add('basic_collider',Entities.create(
 	(function(){
 		return {
 			create: function(state,x,y){
-				if(!state.first){
+				if(!state.firstBasicCollider){
 					fillProperties(state,Entities.createStandardCollisionState(
 						{
-							draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-								manager.fillRect(this.x+(this.width/2),this.y+(this.width/2),0,this.width,this.height,0,.5,1,1,1);
-							},
-							width: 32,
-							height: 32
+							
 						},x,y,32,32,1));
-					state.first = true;
-					// state.tick= function(){
-						// this.accel[0]=0;
-						// this.accel[1]=0;
-					// }
+					state.firstBasicCollider = true;
 					state.dragConst = 0.1
 				}
 				state.set(x,y,0,0,0,0);
 				graphics.addToDisplay(state,'gl_main');
 				physics.add(state);
-				// ticker.add(state);
+			},
+			update: function(state,delta){
+				state.accel[0]=0;
+				state.accel[1]=1;
 			},
 			destroy: function(state){
 				graphics.removeFromDisplay(state,'gl_main');
-				ticker.remove(state);
 				physics.remove(state);
+			}
+		};
+	})())
+);
+
+Entities.add('clickBox',Entities.create(
+	(function(){
+		return {
+			parent: Entities.basic_collider,
+			create: function(state,x,y){
+				if(!state.firstClickBox){
+					state.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix){
+						manager.fillRect(this.x+(this.width/2),this.y+(this.width/2),0,this.width,this.height,0,.5,1,1,1);
+					}
+				}
 			}
 		};
 	})())
@@ -90,3 +99,56 @@ Entities.add('tempBullet', Entities.create(
 // Example creation
 // Entities.tempBullet.newInstance(Entities.player.getInstance(0).cx, Entities.player.getInstance(0).cy);
 
+Entities.add('shrink_frag',Entities.create(
+	(function(){
+		return {
+			parent: Entities.basic_collider,
+			create: function(state,x,y,width,height,life,vx,vy,r,g,b,dragConst){
+				if(!state.firstShrinkCollider){
+					state.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix){
+						var f = this.life/this.startLife
+						this.alpha = f;
+						this.width = this.startWidth * f;
+						this.height = this.startHeight * f;
+						gl.enable(gl.BLEND);
+						gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
+						manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width,this.height,0,this.r,this.g,this.b,0.5*this.alpha);
+						manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width/2,this.height/2,0,this.r,this.g,this.b,this.alpha);
+						gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
+					}
+					state.firstShrinkCollider = true;
+				}
+				
+				state.r = r || 0;
+				state.g = g || 0;
+				state.b = b || 0;
+				state.startWidth = width || 8;
+				state.width = state.startWidth;
+				
+				state.startHeight = height || 8;
+				state.height = state.startHeight;
+				
+				state.startLife = 1 || life;
+				state.life = state.startLife;
+				
+				state.alpha = 1;
+				state.dragConst = 0.1 || dragConst;
+				state.set(x,y,vx,vy,0,0);
+			},
+			update: function(state,delta){
+				state.life-=delta;
+				if(state.life<=0)state.alive = false;
+			}
+		}
+	})())
+).burst = (function(){
+	var miscVec = vec2.create();
+	return function(num,x,y,width,height,life,speed,r,g,b,dragConst,vx,vy){
+		vx = vx || 0;
+		vy = vy || 0;
+		for(var i =0; i<num; i++){
+			var theta = Math.random()*(Math.PI*2);
+			this.newInstance(x,y,width,height,life,vx+Math.cos(theta)*speed,vy+Math.sin(theta)*speed,r,g,b,dragConst);
+		}
+	}
+})();

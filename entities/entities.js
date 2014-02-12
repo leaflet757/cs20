@@ -69,10 +69,6 @@ Entities = fillProperties(new Updatable(),{
 	*/
 	add: function(name,entity){
 		if(entity instanceof Entity){
-			Object.defineProperty(entity,'euid',{
-				writible: false,
-				value: uid()
-			});
 			this[name] = entity;
 		}else{
 			throw 'Entities: attempt to add non-entity'
@@ -115,6 +111,35 @@ Entities = fillProperties(new Updatable(),{
 });
 
 function EntityDef(){
+	Object.defineProperties(this,{
+		doDestroy:{
+			value: function(state){
+				if(this.parent){
+					this.parent.def.doDestroy(state);
+				}
+				this.destroy(state);
+			},
+			writable:false
+		},
+		doUpdate: {
+			value: function(state,delta){
+				if(this.parent){
+					this.parent.def.doUpdate(state,delta);
+				}
+				this.update(state,delta);
+			},
+			writable:false
+		},
+		doCreate: {
+			value: function(state,a,b,c,d,e,f,g,h){
+				if(this.parent){
+					this.parent.def.doCreate(state,a,b,c,d,e,f,g,h);
+				}
+				this.create(state,a,b,c,d,e,f,g,h);
+			},
+			writable:false
+		},
+	})
 }
 EntityDef.prototype={
 	/**
@@ -136,15 +161,15 @@ EntityDef.prototype={
 	*	sets whether or not the entity is active
 	*/
 	setActive: function(state,active){
-	}
+	},
+	/**
+	* 	defines a parent entity for this def
+	*/
+	parent: false
 }
 
 function EntityState(id,euid){
-	this.id = id;
-	Object.defineProperty(this,'euid',{
-			writible: false,
-			value: euid
-		});
+	this[euid] = id;
 }
 EntityState.prototype={
 	alive:false,
@@ -160,6 +185,10 @@ function Entity(def){
 		this.instances = {};
 		this.instanceArray = new Array();
 		this.position = 0;
+		Object.defineProperty(this,'euid',{
+				writible: false,
+				value: uid()
+			});
 	}else{
 		throw 'Entity: illegal parameter';
 	}
@@ -176,18 +205,22 @@ Entity.prototype=(function(){
 			var instance;
 			if(this.position<this.instanceArray.length){
 				instance = this.instanceArray[this.position];
-				instance.id = instanceId++;
+				this.instances[id] = instance;
 			}else{
-				instance = new EntityState(instanceId++,this.euid);
+				instance = new EntityState(id,this.euid);
 				this.instanceArray.push(instance);
+				this.instances[id] = instance;
 			}
+			instance[this.euid]= id;
 			instance.alive = true;
-			this.instances[id] = instance;
-			this.def.create(instance,a,b,c,d,e,f,g,h);
+			this.def.doCreate(instance,a,b,c,d,e,f,g,h);
 			this.position++;
-			return id;
+			return instance;
 		},
-		getInstance: function(id){
+		getInstance: function(index){
+			return this.instanceArray[index];
+		},
+		getInstanceById: function(id){
 			return this.instances[id];
 		},
 		/**
@@ -210,14 +243,13 @@ Entity.prototype=(function(){
 						this.instanceArray[i] = this.instanceArray[this.position];
 						this.instanceArray[this.position] = temp;
 					}
-					this.instances[temp.id] = null;
-					this.def.destroy(temp);
-					
+					this.instances[temp[this.euid]] = null;
+					this.def.doDestroy(temp)
 					instance = this.instanceArray[i];
 				}
-				if(i<this.position && instance.active){
-					this.def.update(instance,delta);
-				}
+			}
+			for(var i = 0; i<this.position; i++){
+				this.def.doUpdate(this.instanceArray[i],delta)
 			}
 		},
 		/**

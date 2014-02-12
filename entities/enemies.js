@@ -1,4 +1,3 @@
-Sound.addBuffer('player_hit', 'resources/audio/player_hit.wav');
 Entities.add('runner',Entities.create(
 	(function(){
 		var mvec = new Array();

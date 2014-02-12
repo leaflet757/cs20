@@ -1,10 +1,3 @@
-Sound.addBuffer('rocket_fire', 'resources/audio/weapon_sounds/rocket1.wav');
-Sound.addBuffer('beam_fire', 'resources/audio/laser_temp.wav');
-Sound.addBuffer('wave_fire', 'resources/audio/weapon_sounds/wave.wav');
-Sound.addBuffer('mine_fire', 'resources/audio/weapon_sounds/mine_place.wav');
-Sound.addBuffer('explosion_fire', 'resources/audio/weapon_sounds/explosion1.wav');
-// temporary sound files
-
 
 // RocketWeapon -- 
 function RocketWeapon(){
@@ -337,7 +330,7 @@ function WaveWeapon(){
 	var length = 100;
 	var radius = 128;
 
-	var sound = Sound.createSound('wave_fire');
+	var sound = Sound.createSound('wave_fire', true);
 	sound.gain = 0.1;
 
 	var mag = 800;
@@ -365,7 +358,7 @@ function WaveWeapon(){
 	};
 	this.fire = function() {
 		if (reload<=0 && duration>0) {
-			if (!sound.playing && !hasFired) {	
+			if (!sound.playing && !hasFired) {
 				sound.play(0);
 				hasFired = true;
 			}
@@ -384,7 +377,7 @@ function WaveWeapon(){
 				// addforce
 				// find direction if direction is legal
 				for (var i = 0; i < a.length; i++) {
-					if (a[i] != p && a[i].isEnemy)
+					if (a[i] != p)
 					{
 						var dist = Math.sqrt(Math.pow(a[i].x - p.cx,2) + Math.pow(a[i].y - p.cy,2));
 						if (dist < radius) {
@@ -397,7 +390,7 @@ function WaveWeapon(){
 								//a[i].addForce(mag*evec[0],mag*evec[1]);
 								a[i].vel[0] = evec[0] * mag;
 								a[i].vel[1] = evec[1] * mag;
-								a[i].life -= damagePer*damage;
+								if(a[i].life)a[i].life -= damagePer*damage;
 								if (a[i].life <= 0) {
 									a[i].alive = false;
 								}

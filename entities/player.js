@@ -1,11 +1,11 @@
 
 
 Entities.add('player', Entities.create((function(){
-	var transitionSound=Sound.createSound(Sound.addBuffer('transition','resources/audio/transition.wav'),false);
+	var transitionSound=Sound.createSound('transition',false);
 	transitionSound.gain = 0.1;
-	var blipSound=Sound.createSound(Sound.addBuffer('blip','resources/audio/blip.wav'),false);
+	var blipSound=Sound.createSound('blip',false);
 	blipSound.gain = 0.05;
-	var playerExplosion=Sound.createSound(Sound.addBuffer('explosion','resources/audio/playerExplosion.wav'),false);
+	var playerExplosion=Sound.createSound('playerExplosion',false);
 	playerExplosion.gain = 0.5;
 	//creates a circle with the given number of sides and radius
 	var generateCircle = function(numOfVerts,radius){
@@ -241,7 +241,7 @@ Entities.add('player', Entities.create((function(){
 			// This section is used for weapons testing
 			var a = new WeaponManager();
 			a.add(new BeamWeapon());
-			a.add(new MineWeapon());
+			a.add(new RocketWeapon());
 			a.add(new WaveWeapon());
 			var weaponsCheck = function() { // fires currently selected weapon
 				if (mouse.left)

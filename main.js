@@ -11,6 +11,7 @@ function loadSource(){
 	//list script files in order here
 	var scriptSource = [
 		'misc.js',
+		'config.js',
 		'utils/input.js',
 		'utils/collisions.js',
 		'utils/geometry.js',
@@ -27,6 +28,8 @@ function loadSource(){
 	for(var i in scriptSource){
 		document.write('<script type="text/javascript" src='+scriptSource[i]+'><\/script>')
 	}
+	
+	
 }
 
 //initializes the keyboard and mouse objects
@@ -121,6 +124,25 @@ function initInput(){
 	mouse = new input.Mouse(window,document.getElementById("Display"));
 }
 
+function loadResources(callback){
+	var resourceConfig = new ResourceConfig('resources.xml');
+	
+	var i = 0;
+	
+	var loadNextSound = function(name){
+		if(name)console.log("audio buffer: "+name+" loaded");
+		if(i < resourceConfig.audio.length){
+			var node = resourceConfig.audio[i];
+			var name = node.getAttribute('name');
+			Sound.addBuffer(name,node.firstChild.data,function(){loadNextSound(name)});
+			i++;
+		}else{
+			callback();
+		}
+	}
+	
+	loadNextSound();
+}
 
 //initialization code goes here
 function init(){
@@ -129,14 +151,12 @@ function init(){
 	}
 	Loop.add(Entities)
 	Loop.start();
-	initScene();
+	loadResources(initScene);
 }
 
 function initScene(){
-	var currentScreen = graphics.getScreen('gl_main');
-	mouse.box = currentScreen;
-	
-	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
+	mouse.box = graphics.getScreen('gl_main');
+
 	
 	//fps counter using a simple low pass filter
 	var fpsCounter = (function(){
@@ -254,16 +274,13 @@ function initScene(){
 	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
-	Sound.addBuffer('test','resources/audio/laser4.wav')
-	testSound = Sound.createSound('test',true);
-	testSound2 = Sound.createSound('test',true);
 }
 
 function reinitScene(){
 	Entities.reset();
 	graphics.removeFromDisplay(currentMap,'gl_main');
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
-	currentMap.init();
+	currentMap.init([Entities.runner],32);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }

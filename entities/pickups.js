@@ -1,6 +1,4 @@
-Sound.addBuffer('health_small','resources/audio/health_pickup_small.wav')
-Sound.addBuffer('health_med','resources/audio/health_pickup_med.wav')
-Sound.addBuffer('health_large','resources/audio/health_pickup_large.wav')
+
 //small health pickup
 Entities.add('health_small',Entities.create(
 		{
