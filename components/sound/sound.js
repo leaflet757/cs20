@@ -69,7 +69,7 @@ function initSound(){
 		});
 	}
 	
-	var SoundBuffer = function(url){
+	var SoundBuffer = function(url,callback){
 		var loaded = false;
 		var data = null;
 			
@@ -82,6 +82,7 @@ function initSound(){
 					context.decodeAudioData(request.response, function(b){
 						data=b;
 						loaded=true;
+						if(callback) callback();
 					}, function(){
 						console.error('error loading audio');
 					})
@@ -115,12 +116,15 @@ function initSound(){
 	
 	window.Sound = Object.defineProperties(
 		{
-			addBuffer:function(id,url){
-				buffers[id] = new SoundBuffer(url);
+			addBuffer:function(id,url,callback){
+				buffers[id] = new SoundBuffer(url,callback);
 				return id;
 			},
 			createSound:function(bufferId,loop){
 				return new Sound(bufferId,loop);
+			},
+			isLoaded: function(id){
+				return buffers[id] && buffers[id].loaded;
 			}
 		},
 		{

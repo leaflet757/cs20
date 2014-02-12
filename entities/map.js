@@ -103,7 +103,6 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 		//add enemies
 		if(enemies){
 			var populate = function(room,d){
-				console.log(enemies)
 				for(var i in enemies){
 					var num = enemies[i].def.max * Math.random();
 					for(var j = 0; j< num; j++){
