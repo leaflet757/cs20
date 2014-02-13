@@ -398,6 +398,7 @@ function initPhysics(){
 					c = true;
 				}
 				if(!c){
+					console.trace();
 					throw 'Physics.add: invalid parameter: '+obj;
 				}
 			},

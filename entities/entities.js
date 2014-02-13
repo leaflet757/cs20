@@ -131,11 +131,11 @@ function EntityDef(){
 			writable:false
 		},
 		doCreate: {
-			value: function(state,a,b,c,d,e,f,g,h){
+			value: function(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p){
 				if(this.parent){
-					this.parent.def.doCreate(state,a,b,c,d,e,f,g,h);
+					this.parent.def.doCreate(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
 				}
-				this.create(state,a,b,c,d,e,f,g,h);
+				this.create(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
 			},
 			writable:false
 		},
@@ -145,7 +145,7 @@ EntityDef.prototype={
 	/**
 	* 	initializes the passed state object
 	*/
-	create: function(state,a,b,c,d,e,f,g,h){
+	create: function(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p){
 	},
 	/**
 	* 	does actions for the end of a instances life
@@ -200,7 +200,7 @@ Entity.prototype=(function(){
 		/**
 		* creates a new instance
 		*/
-		newInstance: function(a,b,c,d,e,f,g,h){
+		newInstance: function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p){
 			var id = instanceId++
 			var instance;
 			if(this.position<this.instanceArray.length){
@@ -213,7 +213,7 @@ Entity.prototype=(function(){
 			}
 			instance[this.euid]= id;
 			instance.alive = true;
-			this.def.doCreate(instance,a,b,c,d,e,f,g,h);
+			this.def.doCreate(instance,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
 			this.position++;
 			return instance;
 		},
@@ -276,5 +276,6 @@ importS('entities/weaponManager.js');
 importS('entities/player.js');
 importS('entities/miscEntities.js');
 importS('entities/weapons.js');
+importS('entities/enemies2.js');
 importS('entities/enemies.js');
 importS('entities/pickups.js');

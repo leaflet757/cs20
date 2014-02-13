@@ -12,6 +12,7 @@
 		<file name='mine_fire'>resources/audio/weapon_sounds/mine_place.wav</file>
 		<file name='explosion_fire'>resources/audio/weapon_sounds/explosion1.wav</file>
 		<file name='player_hit'>resources/audio/player_hit.wav</file>
+		<file name='direct_suicider_death'>resources/audio/direct_suicider_death.wav</file>
 	</audio>
 	<textures>
 	</textures>
