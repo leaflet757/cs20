@@ -14,12 +14,10 @@ Entities.add('health_generic',Entities.create(
 								z: 0
 							},x,y,16,16,1));
 					state.health = 1;
-					state.dragConst = 0.4;
+					state.dragConst = 0.1;
 					state.pickupSound = Sound.createSound('health_small');
 					state.pickupSound.gain = 0.1;
 					state.firstHealth = true;
-					state.pullRange = 512;
-					state.pullMag = 600;
 				}
 				state.set(x,y,vx || 0,vy || 0,0,0);
 				graphics.addToDisplay(state,'gl_main');
@@ -30,20 +28,13 @@ Entities.add('health_generic',Entities.create(
 				if(p.collision(state) && p.life<p.maxLife){
 					p.life += state.health;
 					state.alive = false;
-				}else if(p.life<p.maxLife){
-					var dist = pythag(state.x+state.width/2 - p.cx,state.y+state.height/2 - p.cy);
-					if(dist<state.pullRange){
-						state.accelerateToward(p.cx-state.width/2,p.cy-state.height/2,state.pullMag*sqr(1-(dist/state.pullRange)));
-					}
-				}	
-			},
-			destroy: function(state,reset){
-				if(!reset) {
-					state.pickupSound.play(0);
-					Entities.shrink_burst.burst(8,state.x,state.y,state.width*.75,state.width*.75,3,50,0,1,0,0.1,state.vel[0],state.vel[1])
 				}
+			},
+			destroy: function(state){
+				state.pickupSound.play(0);
 				graphics.removeFromDisplay(state,'gl_main');
 				physics.remove(state);
+				Entities.shrink_burst.burst(8,state.x,state.y,this.width*.75,this.width*.75,3,50,0,1,0,0.1,state.vel[0],state.vel[1])
 			}
 		}
 		)
@@ -106,6 +97,12 @@ Entities.add('health_burst_frag',Entities.create(
 								manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width/2,this.height/2,0,0,1,0,this.alpha);
 								gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
 							},
+							tick:function(delta){
+								this.life -= delta;
+								if(this.life<=0){
+									this.alive = false;
+								}
+							},
 							width: size,
 							height: size,
 							z: 0
@@ -116,16 +113,12 @@ Entities.add('health_burst_frag',Entities.create(
 			state.set(x,y,vx || 0,vy || 0,0,0);
 			graphics.addToDisplay(state,'gl_main');
 			physics.add(state);
-		},
-		update:function(state,delta){
-			state.life -= delta;
-			if(state.life<=0){
-				state.alive = false;
-			}
+			ticker.add(state);
 		},
 		destroy: function(state){
 			graphics.removeFromDisplay(state,'gl_main');
 			physics.remove(state);
+			ticker.remove(state);
 		}
 	}
 	)

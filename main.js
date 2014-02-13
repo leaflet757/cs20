@@ -155,10 +155,9 @@ function init(){
 }
 
 function initScene(){
-	var screen = graphics.getScreen('gl_main');
 	mouse.box = graphics.getScreen('gl_main');
 
-	screen.scale(1.5)
+	
 	//fps counter using a simple low pass filter
 	var fpsCounter = (function(){
 		var element = document.getElementById('fps');
@@ -261,7 +260,7 @@ function initScene(){
 	
 	
 	// graphics.addToDisplay(testMap,"gl_main")
-	currentMap = new Map(9,0.5,256*4,512*4,256*4,512*4,640*4,128);
+	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
 	Entities.runner.def.max = 10;
 	Entities.enemy_direct_suicider.def.max = 10;
 	currentMap.init([Entities.runner,Entities.enemy_direct_suicider],32);
@@ -279,7 +278,6 @@ function initScene(){
 }
 
 function reinitScene(){
-	Entities.reset();
 	Entities.reset();
 	graphics.removeFromDisplay(currentMap,'gl_main');
 	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);

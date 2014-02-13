@@ -280,7 +280,6 @@ var Collisions = {
 	polygonPolygon: function(verts1,itemSize1,verts2,itemSize2){
 		var first1 = true
 		var xa=verts1[verts1.length-itemSize1],ya=verts1[verts1.length-itemSize1];
-		if(this.pointInPolygon(verts1[0],verts1[1],verts2,itemSize2) || this.pointInPolygon(verts2[0],verts2[1],verts1,itemSize1)) return true;
 		for(var i = 0; i<verts1.length; i+=itemSize1){
 			var xb=verts2[verts2.length-itemSize2],ya=verts2[verts2.length2-itemSize2];
 			for(var j = 0; j<verts2.length; j+=itemSize2){

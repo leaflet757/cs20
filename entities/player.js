@@ -314,8 +314,10 @@ Entities.add('player', Entities.create((function(){
 								// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
 							},
 							onCollision: function(){
-								blipSound.play(0);
-								blipSound.gain = Vector.getMag(this.vel) * 0.0001
+								if(!blipSound.playing){
+									blipSound.play(0);
+									blipSound.gain = Vector.getMag(this.vel) * 0.00001
+								}
 							}
 						}),
 				(function(){
