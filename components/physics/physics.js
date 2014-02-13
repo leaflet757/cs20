@@ -220,7 +220,11 @@ function initPhysics(){
 		mover.vel[0] += ax*delta;
 		mover.vel[1] += ay*delta;
 		
-		if(mover.maxSpeed){
+		var speed = Vector.getMag(mover.vel);
+		if(speed<0.001 || (mover.minSpeed && speed<mover.minSpeed)){
+			mover.vel[0]=0;
+			mover.vel[1]=0;
+		}if(mover.maxSpeed){
 			if(Vector.getMag(mover.vel)>mover.maxSpeed) Vector.setMag(mover.vel,mover.vel,mover.maxSpeed);
 		}
 	}
@@ -250,6 +254,7 @@ function initPhysics(){
 		
 		return function(delta){
 			for(var i in colliders){
+				if(colliders[i].x==colliders[i].px && colliders[i].y==colliders[i].py && colliders[i].width==colliders[i].pwidth && colliders[i].height==colliders[i].pheight) continue;
 				collisionSet.length = 0;
 				collidingLines.length = 0;
 				var co = colliders[i];
@@ -378,6 +383,8 @@ function initPhysics(){
 				for(var i = 0; i<colliders.length; i++){
 					colliders[i].pwidth = colliders[i].width;
 					colliders[i].pheight = colliders[i].height;
+					colliders[i].px = colliders[i].x;
+					colliders[i].py = colliders[i].y
 				}
 				if(colliderTree){
 					colliderTree.clear();
@@ -790,5 +797,25 @@ PolygonCollider.prototype = fillProperties(new BasicCollider(),
 					// break;
 			// }
 		// }
-	// }
+	// },
+	collision: function(x,y,width,height){
+		var obj;
+		if(typeof x == 'object'){
+			obj = x;
+			x = obj.x;
+			y = obj.y;
+			width = obj.width;
+			height = obj.height;
+		}
+		if(Collisions.boxBox(x,y,width,height,this.x,this.y,this.width,this.height)){
+			if(obj && obj.isCircle){
+					return Collisions.circlePolygon(x+width/2,y+height/2,width/2,this.verts,this.itemSize);
+			}else if(obj && obj.verts && obj.itemSize){
+				return Collisions.polygonPolygon(obj.verts,obj.itemSize,this.verts,this.itemSize)
+			}else{
+				return Collisions.polygonBox(x,y,width,height,this.verts,this.itemSize);
+			}
+		}
+		return false;
+	}
 })

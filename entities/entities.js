@@ -96,9 +96,11 @@ Entities = fillProperties(new Updatable(),{
 	*	clears all instances but not object pools
 	*/
 	reset:function(){
+		// this.reseting = true;
 		for(var o in this){
 			if(typeof this[o].reset== 'function')this[o].reset();
 		}
+		// this.reseting = false;
 	},
 	/**
 	*	clears all object pools, killing all instances
@@ -113,11 +115,11 @@ Entities = fillProperties(new Updatable(),{
 function EntityDef(){
 	Object.defineProperties(this,{
 		doDestroy:{
-			value: function(state){
+			value: function(state,reset){
 				if(this.parent){
-					this.parent.def.doDestroy(state);
+					this.parent.def.doDestroy(state,reset);
 				}
-				this.destroy(state);
+				this.destroy(state,reset);
 			},
 			writable:false
 		},
@@ -150,7 +152,7 @@ EntityDef.prototype={
 	/**
 	* 	does actions for the end of a instances life
 	*/
-	destroy: function(state){
+	destroy: function(state,reset){
 	},
 	/**
 	*  does tick for entity
@@ -201,6 +203,7 @@ Entity.prototype=(function(){
 		* creates a new instance
 		*/
 		newInstance: function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p){
+			if(Entities.reseting) return;
 			var id = instanceId++
 			var instance;
 			if(this.position<this.instanceArray.length){
@@ -258,7 +261,7 @@ Entity.prototype=(function(){
 		reset:function(){
 			for(var i = 0; i<this.position; i++){
 				delete this.instances[this.instanceArray[i].id];
-				this.def.doDestroy(this.instanceArray[i]);
+				this.def.doDestroy(this.instanceArray[i],true);
 			}
 			this.position = 0;
 		},

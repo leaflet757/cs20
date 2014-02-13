@@ -97,7 +97,6 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 	
 	this.init = function(enemies,margin){
 		//create player
-		console.log(this.room.x+this.room.width/2,this.room.y + this.room.height/2)
 		Entities.player.newInstance(this.room.x+size/2,this.room.y + size/2);
 		
 		//add enemies
