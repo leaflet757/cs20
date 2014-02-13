@@ -1,20 +1,25 @@
-// temporary sound files
-
 
 // RocketWeapon -- 
 function RocketWeapon(){
+	this.boundless = true;
 	var time = 0;
+	var energy = 100;
+	var COST = 10;
 	var p = Entities.player.getInstance(0);
 	var dir = {0:0, 1:0, length:2};	
 	var sound = Sound.createSound('rocket_fire');
 	sound.gain = 0.1;
-	
 	ticker.add(
 		{tick:function (delta) {
 			if (time > 0)
 				time-=delta;
 		}
 	});
+
+	// this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
+// 		manager.fillRect(screen.x + screen.width-32,screen.y,-99,16,(screen.height-32)*(energy/100),0,0,1,0,1)
+// 	};
+// 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.fire = function() {
 		if (time <= 0) {
@@ -30,7 +35,8 @@ function RocketWeapon(){
 		// Empty
 	};
 }
-RocketWeapon.prototype = {};
+// RocketWeapon.prototype = GLDrawable();
+RocketWeapon.prototype = {}
 
 // Rocket -- 
 Entities.add('rocket', Entities.create(
@@ -323,8 +329,7 @@ Entities.add('mine', Entities.create(
 // WaveWeapon -- 
 function WaveWeapon(){
 	var p = Entities.player.getInstance(0);
-	var damage = 0.3;
-	var damagePer = 1;
+	var damage = 0.5;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
@@ -332,7 +337,7 @@ function WaveWeapon(){
 	var length = 100;
 	var radius = 128;
 
-	var sound = Sound.createSound('wave_fire', true);
+	var sound = Sound.createSound('wave_fire');
 	sound.gain = 0.1;
 
 	var mag = 800;
@@ -340,14 +345,11 @@ function WaveWeapon(){
 	var eAngle = 0;
 	var evec = vec2.create();
 	
-	var reload = 0;
-	var duration = 1;
+	var hasPressed = false;
 	var forceTime = 1;
 	
 	var newA = true;
 	var a = [];
-	
-	var hasFired = false;
 	
 	graphics.addToDisplay(this, 'gl_main');
 	
@@ -359,25 +361,16 @@ function WaveWeapon(){
 		mvMatrix.pop();
 	};
 	this.fire = function() {
-		if (reload<=0 && duration>0) {
-			if (!sound.playing && !hasFired) {
-				sound.play(0);
-				hasFired = true;
-			}
+		if (!hasPressed) {
+			hasPressed = true;
+			sound.play(0);
 			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-			duration -= 0.1;
-			if (duration < 0) {
-				reload = 0.8;
-				duration = 1;
-				hasFired = false;
-			}
+			
 			this.visible = true;
 			// check for enemies
 			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
 			newA = true;
 			if (enemies.length > 1) {
-				// addforce
-				// find direction if direction is legal
 				for (var i = 0; i < a.length; i++) {
 					if (a[i] != p)
 					{
@@ -389,10 +382,9 @@ function WaveWeapon(){
 								((eAngle > theta - 2*Math.PI && eAngle < wAngle + theta - 2*Math.PI) || 
 								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {					
 								Vector.setMag(evec, evec, 1);
-								//a[i].addForce(mag*evec[0],mag*evec[1]);
 								a[i].vel[0] = evec[0] * mag;
 								a[i].vel[1] = evec[1] * mag;
-								if(a[i].life)a[i].life -= damagePer*damage;
+								if(a[i].life)a[i].life -= damage;
 								if (a[i].life <= 0) {
 									a[i].alive = false;
 								}
@@ -406,17 +398,13 @@ function WaveWeapon(){
 		}
 	};
 	this.holdFire = function() {
-		if (sound.playing)
-			sound.stop(0);
 		this.visible = false;
+		hasPressed = false;
 	};
 	this.boundless = true;
 	ticker.add({
 		tick: function(delta) {
-			damagePer = delta
-			if (reload > 0) {
-				reload -= delta;
-			}
+			damagePer = delta;
 			
 			if (newA){	
 				for (var i = 0; i < a.length; i++) {
@@ -434,6 +422,7 @@ WaveWeapon.prototype = new GLDrawable();
 function BeamWeapon(){
 	var p = Entities.player.getInstance(0);
 	var damage = 0.7;
+	var force = -80;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
@@ -459,8 +448,11 @@ function BeamWeapon(){
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
 		if (traceResult.length > 3) {
-			traceResult[1].accelerateToward(p.cx,p.cy,-80);
-			traceResult[1].life -= damage;
+			for (var i = 1; i < traceResult.length -2; i++) {
+				traceResult[i].accelerateToward(p.cx, p.cy, force * 3/i);
+				traceResult[i].life -= damage * 3/i;
+			}
+			
 			if (traceResult[1].life <= 0) {
 				traceResult[1].alive = false;
 			}
