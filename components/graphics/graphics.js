@@ -635,7 +635,7 @@ function initGraphics(){
 		}
 		
 		this.fillEllipse = function(x,y,z,width,height,theta,r,g,b,a){
-			this.fillPrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_circle',32);
+			this.fillPrimitive(x,y,z,width,height,theta,r,g,b,a,'primitive_circle',16);
 		}
 		
 		this.stroke = function(r,g,b,a){
@@ -749,7 +749,7 @@ function initGraphics(){
 			this.addArrayBuffer('primitive_circle',true,(function(){
 					var verts = [];
 					var current = [0.0,0.5,0.0];
-					var numOfVerts = 32;
+					var numOfVerts = 16
 					var theta = (Math.PI*2)/(numOfVerts)
 					var c = Math.cos(theta);
 					var s = Math.sin(theta);
@@ -763,7 +763,7 @@ function initGraphics(){
 						current[2]=0;
 					}
 					return verts;
-				})(),32,3);
+				})(),16,3);
 		
 			this.addArrayBuffer('sprite_texture_coords',false,[
 				1.0, 1.0, 0.0,

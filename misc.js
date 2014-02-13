@@ -34,3 +34,7 @@ var uid = (function(){
 		return next++;
 	}
 })();
+
+function sqr(x){
+	return x * x;
+}
