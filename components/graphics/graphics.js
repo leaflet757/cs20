@@ -271,43 +271,74 @@ function initGraphics(){
 		var textures = {};
 		
 		var currentProgram = null;
-		var getShader = function(id){
-			var shaderScript = document.getElementById(id);
-			if (!shaderScript) {
-				throw "cannot find shader";
-			}
+		var getShader = function(url){
+			// var shaderScript = document.getElementById(id);
+			// if (!shaderScript) {
+				// throw "cannot find shader";
+			// }
 
-			var str = shaderScript.innerHTML;
+			// var str = shaderScript.innerHTML;
 
+			// var shader;
+			// if (shaderScript.type == "x-shader/x-fragment") {
+				// shader = gl.createShader(gl.FRAGMENT_SHADER);
+			// } else if (shaderScript.type == "x-shader/x-vertex") {
+				// shader = gl.createShader(gl.VERTEX_SHADER);
+			// } else {
+				// return null;
+			// }
+
+			// gl.shaderSource(shader, str);
+			// gl.compileShader(shader);
+
+			// if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+				// console.log(str);
+				// throw gl.getShaderInfoLog(shader)+" shader compile fail";
+				// return null;
+			// }
+			
+			var request=new XMLHttpRequest();
+			request.open("GET",url,false);//synchronous loading
+			request.send();
+			
+			var str = request.responseText;
+			
 			var shader;
-			if (shaderScript.type == "x-shader/x-fragment") {
+			
+			console.log(url.charAt(url.length-2)+" "+url)
+			if(url.charAt(url.length-2)=='f'){
+				console.log('fragment')
 				shader = gl.createShader(gl.FRAGMENT_SHADER);
-			} else if (shaderScript.type == "x-shader/x-vertex") {
+			}else if(url.charAt(url.length-2)=='v'){
+				console.log('vertex')
 				shader = gl.createShader(gl.VERTEX_SHADER);
-			} else {
+			}else{
 				return null;
 			}
-
+			
 			gl.shaderSource(shader, str);
 			gl.compileShader(shader);
-
+			
 			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
 				console.log(str);
 				throw gl.getShaderInfoLog(shader)+" shader compile fail";
 				return null;
 			}
-
+			
 			return shader;
 		} 
 		
 		/**
 		* compiles and adds the shader
 		*/
-		this.addShader = function(name,docId){
+		this.addShader = function(name,url,attributes,uniforms){
 			if(shaders.hasOwnProperty(name)){
 				console.log("overwriting shader: "+name);
 			}
-			shaders[name] = getShader(docId);
+			var shader = getShader(url);
+			shader.attributes = attributes;
+			shader.uniforms = uniforms;
+			shaders[name] = shader;
 		}
 		
 		/**
@@ -340,17 +371,24 @@ function initGraphics(){
 			
 			shaderProgram.attribArrays = {};
 			
-			if(typeof setupAttributes == 'function'){
-				setupAttributes(gl,shaderProgram);
-			}else{
-				shaderProgram.attribArrays.vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-				gl.enableVertexAttribArray(shaderProgram.attribArrays.vertexPosition);
+			for(var o in vertexShader.attributes){
 				
-				shaderProgram.attribArrays.vertexColor = gl.getAttribLocation(shaderProgram, "aVertexColor");
-				gl.enableVertexAttribArray(shaderProgram.attribArrays.vertexColor);
+					shaderProgram.attribArrays[o]=gl.getAttribLocation(shaderProgram,vertexShader.attributes[o]);
+					gl.enableVertexAttribArray(shaderProgram.attribArrays[o])
 				
-				shaderProgram.pMatrix = gl.getUniformLocation(shaderProgram, "uPMatrix");
-				shaderProgram.mvMatrix = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+			}
+			for(var o in vertexShader.uniforms){
+				shaderProgram[o]=gl.getUniformLocation(shaderProgram,vertexShader.uniforms[o])
+			}
+			
+			for(var o in fragmentShader.attributes){
+				if(!shaderProgram.attribArrays[o]){
+					shaderProgram.attribArrays[o]=gl.getAttribLocation(shaderProgram,fragmentShader.attributes[o]);
+					gl.enableVertexAttribArray(shaderProgram.attribArrays[o])
+				}
+			}
+			for(var o in fragmentShader.uniforms){
+				if(!shaderProgram[o])shaderProgram[o]=gl.getUniformLocation(shaderProgram,fragmentShader.uniforms[o])
 			}
 			
 			if(programs.hasOwnProperty(name)){
@@ -772,77 +810,91 @@ function initGraphics(){
 				0.0, 1.0, 0.0
 			],4,3);
 			//load shaders
-			this.addShader('basic_fs','fs');
-			this.addShader('basic_vs','vs');
-			this.addProgram('basic','basic_vs','basic_fs');
-			this.bindProgram('basic');
+			// this.addShader('basic_vs','resources/shaders/basic.vs',
+				// {
+					// vertexColor:"aVertexColor",
+					// vertexPosition:"aVertexPosition",
+				// },
+				// {
+					// pMatrix:"uPMatrix",
+					// mvMatrix:"uMVMatrix"
+				// });
+			// this.addShader('basic_fs','resources/shaders/basic.fs',{},{})
+			// this.addProgram('basic','basic_vs','basic_fs');
+			// this.bindProgram('basic');
 			
-			this.addShader('simple_fs','simple_fs');
-			this.addShader('simple_vs','simple_vs')
-			this.addProgram('simple','simple_vs','simple_fs',function(gl,prog){
-				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-				
-				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-				prog.color = gl.getUniformLocation(prog, "color");
-			});
-			this.bindProgram('simple');
+			// this.addShader('simple_fs','resources/shaders/simple.fs',{},
+				// {
+					// color: "color"
+				// });
+			// this.addShader('simple_vs','resources/shaders/simple.vs',
+				// {
+					// vertexPosition:"aVertexPosition"
+				// },
+				// {
+					// pMatrix:"uPMatrix",
+					// mvMatrix:"uMVMatrix"
+				// })
+			// this.addProgram('simple','simple_vs','simple_fs');
+			// this.bindProgram('simple');
 			
-			this.addShader('point_vs','point_vs');
-			this.addProgram('basic_point','point_vs','basic_fs',function(gl,prog){
-				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-				
-				prog.attribArrays.vertexColor = gl.getAttribLocation(prog, "aVertexColor");
-				gl.enableVertexAttribArray(prog.attribArrays.vertexColor);
-				
-				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-				prog.pointSize = gl.getUniformLocation(prog, "pointSize");
-			});
-			this.bindProgram('basic_point');
+			// this.addShader('point_vs','resources/shaders/point.vs',
+				// {
+					// vertexColor:"aVertexColor",
+					// vertexPosition:"aVertexPosition",
+				// },
+				// {
+					// pMatrix:"uPMatrix",
+					// mvMatrix:"uMVMatrix",
+					// pointSize:"pointSize"
+				// });
+			// this.addProgram('basic_point','point_vs','basic_fs');
+			// this.bindProgram('basic_point');
 			
-			this.addShader('simple_point_vs','simple_point_vs');
-			this.addProgram('simple_point','simple_point_vs','simple_fs',function(gl,prog){
-				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-				
-				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-				prog.pointSize = gl.getUniformLocation(prog, "pointSize");
-				prog.color = gl.getUniformLocation(prog, "color");
-			});
-			this.bindProgram('simple_point');
+			// this.addShader('simple_point_vs','resources/shaders/simple_point.vs',
+				// {
+					// vertexPosition:"aVertexPosition",
+				// },
+				// {
+					// pMatrix:"uPMatrix",
+					// mvMatrix:"uMVMatrix",
+					// pointSize:"pointSize"
+				// });
+			// this.addProgram('simple_point','simple_point_vs','simple_fs');
+			// this.bindProgram('simple_point');
 			
-			this.addShader('noise_fs','noise_fs');
-			this.addShader('noise_vs','noise_vs');
-			this.addProgram('noise','noise_vs','noise_fs',function(gl,prog){
-				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-				
-				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-				prog.time = gl.getUniformLocation(prog, "time");
-			});
-			this.bindProgram('noise');
+			// this.addShader('noise_fs','resources/shaders/noise.fs',{},{time:"time"});
+			// this.addShader('noise_vs','resources/shaders/noise.vs',
+				// {
+					// vertexPosition:"aVertexPosition",
+				// },
+				// {
+					// pMatrix:"uPMatrix",
+					// mvMatrix:"uMVMatrix",
+					// time:"time"
+				// });
+			// this.addProgram('noise','noise_vs','noise_fs');
+			// this.bindProgram('noise');
 			
-			this.addShader('text_fs','text_fs');
-			this.addShader('text_vs','text_vs');
-			this.addProgram('basic_texture','text_vs','text_fs',function(gl,prog){
-				prog.attribArrays.vertexPosition = gl.getAttribLocation(prog, "aVertexPosition");
-				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-				prog.attribArrays.textureCoord = gl.getAttribLocation(prog, "aTextureCoord");
-				gl.enableVertexAttribArray(prog.attribArrays.vertexPosition);
-				
-				prog.sampler = gl.getUniformLocation(prog, 'uSampler');
-				prog.tint = gl.getUniformLocation(prog, 'uTint');
-				prog.alpha = gl.getUniformLocation(prog, 'uAlpha');
-				prog.tintWeight = gl.getUniformLocation(prog, 'uTintWeight');
-				prog.pMatrix = gl.getUniformLocation(prog, "uPMatrix");
-				prog.mvMatrix = gl.getUniformLocation(prog, "uMVMatrix");
-			});
-			this.bindProgram('basic_texture');
+			// this.addShader('texture_fs','resources/shaders/texture.fs',
+				// {},
+				// {
+					// tint:"uTint",
+					// tintWeight:'uTintWeight',
+					// alpha: 'uAlpha',
+					// sampler: 'uSampler'
+				// });
+			// this.addShader('texture_vs','resources/shaders/texture.vs',
+				// {
+					// textureCoord: "aTextureCoord",
+					// vertexPosition:"aVertexPosition"
+				// },
+				// {
+					// pMatrix:"uPMatrix",
+					// mvMatrix:"uMVMatrix"
+				// });
+			// this.addProgram('basic_texture','texture_vs','texture_fs');
+			// this.bindProgram('basic_texture');
 		}
 	}
 	
@@ -883,6 +935,7 @@ function initGraphics(){
 			gl.viewport(0,0,display.width,display.height);
 		}
 		
+		this.manager = manager;
 		//sets up default shader
 		
 		//add a drawable to this display
@@ -977,6 +1030,7 @@ function initGraphics(){
 					}
 				}
 			}
+			gl.flush();
 		}
 		this.clear = function(delta){}
 		
@@ -1061,7 +1115,13 @@ function initGraphics(){
 			if(typeof d == 'object'){
 				return d.screen;
 			}
-		}
+		},
+		getManager:function(identifier){
+			var d = getDisplay(identifier);
+			if(typeof d == 'object'){
+				return d.manager;
+			}
+		},
 	});
 	gameComponents[2] = graphics;
 }

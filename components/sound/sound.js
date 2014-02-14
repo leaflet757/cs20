@@ -69,7 +69,7 @@ function initSound(){
 		});
 	}
 	
-	var SoundBuffer = function(url,callback){
+	var SoundBuffer = function(url,onloadCallback,onerrCallback){
 		var loaded = false;
 		var data = null;
 			
@@ -82,16 +82,19 @@ function initSound(){
 					context.decodeAudioData(request.response, function(b){
 						data=b;
 						loaded=true;
-						if(callback) callback();
+						if(onloadCallback) onloadCallback();
 					}, function(){
 						console.error('error loading audio');
+						if(onerrCallback)onerrCallback();
 					})
 				};
 				request.onerror = function() {
 					console.error("failed to load audio file "+url);
+					if(onerrCallback)onerrCallback();
 				}
 				request.onabort = function() {
 					console.error("failed to load audio file "+url);
+					if(onerrCallback)onerrCallback();
 				}
 				request.send();
 			}catch(e){}
