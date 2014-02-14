@@ -5,6 +5,8 @@ function ResourceConfig(source){
 	request.send();
 	// console.log(request.responseText)
 	var xml = (new DOMParser()).parseFromString(request.responseText,'text/xml');
+	
+	//load files
 	var files = xml.getElementsByTagName('file');
 	for(var i in files){
 		if(files[i].parentNode){
@@ -17,6 +19,10 @@ function ResourceConfig(source){
 			}
 		}
 	}
+	
+	//load shaders
+	this.shaders = xml.getElementsByTagName("shader");
+	this.programs = xml.getElementsByTagName("program");
 }
 ResourceConfig.prototype = {
 	merge: function(config){
