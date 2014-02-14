@@ -23,5 +23,6 @@
 		</shader>
 	</shaders>
 	<resourceConfig>
+		<!--<file name='weapon_values'>values/weaponValues.xml</file>-->
 	</resourceConfig>
 </root>

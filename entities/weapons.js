@@ -44,14 +44,17 @@ Entities.add('rocket', Entities.create(
 		var damage = 1;
 		var buffered = false;
 		var hits = [];
+		var enemies = [];
+		var blastBox = new Object();
 		return {
 			create: function(state,x,y,dir){
 				state.alive = true;
-				state.fuse = 5;
 				state.theta = Vector.getDir(dir) - Math.PI / 2;
 				state.delay = 0.5;
 				state.mx = mouse.x;
 				state.my = mouse.yInv;
+				blastBox.width = 24;
+				blastBox.height = 24;
 				state.hits = physics.rayTrace(hits,x,y,mouse.x,mouse.yInv);
 				state.targetx = state.hits[state.hits.length - 2];
 				state.targety = state.hits[state.hits.length - 1];
@@ -76,7 +79,6 @@ Entities.add('rocket', Entities.create(
 					},x,y,16,16,1));
 					
 					state.tick = function(delta){
-						this.fuse-=delta;
 						this.delay -= delta;
 						if (this.fuse<=0)
 						{
@@ -85,15 +87,16 @@ Entities.add('rocket', Entities.create(
 						if (this.delay <= 0)
 						{
 							this.accelerateToward(this.targetx,this.targety,800);
-						}
-						for (var e in Entities) {
-							if (e.isEnemy) {
-								e.life -= damage;
-								if (e.life <= 0) {
-									e.alive = false;
+							enemies = physics.getColliders(hits, blastBox.x,blastBox.y,blastBox.width,blastBox.height);
+							for (var i = 0; i < enemies.length; i++){
+								if (enemies[i].isEnemy) {
+									this.alive = false;
+									i = hits.length;
 								}
 							}
 						}
+						blastBox.x = this.x - 12;
+						blastBox.y = this.y - 12;
 					}
 					
 					state.onCollision = function() {
@@ -133,7 +136,7 @@ Entities.add('rocket', Entities.create(
 						},
 						{},6);
 						
-						state.animator.addKeyframe("slim", 
+					state.animator.addKeyframe("slim", 
 						{
 						rocketColor: 
 							fillProperties([
@@ -166,7 +169,7 @@ Entities.add('rocket', Entities.create(
 						},
 						{},6);
 						
-						state.animator.addKeyframe("fat", 
+					state.animator.addKeyframe("fat", 
 						{
 						rocketColor: 
 							fillProperties([
@@ -216,6 +219,14 @@ Entities.add('rocket', Entities.create(
 			},
 			destroy: function(state){
 				state.sound.play(0);
+				for (var i = 0; i < enemies.length; i++) {
+					if (enemies[i].isEnemy){
+						enemies.life -= damage;
+						//if (e.life <= 0) {
+						//	e.alive = false;
+						//}
+					}
+				}
 				for (var i = 0; i < 50; i++)
 					Entities.explosion.newInstance(state.x, state.y, 0.3);
 				graphics.removeFromDisplay(state,'gl_main');
@@ -268,10 +279,10 @@ Entities.add('mine', Entities.create(
 				state.alive = true;
 				state.time = 2;
 				
-				blastbox.width = 100;
-		 		blastbox.height = 100;
-				blastbox.x = x - 50;
-				blastbox.y = y - 50;
+				blastbox.width = 50;
+		 		blastbox.height = 50;
+				blastbox.x = x - 25;
+				blastbox.y = y - 25;
 				
 				if(!state.first){
 					fillProperties(state, Entities.createStandardState(
@@ -283,27 +294,6 @@ Entities.add('mine', Entities.create(
 					state.tick = function(delta){
 						this.time-=delta;
  						this.alive = this.time>0;
-						if (!this.alive) {
-							//console.log(Entities.player.getInstance(0).x);
-							//console.log(blastbox.x);
-							var enemies = physics.getColliders(a, blastbox.x, blastbox.y, blastbox.width, blastbox.height);
-							for (var e in enemies) {
-								e = enemies[e];
-								vec2.set(vec, e.x - this.x, e.y - this.y);
-								Vector.setMag(vec, vec, 1);
-								if (e.isEnemy) { // add player damage
-									e.life -= damage;
-									//console.log(Entities.player.getInstance(0).x);
-									//console.log(blastbox.x);
-									if (e.life <= 0) {
-										e.alive = false;
-									} else {
-										e.vel[0] = vec[0] * blastForce;
-										e.vel[1] = vec[1] * blastForce;
-									}
-								}
-							}
-						}
 					}
 					
 					state.first = true;
@@ -316,6 +306,23 @@ Entities.add('mine', Entities.create(
 			},
 			destroy: function(state){
 				sound.play(0);
+				if (!this.alive) {
+					var enemies = physics.getColliders(a, blastbox.x, blastbox.y, blastbox.width, blastbox.height);
+					for (var e in enemies) {
+						e = enemies[e];
+						vec2.set(vec, e.x - this.x, e.y - this.y);
+						Vector.setMag(vec, vec, 1);
+						if (e.isEnemy) { // TODO: add player damage
+							e.life -= damage;
+							if (e.life <= 0) {
+								e.alive = false;
+							} else {
+								e.vel[0] = vec[0] * blastForce;
+								e.vel[1] = vec[1] * blastForce;
+							}
+						}
+					}
+				}
 				for (var i = 0; i < 50; i++)
 					Entities.explosion.newInstance(state.x, state.y);
 				graphics.removeFromDisplay(state,'gl_main');
