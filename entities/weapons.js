@@ -43,19 +43,22 @@ Entities.add('rocket', Entities.create(
 	(function(){
 		var damage = 1;
 		var buffered = false;
-		var hits = [];
-		var enemies = [];
-		var blastBox = new Object();
 		return {
 			create: function(state,x,y,dir){
 				state.alive = true;
+				state.fuse = 5;
 				state.theta = Vector.getDir(dir) - Math.PI / 2;
 				state.delay = 0.5;
 				state.mx = mouse.x;
 				state.my = mouse.yInv;
-				blastBox.width = 24;
-				blastBox.height = 24;
-				state.hits = physics.rayTrace(hits,x,y,mouse.x,mouse.yInv);
+				state.a = []; // array for collision check
+				state.blastbox = new Object();
+				state.blastbox.width = 24;
+		 		state.blastbox.height = 24;
+				state.blastbox.x = x - 12;
+				state.blastbox.y = y - 12;
+				state.ray = [];
+				state.hits = physics.rayTrace(state.ray,x,y,mouse.x,mouse.yInv);
 				state.targetx = state.hits[state.hits.length - 2];
 				state.targety = state.hits[state.hits.length - 1];
 				state.sound = Sound.createSound('explosion_fire');
@@ -79,6 +82,7 @@ Entities.add('rocket', Entities.create(
 					},x,y,16,16,1));
 					
 					state.tick = function(delta){
+						this.fuse-=delta;
 						this.delay -= delta;
 						if (this.fuse<=0)
 						{
@@ -87,16 +91,17 @@ Entities.add('rocket', Entities.create(
 						if (this.delay <= 0)
 						{
 							this.accelerateToward(this.targetx,this.targety,800);
-							enemies = physics.getColliders(hits, blastBox.x,blastBox.y,blastBox.width,blastBox.height);
-							for (var i = 0; i < enemies.length; i++){
-								if (enemies[i].isEnemy) {
-									this.alive = false;
-									i = hits.length;
-								}
+						}
+						this.blastbox.x = this.x - this.blastbox.width/2;
+						this.blastbox.y = this.y - this.blastbox.width/2;
+						state.a = [];
+						var enemies = physics.getColliders(state.a, state.blastbox.x, state.blastbox.y, state.blastbox.width, state.blastbox.height);
+						for (var i = 0; i < enemies.length; i++){
+							if (enemies[i].isEnemy) {
+								this.alive = false;
+								i = enemies.length;
 							}
 						}
-						blastBox.x = this.x - 12;
-						blastBox.y = this.y - 12;
 					}
 					
 					state.onCollision = function() {
@@ -136,7 +141,7 @@ Entities.add('rocket', Entities.create(
 						},
 						{},6);
 						
-					state.animator.addKeyframe("slim", 
+						state.animator.addKeyframe("slim", 
 						{
 						rocketColor: 
 							fillProperties([
@@ -169,7 +174,7 @@ Entities.add('rocket', Entities.create(
 						},
 						{},6);
 						
-					state.animator.addKeyframe("fat", 
+						state.animator.addKeyframe("fat", 
 						{
 						rocketColor: 
 							fillProperties([
@@ -219,12 +224,17 @@ Entities.add('rocket', Entities.create(
 			},
 			destroy: function(state){
 				state.sound.play(0);
-				for (var i = 0; i < enemies.length; i++) {
-					if (enemies[i].isEnemy){
-						enemies.life -= damage;
-						//if (e.life <= 0) {
-						//	e.alive = false;
-						//}
+				var enemies = physics.getColliders(state.a, state.blastbox.x, state.blastbox.y, state.blastbox.width, state.blastbox.height);
+				for (var e in enemies) {
+					e = enemies[e];
+					if (e.isEnemy) { // add player damage and blast force
+						e.life -= damage;
+						if (e.life <= 0) {
+							e.alive = false;
+						} else {
+							//e.vel[0] = vec[0] * blastForce;
+							//e.vel[1] = vec[1] * blastForce;
+						}
 					}
 				}
 				for (var i = 0; i < 50; i++)
@@ -268,8 +278,6 @@ MineWeapon.prototype = {};
 Entities.add('mine', Entities.create(
 	(function(){
 		var damage = 5;
-		var a = []; // array for collision check
-		var blastbox = new Object();
 		var blastForce = 800;
 		var vec = vec2.create();		
 		var sound = Sound.createSound('explosion_fire');
@@ -277,12 +285,13 @@ Entities.add('mine', Entities.create(
 		return {
 			create: function(state,x,y){
 				state.alive = true;
-				state.time = 2;
-				
-				blastbox.width = 50;
-		 		blastbox.height = 50;
-				blastbox.x = x - 25;
-				blastbox.y = y - 25;
+				state.time = 1.5;
+				state.a = []; // array for collision check
+				state.blastbox = new Object();
+				state.blastbox.width = 50;
+		 		state.blastbox.height = 50;
+				state.blastbox.x = x - 25;
+				state.blastbox.y = y - 25;
 				
 				if(!state.first){
 					fillProperties(state, Entities.createStandardState(
@@ -306,20 +315,18 @@ Entities.add('mine', Entities.create(
 			},
 			destroy: function(state){
 				sound.play(0);
-				if (!this.alive) {
-					var enemies = physics.getColliders(a, blastbox.x, blastbox.y, blastbox.width, blastbox.height);
-					for (var e in enemies) {
-						e = enemies[e];
-						vec2.set(vec, e.x - this.x, e.y - this.y);
-						Vector.setMag(vec, vec, 1);
-						if (e.isEnemy) { // TODO: add player damage
-							e.life -= damage;
-							if (e.life <= 0) {
-								e.alive = false;
-							} else {
-								e.vel[0] = vec[0] * blastForce;
-								e.vel[1] = vec[1] * blastForce;
-							}
+				var enemies = physics.getColliders(state.a, state.blastbox.x, state.blastbox.y, state.blastbox.width, state.blastbox.height);
+				for (var e in enemies) {
+					e = enemies[e];
+					vec2.set(vec, e.x - this.x, e.y - this.y);
+					Vector.setMag(vec, vec, 1);
+					if (e.isEnemy) { // add player damage
+						e.life -= damage;
+						if (e.life <= 0) {
+							e.alive = false;
+						} else {
+							e.vel[0] = vec[0] * blastForce;
+							e.vel[1] = vec[1] * blastForce;
 						}
 					}
 				}
@@ -445,13 +452,13 @@ function BeamWeapon(){
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		manager.line(p.cx, p.cy, endX, endY,0,0,1,0,1);
+		manager.line(p.cx, p.cy, endX+5, endY+5,0,0,1,0,1);
 	};
 	this.fire = function() {
 		if (!sound.playing) 
 			sound.play(0);
 		this.visible = true;
 		hits.length = 0;
-		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
 		if (traceResult.length > 3) {

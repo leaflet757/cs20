@@ -240,7 +240,7 @@ Entities.add('player', Entities.create((function(){
 				}
 			}
 			
-			weaponManager.add(new MineWeapon());
+			weaponManager.add(new BeamWeapon());
 			weaponManager.add(new RocketWeapon());
 			weaponManager.add(new WaveWeapon());
 			
