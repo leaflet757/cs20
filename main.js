@@ -146,40 +146,40 @@ function loadResources(callback){
 		}
 	}
 	
-	var manager = graphics.getManager('gl_main');
+	// var manager = graphics.getManager('gl_main');
 	
-	console.log(resourceConfig.shaders.length)
-	for(var i = 0; i<resourceConfig.shaders.length; i++){
-		console.log(i)
-		var shader = resourceConfig.shaders[i];
-		var name = shader.getAttribute("name");
-		var src = shader.getAttribute("src");
-		var attributes = {};
-		var uniforms = {};
-		console.log(name+" "+src+" "+shader.childNodes.length)
-		for(var j in shader.childNodes){
-			if(shader.childNodes[j].nodeName){
-				if(shader.childNodes[j].nodeName=="attribute"){
-					console.log("attrib "+shader.childNodes[j].childNodes[0].data+" "+shader.childNodes[j].getAttribute("name"))
-					attributes[shader.childNodes[j].childNodes[0].data] = shader.childNodes[j].getAttribute("name");
-				}else if(shader.childNodes[j].nodeName=="uniform"){
-					console.log("uniform "+shader.childNodes[j].childNodes[0].data+" "+shader.childNodes[j].getAttribute("name"))
-					uniforms[shader.childNodes[j].childNodes[0].data] = shader.childNodes[j].getAttribute("name");
-				}
-			}
-		}
-		manager.addShader(name,src,attributes,uniforms);
-	}
-	console.log("shaders loaded")
-	for(var i = 0; i<resourceConfig.programs.length; i++){
-		var p = resourceConfig.programs[i];
-		var name = p.getAttribute("name");
-		var vertex = p.getAttribute("vertex");
-		var fragment = p.getAttribute("fragment");
-		console.log(name,vertex,fragment)
-		manager.addProgram(name,vertex,fragment);
-		manager.bindProgram(name);
-	}
+	// console.log(resourceConfig.shaders.length)
+	// for(var i = 0; i<resourceConfig.shaders.length; i++){
+		// console.log(i)
+		// var shader = resourceConfig.shaders[i];
+		// var name = shader.getAttribute("name");
+		// var src = shader.getAttribute("src");
+		// var attributes = {};
+		// var uniforms = {};
+		// console.log(name+" "+src+" "+shader.childNodes.length)
+		// for(var j in shader.childNodes){
+			// if(shader.childNodes[j].nodeName){
+				// if(shader.childNodes[j].nodeName=="attribute"){
+					// console.log("attrib "+shader.childNodes[j].childNodes[0].data+" "+shader.childNodes[j].getAttribute("name"))
+					// attributes[shader.childNodes[j].childNodes[0].data] = shader.childNodes[j].getAttribute("name");
+				// }else if(shader.childNodes[j].nodeName=="uniform"){
+					// console.log("uniform "+shader.childNodes[j].childNodes[0].data+" "+shader.childNodes[j].getAttribute("name"))
+					// uniforms[shader.childNodes[j].childNodes[0].data] = shader.childNodes[j].getAttribute("name");
+				// }
+			// }
+		// }
+		// manager.addShader(name,src,attributes,uniforms);
+	// }
+	// console.log("shaders loaded")
+	// for(var i = 0; i<resourceConfig.programs.length; i++){
+		// var p = resourceConfig.programs[i];
+		// var name = p.getAttribute("name");
+		// var vertex = p.getAttribute("vertex");
+		// var fragment = p.getAttribute("fragment");
+		// console.log(name,vertex,fragment)
+		// manager.addProgram(name,vertex,fragment);
+		// manager.bindProgram(name);
+	// }
 	loadNextSound();
 }
 

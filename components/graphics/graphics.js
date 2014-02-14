@@ -810,91 +810,91 @@ function initGraphics(){
 				0.0, 1.0, 0.0
 			],4,3);
 			//load shaders
-			// this.addShader('basic_vs','resources/shaders/basic.vs',
-				// {
-					// vertexColor:"aVertexColor",
-					// vertexPosition:"aVertexPosition",
-				// },
-				// {
-					// pMatrix:"uPMatrix",
-					// mvMatrix:"uMVMatrix"
-				// });
-			// this.addShader('basic_fs','resources/shaders/basic.fs',{},{})
-			// this.addProgram('basic','basic_vs','basic_fs');
-			// this.bindProgram('basic');
+			this.addShader('basic_vs','resources/shaders/basic.vs',
+				{
+					vertexColor:"aVertexColor",
+					vertexPosition:"aVertexPosition",
+				},
+				{
+					pMatrix:"uPMatrix",
+					mvMatrix:"uMVMatrix"
+				});
+			this.addShader('basic_fs','resources/shaders/basic.fs',{},{})
+			this.addProgram('basic','basic_vs','basic_fs');
+			this.bindProgram('basic');
 			
-			// this.addShader('simple_fs','resources/shaders/simple.fs',{},
-				// {
-					// color: "color"
-				// });
-			// this.addShader('simple_vs','resources/shaders/simple.vs',
-				// {
-					// vertexPosition:"aVertexPosition"
-				// },
-				// {
-					// pMatrix:"uPMatrix",
-					// mvMatrix:"uMVMatrix"
-				// })
-			// this.addProgram('simple','simple_vs','simple_fs');
-			// this.bindProgram('simple');
+			this.addShader('simple_fs','resources/shaders/simple.fs',{},
+				{
+					color: "color"
+				});
+			this.addShader('simple_vs','resources/shaders/simple.vs',
+				{
+					vertexPosition:"aVertexPosition"
+				},
+				{
+					pMatrix:"uPMatrix",
+					mvMatrix:"uMVMatrix"
+				})
+			this.addProgram('simple','simple_vs','simple_fs');
+			this.bindProgram('simple');
 			
-			// this.addShader('point_vs','resources/shaders/point.vs',
-				// {
-					// vertexColor:"aVertexColor",
-					// vertexPosition:"aVertexPosition",
-				// },
-				// {
-					// pMatrix:"uPMatrix",
-					// mvMatrix:"uMVMatrix",
-					// pointSize:"pointSize"
-				// });
-			// this.addProgram('basic_point','point_vs','basic_fs');
-			// this.bindProgram('basic_point');
+			this.addShader('point_vs','resources/shaders/point.vs',
+				{
+					vertexColor:"aVertexColor",
+					vertexPosition:"aVertexPosition",
+				},
+				{
+					pMatrix:"uPMatrix",
+					mvMatrix:"uMVMatrix",
+					pointSize:"pointSize"
+				});
+			this.addProgram('basic_point','point_vs','basic_fs');
+			this.bindProgram('basic_point');
 			
-			// this.addShader('simple_point_vs','resources/shaders/simple_point.vs',
-				// {
-					// vertexPosition:"aVertexPosition",
-				// },
-				// {
-					// pMatrix:"uPMatrix",
-					// mvMatrix:"uMVMatrix",
-					// pointSize:"pointSize"
-				// });
-			// this.addProgram('simple_point','simple_point_vs','simple_fs');
-			// this.bindProgram('simple_point');
+			this.addShader('simple_point_vs','resources/shaders/simple_point.vs',
+				{
+					vertexPosition:"aVertexPosition",
+				},
+				{
+					pMatrix:"uPMatrix",
+					mvMatrix:"uMVMatrix",
+					pointSize:"pointSize"
+				});
+			this.addProgram('simple_point','simple_point_vs','simple_fs');
+			this.bindProgram('simple_point');
 			
-			// this.addShader('noise_fs','resources/shaders/noise.fs',{},{time:"time"});
-			// this.addShader('noise_vs','resources/shaders/noise.vs',
-				// {
-					// vertexPosition:"aVertexPosition",
-				// },
-				// {
-					// pMatrix:"uPMatrix",
-					// mvMatrix:"uMVMatrix",
-					// time:"time"
-				// });
-			// this.addProgram('noise','noise_vs','noise_fs');
-			// this.bindProgram('noise');
+			this.addShader('noise_fs','resources/shaders/noise.fs',{},{time:"time"});
+			this.addShader('noise_vs','resources/shaders/noise.vs',
+				{
+					vertexPosition:"aVertexPosition",
+				},
+				{
+					pMatrix:"uPMatrix",
+					mvMatrix:"uMVMatrix",
+					time:"time"
+				});
+			this.addProgram('noise','noise_vs','noise_fs');
+			this.bindProgram('noise');
 			
-			// this.addShader('texture_fs','resources/shaders/texture.fs',
-				// {},
-				// {
-					// tint:"uTint",
-					// tintWeight:'uTintWeight',
-					// alpha: 'uAlpha',
-					// sampler: 'uSampler'
-				// });
-			// this.addShader('texture_vs','resources/shaders/texture.vs',
-				// {
-					// textureCoord: "aTextureCoord",
-					// vertexPosition:"aVertexPosition"
-				// },
-				// {
-					// pMatrix:"uPMatrix",
-					// mvMatrix:"uMVMatrix"
-				// });
-			// this.addProgram('basic_texture','texture_vs','texture_fs');
-			// this.bindProgram('basic_texture');
+			this.addShader('texture_fs','resources/shaders/texture.fs',
+				{},
+				{
+					tint:"uTint",
+					tintWeight:'uTintWeight',
+					alpha: 'uAlpha',
+					sampler: 'uSampler'
+				});
+			this.addShader('texture_vs','resources/shaders/texture.vs',
+				{
+					textureCoord: "aTextureCoord",
+					vertexPosition:"aVertexPosition"
+				},
+				{
+					pMatrix:"uPMatrix",
+					mvMatrix:"uMVMatrix"
+				});
+			this.addProgram('basic_texture','texture_vs','texture_fs');
+			this.bindProgram('basic_texture');
 		}
 	}
 	
