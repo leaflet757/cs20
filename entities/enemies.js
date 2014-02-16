@@ -41,21 +41,21 @@ Entities.add('runner',Entities.create(
 						
 						}
 						// test collision code
-						var r = Entities.rocket;
-						for(var i = 0; i<r.position; i++){
-							if(this.collision(r.instanceArray[i])){
-								r.instanceArray[i].alive = false;
-								if (--state.life <= 0)
-								{
-									this.alive = false;
-								}
-								this.x += r.instanceArray[i].vel[0] * .064;
-								this.y += r.instanceArray[i].vel[1] * .064;
-								this.vel[0] += r.instanceArray[i].vel[0];
-								this.vel[1] += r.instanceArray[i].vel[1];
-							}
-						}
-						// ---- 
+// 						var r = Entities.rocket;
+// 						for(var i = 0; i<r.position; i++){
+// 							if(this.collision(r.instanceArray[i])){
+// 								r.instanceArray[i].alive = false;
+// 								if (--state.life <= 0)
+// 								{
+// 									this.alive = false;
+// 								}
+// 								this.x += r.instanceArray[i].vel[0] * .064;
+// 								this.y += r.instanceArray[i].vel[1] * .064;
+// 								this.vel[0] += r.instanceArray[i].vel[0];
+// 								this.vel[1] += r.instanceArray[i].vel[1];
+// 							}
+// 						}
+// 						// ---- 
 						// test collision bounding box test
 						if(s.collision(this)){
 							s.life -= 15;
@@ -109,21 +109,21 @@ Entities.add('shooter_tank',Entities.create(
 					state.tick = function(delta){
 						var s = Entities.player.getInstance(0);
 						// test collision code
-						var r = Entities.rocket;
-						for(var i = 0; i<r.position; i++){
-							if(this.collision(r.instanceArray[i])){
-								r.instanceArray[i].alive = false;
-								if (--state.life <= 0)
-								{
-									this.alive = false;
-								}
-								this.x += r.instanceArray[i].vel[0] * .064;
-								this.y += r.instanceArray[i].vel[1] * .064;
-								this.vel[0] += r.instanceArray[i].vel[0];
-								this.vel[1] += r.instanceArray[i].vel[1];
-							}
-						}
-						// ---- 
+						// var r = Entities.rocket;
+// 						for(var i = 0; i<r.position; i++){
+// 							if(this.collision(r.instanceArray[i])){
+// 								r.instanceArray[i].alive = false;
+// 								if (--state.life <= 0)
+// 								{
+// 									this.alive = false;
+// 								}
+// 								this.x += r.instanceArray[i].vel[0] * .064;
+// 								this.y += r.instanceArray[i].vel[1] * .064;
+// 								this.vel[0] += r.instanceArray[i].vel[0];
+// 								this.vel[1] += r.instanceArray[i].vel[1];
+// 							}
+// 						}
+// 						// ---- 
 					}
 					state.first = true;
 				}else{
