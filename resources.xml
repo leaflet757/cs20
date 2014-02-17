@@ -76,6 +76,7 @@
 	</shaders>
 	<configs>
 	</configs>
-	<resourceConfigs>
-	</resourceConfigs>
+	<resourceConfig>
+		<!--<file>values/weaponValues.xml</file>-->
+	</resourceConfig>
 </root>
