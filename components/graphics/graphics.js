@@ -299,18 +299,18 @@ function initGraphics(){
 			
 			var request=new XMLHttpRequest();
 			request.open("GET",url,false);//synchronous loading
+			request.overrideMimeType("text/plain");
 			request.send();
 			
 			var str = request.responseText;
 			
 			var shader;
-			
-			console.log(url.charAt(url.length-2)+" "+url)
+			var type = "";
 			if(url.charAt(url.length-2)=='f'){
-				console.log('fragment')
+				type = "fragment";
 				shader = gl.createShader(gl.FRAGMENT_SHADER);
 			}else if(url.charAt(url.length-2)=='v'){
-				console.log('vertex')
+				type = "vertex";
 				shader = gl.createShader(gl.VERTEX_SHADER);
 			}else{
 				return null;
@@ -323,6 +323,8 @@ function initGraphics(){
 				console.log(str);
 				throw gl.getShaderInfoLog(shader)+" shader compile fail";
 				return null;
+			}else{
+				console.log(url+" loaded as "+type+"")
 			}
 			
 			return shader;
@@ -1122,6 +1124,27 @@ function initGraphics(){
 				return d.manager;
 			}
 		},
+		setDisplayDimensions: function(width,height){
+			for(var i in displays){
+				displays[i].display.width = width;
+				displays[i].display.height = height;
+				displays[i].screen.width = displays[i].screen.height * width/height;
+			}
+			var style = document.getElementById("displayStyle");
+			style.innerHTML = 
+			'canvas{'+
+			' 	position: fixed;'+
+			'	left:50%;'+
+			'	top:50%;'+
+			'	'+
+			'	height: '+height+'px;'+
+			'	margin-top: -'+height/2+'px;'+
+			'	'+
+			'	width: '+width+'px;'+
+			'	margin-left: -'+width/2+'px;'+
+			'	cursor: none;'+
+			'}'
+		}
 	});
 	gameComponents[2] = graphics;
 }

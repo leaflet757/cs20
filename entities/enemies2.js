@@ -153,7 +153,7 @@ Entities.add('enemy_direct_suicider',Entities.create({
 	destroy: function(state,reset){
 		if(!reset){
 			state.deathSound.play(0)
-			Entities.shrink_burst.burst(8,state.x+state.width/2,state.y+state.height/2,18,18,4,200,1,0,0,0.1,state.vel[0],state.vel[1]);
+			Entities.shrink_burst.burst(16,state.x+state.width/2,state.y+state.height/2,24,24,4,200,1,0,0,0.1,state.vel[0],state.vel[1]);
 		}
 	}
 }));

@@ -126,7 +126,7 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 }
 Map.prototype=fillProperties(new GLDrawable(),{
 	draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
-		manager.stroke(1,1,0,1)
+		manager.stroke(1,1,0,1);
 		for(var i = 0; i<this.lines.length; i+=4){
 			if(screen.collision(Math.min(this.lines[i],this.lines[i+2]),Math.min(this.lines[i+1],this.lines[i+3]),Math.abs(this.lines[i]-this.lines[i+2]),Math.abs(this.lines[i+1]-this.lines[i+3]))){
 				manager.line(this.lines[i],this.lines[i+1],this.lines[i+2],this.lines[i+3],98);

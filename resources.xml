@@ -74,6 +74,8 @@
 		<program name='noise' vertex='noise_vs' fragment='noise_fs'></program>
 		<program name='texture' vertex='texture_vs' fragment='texture_fs'></program> 
 	</shaders>
-	<resourceConfig>
-	</resourceConfig>
+	<configs>
+	</configs>
+	<resourceConfigs>
+	</resourceConfigs>
 </root>

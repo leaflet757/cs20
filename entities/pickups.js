@@ -19,7 +19,9 @@ Entities.add('health_generic',Entities.create(
 					state.pickupSound.gain = 0.1;
 					state.firstHealth = true;
 					state.pullRange = 512;
-					state.pullMag = 600;
+					state.moveRange = 128;
+					state.pullMag = 1000;
+					state.moveSpeed = 500;
 				}
 				state.set(x,y,vx || 0,vy || 0,0,0);
 				graphics.addToDisplay(state,'gl_main');
@@ -33,7 +35,11 @@ Entities.add('health_generic',Entities.create(
 				}else if(p.life<p.maxLife){
 					var dist = pythag(state.x+state.width/2 - p.cx,state.y+state.height/2 - p.cy);
 					if(dist<state.pullRange){
-						state.accelerateToward(p.cx-state.width/2,p.cy-state.height/2,state.pullMag*sqr(1-(dist/state.pullRange)));
+						if(dist<state.moveRange){
+							state.moveToward(p.cx-state.width/2,p.cy-state.height/2,state.moveSpeed);
+						}else{
+							state.accelerateToward(p.cx-state.width/2,p.cy-state.height/2,state.pullMag*sqr(1-(dist/state.pullRange)));
+						}
 					}
 				}	
 			},

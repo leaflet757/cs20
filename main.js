@@ -132,9 +132,9 @@ function loadResources(callback){
 	var loadNextSound = function(){
 		if(n < resourceConfig.audio.length){
 			var node = resourceConfig.audio[n];
-			var name = node.getAttribute('name');
-			Sound.addBuffer(name,node.firstChild.data,function(){
-				console.log("audio buffer: "+name+" loaded");
+			var name = node.attributes['name'];
+			Sound.addBuffer(name,node.text,function(){
+				console.log("audio buffer: "+name+" loaded from "+node.text);
 				loadNextSound()
 			},function(){
 				console.error("error loading audio buffer: "+name);
@@ -146,40 +146,6 @@ function loadResources(callback){
 		}
 	}
 	
-	// var manager = graphics.getManager('gl_main');
-	
-	// console.log(resourceConfig.shaders.length)
-	// for(var i = 0; i<resourceConfig.shaders.length; i++){
-		// console.log(i)
-		// var shader = resourceConfig.shaders[i];
-		// var name = shader.getAttribute("name");
-		// var src = shader.getAttribute("src");
-		// var attributes = {};
-		// var uniforms = {};
-		// console.log(name+" "+src+" "+shader.childNodes.length)
-		// for(var j in shader.childNodes){
-			// if(shader.childNodes[j].nodeName){
-				// if(shader.childNodes[j].nodeName=="attribute"){
-					// console.log("attrib "+shader.childNodes[j].childNodes[0].data+" "+shader.childNodes[j].getAttribute("name"))
-					// attributes[shader.childNodes[j].childNodes[0].data] = shader.childNodes[j].getAttribute("name");
-				// }else if(shader.childNodes[j].nodeName=="uniform"){
-					// console.log("uniform "+shader.childNodes[j].childNodes[0].data+" "+shader.childNodes[j].getAttribute("name"))
-					// uniforms[shader.childNodes[j].childNodes[0].data] = shader.childNodes[j].getAttribute("name");
-				// }
-			// }
-		// }
-		// manager.addShader(name,src,attributes,uniforms);
-	// }
-	// console.log("shaders loaded")
-	// for(var i = 0; i<resourceConfig.programs.length; i++){
-		// var p = resourceConfig.programs[i];
-		// var name = p.getAttribute("name");
-		// var vertex = p.getAttribute("vertex");
-		// var fragment = p.getAttribute("fragment");
-		// console.log(name,vertex,fragment)
-		// manager.addProgram(name,vertex,fragment);
-		// manager.bindProgram(name);
-	// }
 	loadNextSound();
 }
 
@@ -197,7 +163,7 @@ function initScene(){
 	var screen = graphics.getScreen('gl_main');
 	mouse.box = graphics.getScreen('gl_main');
 
-	screen.scale(1.5)
+	screen.scale(2)
 	//fps counter using a simple low pass filter
 	var fpsCounter = (function(){
 		var element = document.getElementById('fps');
@@ -321,7 +287,7 @@ function reinitScene(){
 	Entities.reset();
 	Entities.reset();
 	graphics.removeFromDisplay(currentMap,'gl_main');
-	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
+	currentMap = new Map(9,0.5,256*4,512*4,256*4,512*4,640*4,128);
 	currentMap.init([Entities.runner,Entities.enemy_direct_suicider],32);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');

@@ -305,12 +305,12 @@ Entities.add('player', Entities.create((function(){
 								updateCoords();
 								mvMatrix.identity(mvMatrix);
 								mvMatrix.translate(state.cx,state.cy,0);
-								manager.point(0,0,-1,6,1,1,1,1);
+								// manager.point(0,0,-1,6,1,1,1,1);
 								mvMatrix.rotateZ(theta);
 								animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
 								mvMatrix.identity()
 								manager.fillRect(32+screen.x,screen.y+screen.height/2,-99,16,(screen.height-32)*(this.life/100),0,1-(1*(this.life/100)),1*(this.life/100),0,1)
-								// mvMatrix.identity();
+								mvMatrix.identity();
 								// manager.line(state.x-animator.x,state.y-animator.y,mouse.x,mouse.yInv,0,1,1,1,1)
 							},
 							onCollision: function(){
