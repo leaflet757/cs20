@@ -325,6 +325,13 @@ Vector = {
 			m+=(a[i]-b[i])*(a[i]-b[i])
 		}
 		return Math.sqrt(m);
+	},
+	normalize: function(out,a){
+		var m= 1/this.getMag(a);
+		for(var i = 0; i<a.length; i++){
+			out[i] = a[i]*m;
+		}
+		return out;
 	}
 }
 

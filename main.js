@@ -268,8 +268,11 @@ function initScene(){
 	// graphics.addToDisplay(testMap,"gl_main")
 	currentMap = new Map(9,0.5,256*4,512*4,256*4,512*4,640*4,128);
 	Entities.runner.def.max = 10;
-	Entities.enemy_direct_suicider.def.max = 10;
-	currentMap.init([Entities.runner,Entities.enemy_direct_suicider],32);
+	Entities.enemy_direct_suicider.def.max = 5;
+	Entities.enemy_direct_move_suicider.def.max = 5;
+	Entities.enemy_breaker_suicider.def.max = 5;
+	Entities.enemy_meandering_suicider.def.max = 10;
+	currentMap.init([Entities.enemy_direct_suicider,Entities.enemy_direct_move_suicider,Entities.enemy_meandering_suicider,Entities.enemy_breaker_suicider],32);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
