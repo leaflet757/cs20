@@ -1,10 +1,15 @@
-
+// TODO:
+// OVERHEAT NEEDED
+// weapons strictly do not charge when holding down fire
 // RocketWeapon -- 
 function RocketWeapon(){
 	this.boundless = true;
+	this.barVisible = false;
 	var time = 0;
 	var energy = 100;
 	var COST = 10;
+	var RECHARGE_RATE = 1;
+	var vis = false;
 	var p = Entities.player.getInstance(0);
 	var dir = {0:0, 1:0, length:2};	
 	var sound = Sound.createSound('rocket_fire');
@@ -13,11 +18,29 @@ function RocketWeapon(){
 		{tick:function (delta) {
 			if (time > 0)
 				time-=delta;
+			if (!vis) {
+				if (energy < 100)
+					energy+=RECHARGE_RATE;
+			}
 		}
 	});
 	
+	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
+		if (this.barVisible) {
+			manager.fillRect(16+screen.x,screen.y+screen.height/2,-99,16,
+				(screen.height-32)*(energy/100),0,1,1,0,1);
+		}	
+// 		gl.enable(gl.BLEND);
+// 		gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
+// 		manager.fillRect(16+screen.x,screen.y+screen.height/2,-99,16,
+// 			(screen.height-32)*(energy/100),0,1,1,0,1);
+// 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
+	}
+	
 	this.fire = function() {
-		if (time <= 0) {
+		if (time <= 0 && energy >= COST) {
+			energy -= COST;
+			vis = true;
 			time = 0.5;
 			dir[0] = mouse.x - p.cx;
 			dir[1] = mouse.yInv - p.cy;
@@ -27,11 +50,13 @@ function RocketWeapon(){
 	};
 	
 	this.holdFire = function() {
-		// Empty
+		vis = false;
 	};
+	
+	graphics.addToDisplay(this, 'gl_main');
 }
-// RocketWeapon.prototype = GLDrawable();
-RocketWeapon.prototype = {}
+RocketWeapon.prototype = new GLDrawable();
+//RocketWeapon.prototype = {}
 
 // Rocket -- 
 Entities.add('rocket', Entities.create( // blows up before it touches???
@@ -87,6 +112,10 @@ Entities.add('rocket', Entities.create( // blows up before it touches???
 						if (this.delay <= 0)
 						{
 							this.accelerateToward(this.targetx,this.targety,800);
+							// todo:
+							// change to blast radius
+							// farther away less damage
+							// inverse quad
 							var enemies = physics.getColliders(state.a, state.x,
 								state.y, state.width, state.height);
 							for (var i = 0; i < enemies.length; i++){
@@ -246,6 +275,13 @@ Entities.add('rocket', Entities.create( // blows up before it touches???
 
 // MineWeapon -- 
 function MineWeapon(){
+	this.boundless = true;
+	this.barVisible = false;
+	var time = 0;
+	var energy = 100;
+	var COST = 30;
+	var RECHARGE_RATE = 1;
+	var vis = false;
 	var time = 0;
 	var p = Entities.player.getInstance(0);
 	var sound = Sound.createSound('mine_fire');
@@ -254,11 +290,24 @@ function MineWeapon(){
 		{tick:function (delta) {
 			if (time > 0)
 				time-=delta;
+			if (!vis) {
+				if (energy < 100)
+					energy+=RECHARGE_RATE;
+			}
 		}
 	});
 	
+	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
+		if (this.barVisible) {
+			manager.fillRect(16+screen.x,screen.y+screen.height/2,-99,16,
+				(screen.height-32)*(energy/100),0,1,1,0,1);
+		}
+	};
+	
 	this.fire = function() {
-		if (time <= 0) {
+		if (time <= 0 && energy >= COST) {
+			vis = true;
+			energy -= COST;
 			sound.play(0);
 			Entities.mine.newInstance(p.cx,p.cy);
 			time = 1;
@@ -266,10 +315,11 @@ function MineWeapon(){
 	};
 	
 	this.holdFire = function() {
-		// Empty
+		vis = false;
 	};
+	graphics.addToDisplay(this, 'gl_main');
 }
-MineWeapon.prototype = {};
+MineWeapon.prototype = new GLDrawable();
 
 // Mine -- 
 Entities.add('mine', Entities.create(
@@ -337,9 +387,15 @@ Entities.add('mine', Entities.create(
 
 // WaveWeapon -- 
 function WaveWeapon(){
+	this.boundless = true;
+	this.barVisible = false;
+	var time = 0;
+	var energy = 100;
+	var COST = 15;
+	var RECHARGE_RATE = 1;
+	var vis = false;
 	var p = Entities.player.getInstance(0);
 	var damage = 0.5;
-	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
 	var thickness = 156;
@@ -363,19 +419,25 @@ function WaveWeapon(){
 	graphics.addToDisplay(this, 'gl_main');
 	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
-		mvMatrix.push();
-		theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-		mvMatrix.rotateZ(theta + Math.PI / 2);
-		manager.fillTriangle(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0.6,0,1,1);
-		mvMatrix.pop();
+		if (vis) {
+			mvMatrix.push();
+			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
+			mvMatrix.rotateZ(theta + Math.PI / 2);
+			manager.fillTriangle(p.cx + (Math.cos(theta)*(length/2)),p.cy+(Math.sin(theta)*(length/2)),0,thickness,length,0,0.6,0,1,1);
+			mvMatrix.pop();
+		}
+		if (this.barVisible) {
+			manager.fillRect(16+screen.x,screen.y+screen.height/2,-99,16,
+				(screen.height-32)*(energy/100),0,1,1,0,1);
+		}
 	};
 	this.fire = function() {
-		if (!hasPressed) {
+		if (!hasPressed && energy>=COST) {
 			hasPressed = true;
 			sound.play(0);
 			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-			
-			this.visible = true;
+			energy -= COST;
+			vis = true;
 			// check for enemies
 			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
 			newA = true;
@@ -400,16 +462,21 @@ function WaveWeapon(){
 				}
 			}
 		} else {
-			this.visible = false;
+			vis = false;
 		}
 	};
 	this.holdFire = function() {
-		this.visible = false;
+		vis = false;
 		hasPressed = false;
 	};
 	this.boundless = true;
 	ticker.add({
 		tick: function(delta) {
+			if (!vis) {
+				if (energy < 100)
+					energy+=RECHARGE_RATE;
+			}
+		
 			damagePer = delta;
 			
 			if (newA){	
@@ -426,10 +493,16 @@ WaveWeapon.prototype = new GLDrawable();
 
 // BeamWeapon --
 function BeamWeapon(){
+	this.boundless = true;
+	this.barVisible = false;
+	var time = 0;
+	var energy = 100;
+	var COST = 0.8;
+	var RECHARGE_RATE = 1;
+	var vis = false;
 	var p = Entities.player.getInstance(0);
 	var damage = 0.7;
 	var force = -80;
-	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
 	var t = 0;
@@ -444,75 +517,73 @@ function BeamWeapon(){
 	var v = vec2.create();
 	var hits = [];
 	var sound = Sound.createSound('beam_fire', true);
-	sound.gain = 0.1;
- 	
-	
+	sound.gain = 0.1;	
 	
 	this.glInit = function(manager){
 		manager.addArrayBuffer("beam",false,verts,3,3)
 	}
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
-		manager.setArrayBuffer("beam",false,verts,verts.length/3,3);
-		manager.bindProgram("noise");
-		manager.setUniform1f("noise","time",t2);
-		manager.setArrayBufferAsProgramAttribute("beam","noise","vertexPosition");
-		manager.setMatrixUniforms('noise',pMatrix,mvMatrix.current);
-		gl.drawArrays(gl.TRIANGLE_FAN,0,verts.length/3);
-		t2%=10;
-		t2++;
+		if (vis) {
+			manager.setArrayBuffer("beam",false,verts,verts.length/3,3);
+			manager.bindProgram("noise");
+			manager.setUniform1f("noise","time",t2);
+			manager.setArrayBufferAsProgramAttribute("beam","noise","vertexPosition");
+			manager.setMatrixUniforms('noise',pMatrix,mvMatrix.current);
+			gl.drawArrays(gl.TRIANGLE_FAN,0,verts.length/3);
+			t2%=10;
+			t2++;
+			hits.length = 0;
+			physics.rayTraceLine(hits,p.cx,p.cy,mouse.x,mouse.yInv);
+		}
+		if (this.barVisible) {
+			manager.fillRect(16+screen.x,screen.y+screen.height/2,-99,16,
+				(screen.height-32)*(energy/100),0,1,1,0,1);
+		}
 	};
 	this.fire = function() {
-		if (!sound.playing) 
-			sound.play(0);
-		this.visible = true;
-		hits.length = 0;
+		if (energy >= COST) {
+			energy -= COST;
+			if (!sound.playing) 
+				sound.play(0);
+			vis = true;
+			hits.length = 0;
 		
-		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		if (traceResult.length > 3) {
-			for (var i = 1; i < traceResult.length -2; i++) {
-				traceResult[i].accelerateToward(p.cx, p.cy, force * 3/i);
-				traceResult[i].life -= damage * 1/i;
+			var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
+			if (traceResult.length > 3) {
+				for (var i = 1; i < traceResult.length -2; i++) {
+					traceResult[i].accelerateToward(p.cx, p.cy, force * 3/i);
+					traceResult[i].life -= damage * 1/i;
+				}
 			}
+			verts.length = 0
+			verts = physics.getCone(verts,p.cx,p.cy,mouse.x,mouse.yInv,theta);
+			theta = (0.01) + (0.005 *Math.sin(t));
+			t+=Math.PI*2/60
+			t%=Math.PI*2;
+		} else {
+			vis = false;
 		}
-		verts.length = 0
-		verts = physics.getCone(verts,p.cx,p.cy,mouse.x,mouse.yInv,theta);
-		// vec2.set(v,mouse.x-p.cx, mouse.yInv-p.cy);
-		// Vector.setMag(v,v,laserWidth);
-		// var uv = mouse.x-p.cx;
-		// var vv = mouse.yInv-p.cy;
-		// var c = Math.cos(theta);
-		// var s = Math.sin(theta);
-		// var x1,y1,x2,y2;
-		// verts.push(p.cx,p.cy,0);
-		// traceResult = physics.rayTrace(hits, p.cx, p.cy,p.cx + ((uv*c) - (vv*s)),p.cy + ((uv*s) + (vv*c)),true);
-		// verts.push(traceResult[traceResult.length - 6],traceResult[traceResult.length - 5],0)
-		// x1 = traceResult[traceResult.length - 4];
-		// y1 = traceResult[traceResult.length - 3];
-		// x2 = traceResult[traceResult.length - 2]; 
-		// y2 = traceResult[traceResult.length - 1];
-		// c = Math.cos(-theta);
-		// s = Math.sin(-theta);
-		// traceResult = physics.rayTrace(hits, p.cx, p.cy,p.cx + ((uv*c) - (vv*s)),p.cy + ((uv*s) + (vv*c)),true);
-		// var tx =  traceResult[traceResult.length - 6];
-		// var ty = traceResult[traceResult.length - 5];
-		// if(x1 == traceResult[traceResult.length - 2] && y1 == traceResult[traceResult.length - 1]){
-			// verts.push(x1,y1,0)
-		// }else if(x2 == traceResult[traceResult.length - 4] && y2 == traceResult[traceResult.length - 3]){
-			// verts.push(x2,y2,0)
-		// }else{
-		// }
-		// verts.push(tx,ty,0)
-		theta = (0.01) + (0.005 *Math.sin(t));
-		t+=Math.PI*2/60
-		t%=Math.PI*2;
 	};
+	
 	this.boundless = true;
 	this.holdFire = function() {
 		if (sound.playing)
 			sound.stop(0);
-		this.visible = false;
+		vis = false;
 		theta = 0;
 	}
+	
+	ticker.add(
+		{tick:function (delta) {
+			if (!vis) {
+				if (energy < 100)
+					energy+=RECHARGE_RATE;
+				if (energy > 100)
+					energy = 100;
+			}
+		}
+	});
+
 	graphics.addToDisplay(this, 'gl_main');
 }
 BeamWeapon.prototype = new GLDrawable();

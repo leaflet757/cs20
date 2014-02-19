@@ -26,7 +26,9 @@ WeaponManager.prototype =
  	swap: function(index) {
  		if (index < this.position) {
  			this.currentWeapon.holdFire();
+ 			this.currentWeapon.barVisible = false;
  			this.currentWeapon = this.weaponList[index];
+ 			this.currentWeapon.barVisible = true;
  		} else {
  			console.error("Weapon does not exist in slot: " + index);
  		}
@@ -38,7 +40,8 @@ WeaponManager.prototype =
  		item.holdFire();
 		this.weaponList[this.position++] = item;
 			if (this.currentWeapon == undefined) {
-				this.currentWeapon = this.weaponList[0];			
+				this.currentWeapon = this.weaponList[0];
+				this.currentWeapon.barVisible = true;			
 			}
  		return;
  	},
