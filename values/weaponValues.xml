@@ -8,7 +8,13 @@
 	<cost>
 		<rocket name='rocket'>10</rocket>
 		<mine name='mine'>30</mine>
-		<beam name='beam'>1</mine>
-		<wave name='wave'>5</wave>
+		<beam name='beam'>0.8</mine>
+		<wave name='wave'>15</wave>
 	</cost>
+	<rate>
+		<rocket name='rocket'>1</rocket>
+		<mine name='mine'>1</mine>
+		<beam name='beam'>1</mine>
+		<wave name='wave'>1</wave>
+	</rate>
 </root>
