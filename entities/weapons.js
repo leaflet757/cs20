@@ -517,12 +517,11 @@ function BeamWeapon(){
 	var v = vec2.create();
 	var hits = [];
 	var sound = Sound.createSound('beam_fire', true);
-	sound.gain = 0.1;
- 	
+	sound.gain = 0.1;	
+	
 	this.glInit = function(manager){
 		manager.addArrayBuffer("beam",false,verts,3,3)
 	}
-	
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
 		if (vis) {
 			manager.setArrayBuffer("beam",false,verts,verts.length/3,3);
@@ -535,7 +534,6 @@ function BeamWeapon(){
 			t2++;
 			hits.length = 0;
 			physics.rayTraceLine(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-			manager.line(p.cx,p.cy,hits[0],hits[1],-98,1,0,0,0);
 		}
 		if (this.barVisible) {
 			manager.fillRect(16+screen.x,screen.y+screen.height/2,-99,16,
@@ -585,7 +583,7 @@ function BeamWeapon(){
 			}
 		}
 	});
-	
+
 	graphics.addToDisplay(this, 'gl_main');
 }
 BeamWeapon.prototype = new GLDrawable();

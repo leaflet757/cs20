@@ -250,7 +250,7 @@ Entities.add('enemy_meandering_suicider',Entities.create({
 Entities.add('enemy_breaker_suicider',Entities.create({
 	parent: Entities.enemy_suicider,
 	create: function(state){
-		state.life = 1;
+		state.life = 10;
 		if(!state.breakerSuiciderFirst){
 			state.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix){
 				manager.fillRect(this.x+this.width/2,this.y+this.height/2, 0, this.width,this.height,0,1,0,1,1)
