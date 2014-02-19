@@ -1,0 +1,1 @@
+pscp -pw Work4Cake -r C:\Users\Alex\Documents\GitHub\cs20\ awittmon@unix.ic.ucsc.edu:/afs/cats.ucsc.edu/users/e/awittmon/public_html/

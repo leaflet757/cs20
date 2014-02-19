@@ -1,11 +1,7 @@
-Sound.addBuffer('health_small','resources/audio/health_pickup_small.wav')
-Sound.addBuffer('health_med','resources/audio/health_pickup_med.wav')
-Sound.addBuffer('health_large','resources/audio/health_pickup_large.wav')
-//small health pickup
-Entities.add('health_small',Entities.create(
+Entities.add('health_generic',Entities.create(
 		{
 			create: function(state,x,y,vx,vy){
-				if(!state.first){
+				if(!state.firstHealth){
 					fillProperties(state,Entities.createStandardCollisionState(
 							{
 								draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
@@ -15,31 +11,54 @@ Entities.add('health_small',Entities.create(
 									manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width,this.height,0,0,1,0,0.5);
 									gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
 								},
-								tick:function(){
-									var p = Entities.player.getInstance(0);
-									if(p.collision(this) && p.life<p.maxLife){
-										p.life += 1;
-										this.alive = false;
-									}
-								},
 								z: 0
 							},x,y,16,16,1));
-					state.dragConst = 0.1;
+					state.health = 1;
+					state.dragConst = 0.4;
 					state.pickupSound = Sound.createSound('health_small');
 					state.pickupSound.gain = 0.1;
+					state.firstHealth = true;
+					state.pullRange = 512;
+					state.moveRange = 128;
+					state.pullMag = 1000;
+					state.moveSpeed = 500;
 				}
 				state.set(x,y,vx || 0,vy || 0,0,0);
 				graphics.addToDisplay(state,'gl_main');
 				physics.add(state);
-				ticker.add(state);
 			},
-			destroy: function(state){
-				state.pickupSound.play(0);
+			update: function(state){
+				var p = Entities.player.getInstance(0);
+				if(p.collision(state) && p.life<p.maxLife){
+					p.life += state.health;
+					state.alive = false;
+				}else if(p.life<p.maxLife){
+					var dist = pythag(state.x+state.width/2 - p.cx,state.y+state.height/2 - p.cy);
+					if(dist<state.pullRange){
+						if(dist<state.moveRange){
+							state.moveToward(p.cx-state.width/2,p.cy-state.height/2,state.moveSpeed);
+						}else{
+							state.accelerateToward(p.cx-state.width/2,p.cy-state.height/2,state.pullMag*sqr(1-(dist/state.pullRange)));
+						}
+					}
+				}	
+			},
+			destroy: function(state,reset){
+				if(!reset) {
+					state.pickupSound.play(0);
+					Entities.shrink_burst.burst(8,state.x,state.y,state.width*.75,state.width*.75,3,50,0,1,0,0.1,state.vel[0],state.vel[1])
+				}
 				graphics.removeFromDisplay(state,'gl_main');
 				physics.remove(state);
-				ticker.remove(state);
-				Entities.health_burst.newInstance(state.x,state.y,8,12,25,2,state.vel[0],state.vel[1])
 			}
+		}
+		)
+	);
+	
+//small health pickup
+Entities.add('health_small',Entities.create(
+		{
+			parent: Entities.health_generic
 		}
 		)
 	)
@@ -47,41 +66,16 @@ Entities.add('health_small',Entities.create(
 	
 Entities.add('health_med',Entities.create(
 	{
+		parent: Entities.health_generic,
 		create: function(state,x,y,vx,vy){
-			if(!state.first){
-				fillProperties(state,Entities.createStandardCollisionState(
-						{
-							draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-								manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width/2,this.height/2,0,0,1,0,1);
-								gl.enable(gl.BLEND);
-								gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
-								manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width,this.height,0,0,1,0,0.5);
-								gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
-							},
-							tick:function(){
-								var p = Entities.player.getInstance(0);
-								if(p.collision(this) && p.life<p.maxLife){
-									p.life += 15;
-									this.alive = false;
-								}
-							},
-							z: 0
-						},x,y,24,24,1));
-				state.dragConst = 0.1;
+			if(!state.healthMed){
+				state.width = 24;
+				state.height = 24;
+				state.health = 15;
 				state.pickupSound = Sound.createSound('health_med');
 				state.pickupSound.gain = 0.1;
+				state.healthMed = true;
 			}
-			state.set(x,y,vx || 0,vy || 0,0,0);
-			graphics.addToDisplay(state,'gl_main');
-			physics.add(state);
-			ticker.add(state);
-		},
-		destroy: function(state){
-			state.pickupSound.play(0);
-			Entities.health_burst.newInstance(state.x,state.y,8,18,25,2,state.vel[0],state.vel[1])
-			graphics.removeFromDisplay(state,'gl_main');
-			physics.remove(state);
-			ticker.remove(state);
 		}
 	}
 	)
@@ -89,41 +83,16 @@ Entities.add('health_med',Entities.create(
 
 Entities.add('health_large',Entities.create(
 	{
+		parent: Entities.health_generic,
 		create: function(state,x,y,vx,vy){
-			if(!state.first){
-				fillProperties(state,Entities.createStandardCollisionState(
-						{
-							draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-								manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width/2,this.height/2,0,0,1,0,1);
-								gl.enable(gl.BLEND);
-								gl.blendFunc(gl.SRC_ALPHA, gl.DST_ALPHA);
-								manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width,this.height,0,0,1,0,0.5);
-								gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
-							},
-							tick:function(){
-								var p = Entities.player.getInstance(0);
-								if(p.collision(this) && p.life<p.maxLife){
-									p.life += 25;
-									this.alive = false;
-								}
-							},
-							z: 0
-						},x,y,32,32,1));
-				state.dragConst = 0.1;
+			if(!state.healthLarge){
+				state.width = 32;
+				state.height = 32;
+				state.health = 25;
 				state.pickupSound = Sound.createSound('health_large');
 				state.pickupSound.gain = 0.1;
+				state.healthLarge = true;
 			}
-			state.set(x,y,vx || 0,vy || 0,0,0);
-			graphics.addToDisplay(state,'gl_main');
-			physics.add(state);
-			ticker.add(state);
-		},
-		destroy: function(state){
-			state.pickupSound.play(0);
-			Entities.health_burst.newInstance(state.x,state.y,8,24,25,2,state.vel[0],state.vel[1])
-			graphics.removeFromDisplay(state,'gl_main');
-			physics.remove(state);
-			ticker.remove(state);
 		}
 	}
 	)
@@ -143,12 +112,6 @@ Entities.add('health_burst_frag',Entities.create(
 								manager.fillEllipse(this.x+(this.width/2),this.y+(this.width/2),0,this.width/2,this.height/2,0,0,1,0,this.alpha);
 								gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_DST_ALPHA);
 							},
-							tick:function(delta){
-								this.life -= delta;
-								if(this.life<=0){
-									this.alive = false;
-								}
-							},
 							width: size,
 							height: size,
 							z: 0
@@ -159,12 +122,16 @@ Entities.add('health_burst_frag',Entities.create(
 			state.set(x,y,vx || 0,vy || 0,0,0);
 			graphics.addToDisplay(state,'gl_main');
 			physics.add(state);
-			ticker.add(state);
+		},
+		update:function(state,delta){
+			state.life -= delta;
+			if(state.life<=0){
+				state.alive = false;
+			}
 		},
 		destroy: function(state){
 			graphics.removeFromDisplay(state,'gl_main');
 			physics.remove(state);
-			ticker.remove(state);
 		}
 	}
 	)

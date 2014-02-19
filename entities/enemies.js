@@ -1,4 +1,3 @@
-Sound.addBuffer('player_hit', 'resources/audio/player_hit.wav');
 Entities.add('runner',Entities.create(
 	(function(){
 		var mvec = new Array();
@@ -22,7 +21,7 @@ Entities.add('runner',Entities.create(
 					var m = 0;
 					var change = 1;
 					var tolerance = 5;
-					var scope = 800;
+					var scope = 512;
 					state.hitSound = Sound.createSound('player_hit');
 					state.hitSound.gain = 0.1;
 					state.tick = function(delta){
@@ -42,7 +41,21 @@ Entities.add('runner',Entities.create(
 						
 						}
 						// test collision code
-						// ---- 
+// 						var r = Entities.rocket;
+// 						for(var i = 0; i<r.position; i++){
+// 							if(this.collision(r.instanceArray[i])){
+// 								r.instanceArray[i].alive = false;
+// 								if (--state.life <= 0)
+// 								{
+// 									this.alive = false;
+// 								}
+// 								this.x += r.instanceArray[i].vel[0] * .064;
+// 								this.y += r.instanceArray[i].vel[1] * .064;
+// 								this.vel[0] += r.instanceArray[i].vel[0];
+// 								this.vel[1] += r.instanceArray[i].vel[1];
+// 							}
+// 						}
+// 						// ---- 
 						// test collision bounding box test
 						if(s.collision(this)){
 							s.life -= 15;
@@ -93,17 +106,24 @@ Entities.add('shooter_tank',Entities.create(
 						},x,y));
 					state.accel[0]=0;
 					state.maxSpeed = 80;
-					var scope = 512;
-					var delay = 0;
 					state.tick = function(delta){
 						var s = Entities.player.getInstance(0);
-						delay += delta;
 						// test collision code
-						if(pythag(s.cx-this.x,s.cy-this.y)<scope && delay >= 1) {
-							Entities.enemyFollowBullet.newInstance(this.x + this.width/2, this.y + this.height/2);
-							delay = 0;
-						}
-						// ---- 
+						// var r = Entities.rocket;
+// 						for(var i = 0; i<r.position; i++){
+// 							if(this.collision(r.instanceArray[i])){
+// 								r.instanceArray[i].alive = false;
+// 								if (--state.life <= 0)
+// 								{
+// 									this.alive = false;
+// 								}
+// 								this.x += r.instanceArray[i].vel[0] * .064;
+// 								this.y += r.instanceArray[i].vel[1] * .064;
+// 								this.vel[0] += r.instanceArray[i].vel[0];
+// 								this.vel[1] += r.instanceArray[i].vel[1];
+// 							}
+// 						}
+// 						// ---- 
 					}
 					state.first = true;
 				}else{

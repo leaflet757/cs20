@@ -220,7 +220,11 @@ function initPhysics(){
 		mover.vel[0] += ax*delta;
 		mover.vel[1] += ay*delta;
 		
-		if(mover.maxSpeed){
+		var speed = Vector.getMag(mover.vel);
+		if(speed<0.001 || (mover.minSpeed && speed<mover.minSpeed)){
+			mover.vel[0]=0;
+			mover.vel[1]=0;
+		}if(mover.maxSpeed){
 			if(Vector.getMag(mover.vel)>mover.maxSpeed) Vector.setMag(mover.vel,mover.vel,mover.maxSpeed);
 		}
 	}
@@ -250,6 +254,7 @@ function initPhysics(){
 		
 		return function(delta){
 			for(var i in colliders){
+				if(colliders[i].x==colliders[i].px && colliders[i].y==colliders[i].py && colliders[i].width==colliders[i].pwidth && colliders[i].height==colliders[i].pheight) continue;
 				collisionSet.length = 0;
 				collidingLines.length = 0;
 				var co = colliders[i];
@@ -257,7 +262,13 @@ function initPhysics(){
 				lineTree.get(collisionSet,co);
 				for(var j =0; j< collisionSet.length; j++){
 					var index = collisionSet[j];
-					if(Collisions.boxLine(co.x,co.y,co.width,co.height,lines[index],lines[index+1],lines[index+2],lines[index+3]) && co.fineCheck(lines[index],lines[index+1],lines[index+2],lines[index+3])){
+					if(Collisions.boxBox
+							(Math.min(co.x,co.px),Math.min(co.y,co.py),
+							Math.abs(co.x-co.px)+co.width,
+							Math.abs(co.y-co.py)+co.height,
+							Math.min(lines[index],lines[index+2]),Math.min(lines[index+1],lines[index+3]),
+							Math.abs(lines[index]-lines[index+2]),Math.abs(lines[index+1]-lines[index+3])) && 
+							co.fineCheck(lines[index],lines[index+1],lines[index+2],lines[index+3])){
 						collidingLines.push(index);
 					}
 				}
@@ -329,6 +340,8 @@ function initPhysics(){
 		
 		var miscVec = [];
 		
+		var miscArray = [];
+		
 		var doForces = function(delta){
 			if(colliderTree){
 				for(var i = 0; i<radialForces.length; i+=5){
@@ -369,11 +382,17 @@ function initPhysics(){
 				doForces(delta);
 				for(var i in movers){
 					if(movers[i].doMove)move(movers[i],delta);
+					if(!movers[i].keepAccel){
+						movers[i].accel[0] = 0;
+						movers[i].accel[1] = 0;
+					}
 				}
 				if(lines)doCollisionCheck(delta);
 				for(var i = 0; i<colliders.length; i++){
 					colliders[i].pwidth = colliders[i].width;
 					colliders[i].pheight = colliders[i].height;
+					colliders[i].px = colliders[i].x;
+					colliders[i].py = colliders[i].y
 				}
 				if(colliderTree){
 					colliderTree.clear();
@@ -394,6 +413,7 @@ function initPhysics(){
 					c = true;
 				}
 				if(!c){
+					console.trace();
 					throw 'Physics.add: invalid parameter: '+obj;
 				}
 			},
@@ -473,8 +493,11 @@ function initPhysics(){
 			/**
 			*  Does a raytrace and puts all of the items intersecting the ray into an array in the order of intersection 
 			*  the ray is stopped by collision with geometry
+			*  if addLine evaluates to true the endpoints of the 
+			*  line that the ray collides with is added to the array after the point of collision
 			*/
-			rayTrace: function(array,x1,y1,x2,y2){
+			rayTrace: function(array,x1,y1,x2,y2,addLine){
+				queryArray.length = 0;
 				var lineSet = lineTree.getRaySet(queryArray,x1,y1,x2,y2);
 				var line = null;
 				var px,py;
@@ -512,8 +535,188 @@ function initPhysics(){
 				sortY = y1;
 				array.sort(sortComp);
 				array.push(px,py);
+				if(addLine){
+					array.push(lines[line],lines[line+1],lines[line+2],lines[line+3]);
+				}
 				
 				collided.length = 0;
+				return array;
+			},
+			/**
+			*	does the ray trace only for the line
+			*   puts the point the ray collides with a wall into the array then
+			*	the end points of the line in collided with
+			*/
+			rayTraceLine: function(array,x1,y1,x2,y2){
+				queryArray.length = 0;
+				var lineSet = lineTree.getRaySet(queryArray,x1,y1,x2,y2);
+				var line = null;
+				var px,py;
+				var dist = -1;
+				
+				//console.log(lineSet.length);
+				for(var i = 0; i<lineSet.length; i++){
+					var xa = lines[lineSet[i]], ya = lines[lineSet[i]+1], xb = lines[lineSet[i]+2],yb = lines[lineSet[i]+3];
+					var res = Collisions.lineRay(xa,ya,xb,yb,x1,y1,x2,y2);
+					// console.log(res);
+					var tempDist = pythag(res[0]-x1,res[1]-y1);
+					if(res && (dist<0 || tempDist<dist)){
+						dist = tempDist;
+						line = lineSet[i];
+						px = res[0];
+						py = res[1];
+					}
+				}
+				lineSet.length = 0;
+				if(line == null || !px) {
+					throw 'ray trace error: can not find line';
+				}
+				
+				array.push(px,py);
+				array.push(lines[line],lines[line+1],lines[line+2],lines[line+3]);
+				array.push(line);
+				return array;
+			},
+			/**
+			*	returns true if a line can be drawn between the two points without intersecting the geometry
+			*/
+			lineRayTest: function(x1,y1,x2,y2,exception){
+				queryArray.length = 0;
+				var lineSet = lineTree.get(queryArray,Math.min(x1,x2),Math.min(y1,y2),Math.abs(x1-x2),Math.abs(y1-y2));
+				for(var i = 0;i<lineSet.length; i++){
+					if(		lineSet[i] != exception &&
+							!(	exception &&
+								(Collisions.comp(lines[exception],lines[lineSet[i]])   && Collisions.comp(lines[exception+1],lines[lineSet[i]+1]) ||
+								Collisions.comp(lines[exception],lines[lineSet[i]+2]) && Collisions.comp(lines[exception+1],lines[lineSet[i]+3]) ||
+								Collisions.comp(lines[exception+2],lines[lineSet[i]])   && Collisions.comp(lines[exception+3],lines[lineSet[i]+1]) ||
+								Collisions.comp(lines[exception+2],lines[lineSet[i]+2]) && Collisions.comp(lines[exception+3],lines[lineSet[i]+3]))
+							) && 
+							!Collisions.pointOnLine(x1,y1,lines[lineSet[i]],lines[lineSet[i]+1],lines[lineSet[i]+2],lines[lineSet[i]+3]) &&
+							!Collisions.pointOnLine(x2,y2,lines[lineSet[i]],lines[lineSet[i]+1],lines[lineSet[i]+2],lines[lineSet[i]+3]) &&
+							Collisions.lineLine(x1,y1,x2,y2,lines[lineSet[i]],lines[lineSet[i]+1],lines[lineSet[i]+2],lines[lineSet[i]+3])){
+						return false;
+					}
+				}
+				return true;
+			},
+			getCone: function(array,x1,y1,x2,y2,theta){
+				array.push(x1,y1,0);
+				miscArray.length = 0;
+				var dir = Vector.getDir(vec2.set(miscVec,x2-x1,y2-y1));
+				
+				var u = x2-x1;
+				var v = y2-y1;
+				var c = Math.cos(theta);
+				var s = Math.sin(theta);
+				var line = this.rayTraceLine(queryArray,x1,y1,x1+((u*c)-(v*s)),y1+((u*s)+(v*c)));
+				array.push(line[0],line[1],0);
+				var lx1 = line[2],ly1 = line[3],lx2 = line[4], ly2 = line[5];
+				var nx,ny;
+				var p = false;
+				var d = -1;
+				if(Math.abs(Vector.getDir(vec2.set(miscVec,lx1-x1,ly1-y1))-dir)<theta && this.lineRayTest(x1,y1,lx1,ly1,line[6]) &&  d<Vector.getMag(miscVec)){
+					nx = lx1;
+					ny = ly1;
+					array.push(lx1,ly1,0)
+					p=true;
+					d = Vector.getMag(miscVec);
+				}
+				if(Math.abs(Vector.getDir(vec2.set(miscVec,lx2-x1,ly2-y1))-dir)<theta && this.lineRayTest(x1,y1,lx2,ly2,line[6]) && d<Vector.getMag(miscVec)){
+					nx = lx2;
+					ny = ly2;
+					array.push(lx2,ly2,0)
+					p=true;
+					d = Vector.getMag(miscVec);
+				}
+				var prev = line[6];
+				var c = 0
+				while(p && c++<20){
+					d = -1;
+					p=false;
+					vec2.set(miscVec,nx-x1,ny-y1)
+					Vector.normalize(miscVec,miscVec);
+					queryArray.length = 0;
+					try{
+						line = this.rayTraceLine(queryArray,nx+miscVec[0],ny+miscVec[1],nx+(miscVec[0])*2,ny+(miscVec[1])*2);
+					}catch(e){break;}
+					array.push(line[0],line[1],0);
+					lx1 = line[2],ly1 = line[3],lx2 = line[4], ly2 = line[5];
+					if(Math.abs(Vector.getDir(vec2.set(miscVec,lx1-x1,ly1-y1))-dir)<theta && this.lineRayTest(x1,y1,lx1,ly1,line[6]) && d<Vector.getMag(miscVec)){
+						nx = lx1;
+						ny = ly1;
+						array.push(lx1,ly1,0)
+						p=true;
+						d = Vector.getMag(miscVec);
+					}
+					if(Math.abs(Vector.getDir(vec2.set(miscVec,lx2-x1,ly2-y1))-dir)<theta && this.lineRayTest(x1,y1,lx2,ly2,line[6]) && d<Vector.getMag(miscVec)){
+						nx = lx2;
+						ny = ly2;
+						array.push(lx2,ly2,0)
+						p=true;
+						d = Vector.getMag(miscVec);
+					}
+					prev = line[6];
+				}
+				if(c>=20)console.error("timeout1")
+				
+				d=-1;
+				c=Math.cos(-theta);
+				s=Math.sin(-theta);
+				queryArray.length = 0;
+				var line = this.rayTraceLine(queryArray,x1,y1,x1+((u*c)-(v*s)),y1+((u*s)+(v*c)));
+				miscArray.push(line[0],line[1],0);
+				var lx1 = line[2],ly1 = line[3],lx2 = line[4], ly2 = line[5];
+				var nx,ny;
+				var p = false;
+				if(Math.abs(Vector.getDir(vec2.set(miscVec,lx1-x1,ly1-y1))-dir)<theta && this.lineRayTest(x1,y1,lx1,ly1,line[6]) && d<Vector.getMag(miscVec)){
+					nx = lx1;
+					ny = ly1;
+					miscArray.push(lx1,ly1,0)
+					p=true;
+					d=Vector.getMag(miscVec)
+				}
+				if(Math.abs(Vector.getDir(vec2.set(miscVec,lx2-x1,ly2-y1))-dir)<theta && this.lineRayTest(x1,y1,lx2,ly2,line[6]) && d<Vector.getMag(miscVec)){
+					nx = lx2;
+					ny = ly2;
+					miscArray.push(lx2,ly2,0)
+					p=true;
+					d=Vector.getMag(miscVec)
+				}
+				prev = line[6];
+				c = 0;
+				while(p && c++<20){
+					d=-1
+					p=false;
+					vec2.set(miscVec,nx-x1,ny-y1)
+					Vector.normalize(miscVec,miscVec);
+					queryArray.length = 0;
+					try{
+						line = this.rayTraceLine(queryArray,nx+miscVec[0],ny+miscVec[1],nx+(miscVec[0])*2,ny+(miscVec[1])*2);
+					}catch(e){break;}
+					miscArray.push(line[0],line[1],0);
+					lx1 = line[2],ly1 = line[3],lx2 = line[4], ly2 = line[5];
+					if(Math.abs(Vector.getDir(vec2.set(miscVec,lx1-x1,ly1-y1))-dir)<theta && this.lineRayTest(x1,y1,lx1,ly1,line[6]) && d<Vector.getMag(miscVec)){
+						nx = lx1;
+						ny = ly1;
+						miscArray.push(lx1,ly1,0)
+						p=true;
+						d=Vector.getMag(miscVec)
+					}
+					if(Math.abs(Vector.getDir(vec2.set(miscVec,lx2-x1,ly2-y1))-dir)<theta && this.lineRayTest(x1,y1,lx2,ly2,line[6]) && d<Vector.getMag(miscVec)){
+						nx = lx2;
+						ny = ly2;
+						miscArray.push(lx2,ly2,0)
+						p=true;
+						d=Vector.getMag(miscVec)
+					}
+					prev = line[6];
+				}
+				if(c>=20)console.error("timeout2")
+				for(var i = miscArray.length-3; i>=0; i-=3){
+					array.push(miscArray[i],miscArray[i+1],miscArray[i+2])
+				}
+				// console.log(array.length)
+				// console.log(array+"")
 				return array;
 			},
 			/**
@@ -670,6 +873,10 @@ MovementState.prototype = Object.defineProperties(
 			}
 			return child;
 		},
+		face : function(x,y,dif){
+			dif = dif || 0;
+			this.theta = Vector.getDir(x-this.x,y-this.y)+dif
+		},
 		doMove:true
 	},
 	{
@@ -785,5 +992,25 @@ PolygonCollider.prototype = fillProperties(new BasicCollider(),
 					// break;
 			// }
 		// }
-	// }
+	// },
+	collision: function(x,y,width,height){
+		var obj;
+		if(typeof x == 'object'){
+			obj = x;
+			x = obj.x;
+			y = obj.y;
+			width = obj.width;
+			height = obj.height;
+		}
+		if(Collisions.boxBox(x,y,width,height,this.x,this.y,this.width,this.height)){
+			if(obj && obj.isCircle){
+					return Collisions.circlePolygon(x+width/2,y+height/2,width/2,this.verts,this.itemSize);
+			}else if(obj && obj.verts && obj.itemSize){
+				return Collisions.polygonPolygon(obj.verts,obj.itemSize,this.verts,this.itemSize)
+			}else{
+				return Collisions.polygonBox(x,y,width,height,this.verts,this.itemSize);
+			}
+		}
+		return false;
+	}
 })

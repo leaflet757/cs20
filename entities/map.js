@@ -2,13 +2,13 @@
 *	This file defines a map object for the current game
 */
 
-function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, connectorWidth, enemies){
+function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, connectorWidth){
 	var num= 0;
 	var lines= new Array();
 	this.lines = lines;
 	var rooms= new Array();
 	var check = function(x,y){
-		for( i in rooms) {
+		for(var i in rooms) {
 			if( rooms[i].x == x && rooms[i].y == y){
 				return false;
 			}
@@ -95,22 +95,38 @@ function Map(limit, roomChance, minWidth, maxWidth, minHeight, maxHeight, size, 
 	}
 	this.room = new Room(null,null,null,null,0,0);
 	
-	this.init = function(){
+	this.init = function(enemies,margin){
 		//create player
-		console.log(this.room.x+this.room.width/2,this.room.y + this.room.height/2)
 		Entities.player.newInstance(this.room.x+size/2,this.room.y + size/2);
 		
 		//add enemies
 		if(enemies){
-			var populate =function(room){
+			var populate = function(room,d){
+				for(var i in enemies){
+					var num = enemies[i].def.max * Math.random();
+					for(var j = 0; j< num; j++){
+						var x = room.x+ (size/2) - (room.width/2) + margin + (Math.random()*(room.width-(margin*2)));
+						var y = room.y+ (size/2) - (room.height/2) + margin + (Math.random()*(room.height-(margin*2)));
+						enemies[i].newInstance(x,y);
+					}
+				}
 				
+				if(room.north!=null && d!=1)populate(room.north,0);
+				if(room.south!=null && d!=0)populate(room.south,1);
+				if(room.east!=null && d!=3)populate(room.east,2);
+				if(room.west!=null && d!=2)populate(room.west,3);
 			}
+			
+			if(this.room.north!=null)populate(this.room.north,0);
+			if(this.room.south!=null)populate(this.room.south,1);
+			if(this.room.east!=null)populate(this.room.east,2);
+			if(this.room.west!=null)populate(this.room.west,3);
 		}
 	}
 }
 Map.prototype=fillProperties(new GLDrawable(),{
 	draw: function(gl,delta,screen,manager,pMatrix,mvMatrix){
-		manager.stroke(1,1,0,1)
+		manager.stroke(1,1,0,1);
 		for(var i = 0; i<this.lines.length; i+=4){
 			if(screen.collision(Math.min(this.lines[i],this.lines[i+2]),Math.min(this.lines[i+1],this.lines[i+3]),Math.abs(this.lines[i]-this.lines[i+2]),Math.abs(this.lines[i+1]-this.lines[i+3]))){
 				manager.line(this.lines[i],this.lines[i+1],this.lines[i+2],this.lines[i+3],98);

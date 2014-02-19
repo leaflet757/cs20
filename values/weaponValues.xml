@@ -1,0 +1,14 @@
+<root>
+	<damage>
+		<rocket name='rocket'>1</rocket>
+		<mine name='mine'>5</mine>
+		<beam name='beam'>0.7</mine>
+		<wave name='wave'>0.5</wave>
+	</damage>
+	<cost>
+		<rocket name='rocket'>10</rocket>
+		<mine name='mine'>30</mine>
+		<beam name='beam'>1</mine>
+		<wave name='wave'>5</wave>
+	</cost>
+</root>

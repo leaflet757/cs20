@@ -11,6 +11,7 @@ function loadSource(){
 	//list script files in order here
 	var scriptSource = [
 		'misc.js',
+		'config.js',
 		'utils/input.js',
 		'utils/collisions.js',
 		'utils/geometry.js',
@@ -27,6 +28,8 @@ function loadSource(){
 	for(var i in scriptSource){
 		document.write('<script type="text/javascript" src='+scriptSource[i]+'><\/script>')
 	}
+	
+	
 }
 
 //initializes the keyboard and mouse objects
@@ -121,6 +124,30 @@ function initInput(){
 	mouse = new input.Mouse(window,document.getElementById("Display"));
 }
 
+function loadResources(callback){ 
+	var resourceConfig = new ResourceConfig('resources.xml');
+	
+	var n = 0;
+	
+	var loadNextSound = function(){
+		if(n < resourceConfig.audio.length){
+			var node = resourceConfig.audio[n];
+			var name = node.attributes['name'];
+			Sound.addBuffer(name,node.text,function(){
+				console.log("audio buffer: "+name+" loaded from "+node.text);
+				loadNextSound()
+			},function(){
+				console.error("error loading audio buffer: "+name);
+				loadNextSound()
+			});
+			n++;
+		}else{
+			callback();
+		}
+	}
+	
+	loadNextSound();
+}
 
 //initialization code goes here
 function init(){
@@ -129,15 +156,14 @@ function init(){
 	}
 	Loop.add(Entities)
 	Loop.start();
-	initScene();
+	loadResources(initScene);
 }
 
 function initScene(){
-	var currentScreen = graphics.getScreen('gl_main');
-	mouse.box = currentScreen;
-	
-	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
-	
+	var screen = graphics.getScreen('gl_main');
+	mouse.box = graphics.getScreen('gl_main');
+
+	screen.scale(2)
 	//fps counter using a simple low pass filter
 	var fpsCounter = (function(){
 		var element = document.getElementById('fps');
@@ -240,26 +266,32 @@ function initScene(){
 	
 	
 	// graphics.addToDisplay(testMap,"gl_main")
-	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
-	currentMap.init();
-	Entities.shooter_tank.newInstance(Math.random()*500, Math.random()*500);
+	currentMap = new Map(9,0.5,256*4,512*4,256*4,512*4,640*4,128);
+	Entities.runner.def.max = 10;
+	Entities.enemy_direct_suicider.def.max = 5;
+	Entities.enemy_direct_move_suicider.def.max = 5;
+	Entities.enemy_breaker_suicider.def.max = 5;
+	Entities.enemy_meandering_suicider.def.max = 10;
+	currentMap.init([Entities.enemy_direct_suicider,Entities.enemy_direct_move_suicider,Entities.enemy_meandering_suicider,Entities.enemy_breaker_suicider],32);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
 	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	/* Entities.runner.newInstance(Math.random()*500, Math.random()*500);
 	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500); */
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }
 
 function reinitScene(){
 	Entities.reset();
+	Entities.reset();
 	graphics.removeFromDisplay(currentMap,'gl_main');
-	currentMap = new Map(9,0.5,256*2,512*2,256*2,512*2,640*2,128);
-	currentMap.init();
+	currentMap = new Map(9,0.5,256*4,512*4,256*4,512*4,640*4,128);
+	currentMap.init([Entities.runner,Entities.enemy_direct_suicider],32);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }

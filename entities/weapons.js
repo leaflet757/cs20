@@ -1,19 +1,14 @@
-Sound.addBuffer('rocket_fire', 'resources/audio/weapon_sounds/rocket1.wav');
-Sound.addBuffer('beam_fire', 'resources/audio/weapon_sounds/beam2.wav');
-Sound.addBuffer('wave_fire', 'resources/audio/weapon_sounds/wave.wav');
-Sound.addBuffer('mine_fire', 'resources/audio/weapon_sounds/mine_place.wav');
-Sound.addBuffer('explosion_fire', 'resources/audio/weapon_sounds/explosion1.wav');
-// temporary sound files
-
 
 // RocketWeapon -- 
 function RocketWeapon(){
+	this.boundless = true;
 	var time = 0;
+	var energy = 100;
+	var COST = 10;
 	var p = Entities.player.getInstance(0);
 	var dir = {0:0, 1:0, length:2};	
 	var sound = Sound.createSound('rocket_fire');
 	sound.gain = 0.1;
-	
 	ticker.add(
 		{tick:function (delta) {
 			if (time > 0)
@@ -35,14 +30,14 @@ function RocketWeapon(){
 		// Empty
 	};
 }
-RocketWeapon.prototype = {};
+// RocketWeapon.prototype = GLDrawable();
+RocketWeapon.prototype = {}
 
 // Rocket -- 
-Entities.add('rocket', Entities.create(
+Entities.add('rocket', Entities.create( // blows up before it touches???
 	(function(){
 		var damage = 1;
 		var buffered = false;
-		var hits = [];
 		return {
 			create: function(state,x,y,dir){
 				state.alive = true;
@@ -51,7 +46,14 @@ Entities.add('rocket', Entities.create(
 				state.delay = 0.5;
 				state.mx = mouse.x;
 				state.my = mouse.yInv;
-				state.hits = physics.rayTrace(hits,x,y,mouse.x,mouse.yInv);
+				state.a = []; // array for collision check
+				state.blastbox = new Object();
+				state.blastbox.width = 24;
+		 		state.blastbox.height = 24;
+				state.blastbox.x = x - 12;
+				state.blastbox.y = y - 12;
+				state.ray = [];
+				state.hits = physics.rayTrace(state.ray,x,y,mouse.x,mouse.yInv);
 				state.targetx = state.hits[state.hits.length - 2];
 				state.targety = state.hits[state.hits.length - 1];
 				state.sound = Sound.createSound('explosion_fire');
@@ -68,13 +70,14 @@ Entities.add('rocket', Entities.create(
 							}
 						},
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							mvMatrix.translate(this.x, this.y, 0);
+							mvMatrix.translate(this.x+this.width/2, this.y+this.height/2, 0);
 							mvMatrix.rotateZ(this.theta);
 							this.animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
 						}
-					},x,y,16,16,1));
+					},x,y,16,16,1)); // TODO: WHAT THE FUCK BOX
 					
 					state.tick = function(delta){
+						this.a = [];
 						this.fuse-=delta;
 						this.delay -= delta;
 						if (this.fuse<=0)
@@ -84,15 +87,18 @@ Entities.add('rocket', Entities.create(
 						if (this.delay <= 0)
 						{
 							this.accelerateToward(this.targetx,this.targety,800);
-						}
-						for (var e in Entities) {
-							if (e.isEnemy) {
-								e.life -= damage;
-								if (e.life <= 0) {
-									e.alive = false;
+							var enemies = physics.getColliders(state.a, state.x,
+								state.y, state.width, state.height);
+							for (var i = 0; i < enemies.length; i++){
+								if (enemies[i].isEnemy && enemies[i].collision(this)) {
+									this.alive = false;
+									i = enemies.length;
 								}
 							}
+							this.a.length = 0;
 						}
+						this.blastbox.x = this.x + this.width/2 - this.blastbox.width/2;
+						this.blastbox.y = this.y + this.height/2 - this.blastbox.width/2;
 					}
 					
 					state.onCollision = function() {
@@ -132,7 +138,7 @@ Entities.add('rocket', Entities.create(
 						},
 						{},6);
 						
-						state.animator.addKeyframe("slim", 
+					state.animator.addKeyframe("slim", 
 						{
 						rocketColor: 
 							fillProperties([
@@ -165,7 +171,7 @@ Entities.add('rocket', Entities.create(
 						},
 						{},6);
 						
-						state.animator.addKeyframe("fat", 
+					state.animator.addKeyframe("fat", 
 						{
 						rocketColor: 
 							fillProperties([
@@ -215,6 +221,19 @@ Entities.add('rocket', Entities.create(
 			},
 			destroy: function(state){
 				state.sound.play(0);
+				var enemies = physics.getColliders(state.a, state.blastbox.x, state.blastbox.y, state.blastbox.width, state.blastbox.height);
+				for (var e in enemies) {
+					e = enemies[e];
+					if (e.isEnemy) { // add player damage and blast force
+						e.life -= damage;
+						if (e.life <= 0) {
+							e.alive = false;
+						} else {
+							//e.vel[0] = vec[0] * blastForce;
+							//e.vel[1] = vec[1] * blastForce;
+						}
+					}
+				}
 				for (var i = 0; i < 50; i++)
 					Entities.explosion.newInstance(state.x, state.y, 0.3);
 				graphics.removeFromDisplay(state,'gl_main');
@@ -256,8 +275,6 @@ MineWeapon.prototype = {};
 Entities.add('mine', Entities.create(
 	(function(){
 		var damage = 5;
-		var a = []; // array for collision check
-		var blastbox = new Object();
 		var blastForce = 800;
 		var vec = vec2.create();		
 		var sound = Sound.createSound('explosion_fire');
@@ -265,12 +282,13 @@ Entities.add('mine', Entities.create(
 		return {
 			create: function(state,x,y){
 				state.alive = true;
-				state.time = 2;
-				
-				blastbox.width = 100;
-		 		blastbox.height = 100;
-				blastbox.x = x - 50;
-				blastbox.y = y - 50;
+				state.time = 1.5;
+				state.a = []; // array for collision check
+				state.blastbox = new Object();
+				state.blastbox.width = 50;
+		 		state.blastbox.height = 50;
+				state.blastbox.x = x - 25;
+				state.blastbox.y = y - 25;
 				
 				if(!state.first){
 					fillProperties(state, Entities.createStandardState(
@@ -282,27 +300,6 @@ Entities.add('mine', Entities.create(
 					state.tick = function(delta){
 						this.time-=delta;
  						this.alive = this.time>0;
-						if (!this.alive) {
-							//console.log(Entities.player.getInstance(0).x);
-							//console.log(blastbox.x);
-							var enemies = physics.getColliders(a, blastbox.x, blastbox.y, blastbox.width, blastbox.height);
-							for (var e in enemies) {
-								e = enemies[e];
-								vec2.set(vec, e.x - this.x, e.y - this.y);
-								Vector.setMag(vec, vec, 1);
-								if (e.isEnemy) { // add player damage
-									e.life -= damage;
-									//console.log(Entities.player.getInstance(0).x);
-									//console.log(blastbox.x);
-									if (e.life <= 0) {
-										e.alive = false;
-									} else {
-										e.vel[0] = vec[0] * blastForce;
-										e.vel[1] = vec[1] * blastForce;
-									}
-								}
-							}
-						}
 					}
 					
 					state.first = true;
@@ -315,6 +312,19 @@ Entities.add('mine', Entities.create(
 			},
 			destroy: function(state){
 				sound.play(0);
+				var enemies = physics.getColliders(state.a, state.blastbox.x, state.blastbox.y, state.blastbox.width, state.blastbox.height);
+				for (var e in enemies) {
+					e = enemies[e];
+					vec2.set(vec, e.x - this.x, e.y - this.y);
+					Vector.setMag(vec, vec, 1);
+					if (e.isEnemy) { // add player damage
+						e.life -= damage;
+						if (e.life > 0) {
+							e.vel[0] = vec[0] * blastForce;
+							e.vel[1] = vec[1] * blastForce;
+						}
+					}
+				}
 				for (var i = 0; i < 50; i++)
 					Entities.explosion.newInstance(state.x, state.y);
 				graphics.removeFromDisplay(state,'gl_main');
@@ -328,8 +338,7 @@ Entities.add('mine', Entities.create(
 // WaveWeapon -- 
 function WaveWeapon(){
 	var p = Entities.player.getInstance(0);
-	var damage = 0.3;
-	var damagePer = 1;
+	var damage = 0.5;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
@@ -345,14 +354,11 @@ function WaveWeapon(){
 	var eAngle = 0;
 	var evec = vec2.create();
 	
-	var reload = 0;
-	var duration = 1;
+	var hasPressed = false;
 	var forceTime = 1;
 	
 	var newA = true;
 	var a = [];
-	
-	var hasFired = false;
 	
 	graphics.addToDisplay(this, 'gl_main');
 	
@@ -364,27 +370,18 @@ function WaveWeapon(){
 		mvMatrix.pop();
 	};
 	this.fire = function() {
-		if (reload<=0 && duration>0) {
-			if (!sound.playing && !hasFired) {	
-				sound.play(0);
-				hasFired = true;
-			}
+		if (!hasPressed) {
+			hasPressed = true;
+			sound.play(0);
 			theta = Vector.getDir(vec2.set(vec, mouse.x - p.cx, mouse.yInv - p.cy));
-			duration -= 0.1;
-			if (duration < 0) {
-				reload = 0.8;
-				duration = 1;
-				hasFired = false;
-			}
+			
 			this.visible = true;
 			// check for enemies
 			var enemies = physics.getColliders(a, p.cx - radius, p.cy - radius, radius*2, radius*2);
 			newA = true;
 			if (enemies.length > 1) {
-				// addforce
-				// find direction if direction is legal
 				for (var i = 0; i < a.length; i++) {
-					if (a[i] != p && a[i].isEnemy)
+					if (a[i] != p)
 					{
 						var dist = Math.sqrt(Math.pow(a[i].x - p.cx,2) + Math.pow(a[i].y - p.cy,2));
 						if (dist < radius) {
@@ -394,13 +391,9 @@ function WaveWeapon(){
 								((eAngle > theta - 2*Math.PI && eAngle < wAngle + theta - 2*Math.PI) || 
 								(eAngle - 2*Math.PI < theta - 2*Math.PI && eAngle - 2*Math.PI > -wAngle + theta - 2*Math.PI))) {					
 								Vector.setMag(evec, evec, 1);
-								//a[i].addForce(mag*evec[0],mag*evec[1]);
 								a[i].vel[0] = evec[0] * mag;
 								a[i].vel[1] = evec[1] * mag;
-								a[i].life -= damagePer*damage;
-								if (a[i].life <= 0) {
-									a[i].alive = false;
-								}
+								if(a[i].life)a[i].life -= damage;
 							}
 						}
 					}
@@ -411,17 +404,13 @@ function WaveWeapon(){
 		}
 	};
 	this.holdFire = function() {
-		if (sound.playing)
-			sound.stop(0);
 		this.visible = false;
+		hasPressed = false;
 	};
 	this.boundless = true;
 	ticker.add({
 		tick: function(delta) {
-			damagePer = delta
-			if (reload > 0) {
-				reload -= delta;
-			}
+			damagePer = delta;
 			
 			if (newA){	
 				for (var i = 0; i < a.length; i++) {
@@ -439,47 +428,92 @@ WaveWeapon.prototype = new GLDrawable();
 function BeamWeapon(){
 	var p = Entities.player.getInstance(0);
 	var damage = 0.7;
+	var force = -80;
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
+	var t = 0;
+	var t2 = 10;
+	var laserWidth = 32;
 	var thickness = 4;
 	var length = 512;
-	var endX = 0;
-	var endY = 0;
+	var verts = 
+				[0.0, 0.0, 0.0,
+				 0.0, 0.0, 0.0,
+				 0.0, 0.0, 0.0];
+	var v = vec2.create();
 	var hits = [];
-	var sound = Sound.createSound('beam_fire');
+	var sound = Sound.createSound('beam_fire', true);
 	sound.gain = 0.1;
  	
-	graphics.addToDisplay(this, 'gl_main');
 	
+	
+	this.glInit = function(manager){
+		manager.addArrayBuffer("beam",false,verts,3,3)
+	}
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
-		manager.line(p.cx, p.cy, endX, endY,0,0,1,0,1);
+		manager.setArrayBuffer("beam",false,verts,verts.length/3,3);
+		manager.bindProgram("noise");
+		manager.setUniform1f("noise","time",t2);
+		manager.setArrayBufferAsProgramAttribute("beam","noise","vertexPosition");
+		manager.setMatrixUniforms('noise',pMatrix,mvMatrix.current);
+		gl.drawArrays(gl.TRIANGLE_FAN,0,verts.length/3);
+		t2%=10;
+		t2++;
 	};
 	this.fire = function() {
 		if (!sound.playing) 
 			sound.play(0);
 		this.visible = true;
 		hits.length = 0;
-		var p = Entities.player.getInstance(0);
 		
 		var traceResult = physics.rayTrace(hits,p.cx,p.cy,mouse.x,mouse.yInv);
 		if (traceResult.length > 3) {
-			traceResult[1].accelerateToward(p.cx,p.cy,-80);
-			traceResult[1].life -= damage;
-			if (traceResult[1].life <= 0) {
-				traceResult[1].alive = false;
+			for (var i = 1; i < traceResult.length -2; i++) {
+				traceResult[i].accelerateToward(p.cx, p.cy, force * 3/i);
+				traceResult[i].life -= damage * 1/i;
 			}
 		}
-		
-		endX = traceResult[traceResult.length - 2];
-		endY = traceResult[traceResult.length - 1];
+		verts.length = 0
+		verts = physics.getCone(verts,p.cx,p.cy,mouse.x,mouse.yInv,theta);
+		// vec2.set(v,mouse.x-p.cx, mouse.yInv-p.cy);
+		// Vector.setMag(v,v,laserWidth);
+		// var uv = mouse.x-p.cx;
+		// var vv = mouse.yInv-p.cy;
+		// var c = Math.cos(theta);
+		// var s = Math.sin(theta);
+		// var x1,y1,x2,y2;
+		// verts.push(p.cx,p.cy,0);
+		// traceResult = physics.rayTrace(hits, p.cx, p.cy,p.cx + ((uv*c) - (vv*s)),p.cy + ((uv*s) + (vv*c)),true);
+		// verts.push(traceResult[traceResult.length - 6],traceResult[traceResult.length - 5],0)
+		// x1 = traceResult[traceResult.length - 4];
+		// y1 = traceResult[traceResult.length - 3];
+		// x2 = traceResult[traceResult.length - 2]; 
+		// y2 = traceResult[traceResult.length - 1];
+		// c = Math.cos(-theta);
+		// s = Math.sin(-theta);
+		// traceResult = physics.rayTrace(hits, p.cx, p.cy,p.cx + ((uv*c) - (vv*s)),p.cy + ((uv*s) + (vv*c)),true);
+		// var tx =  traceResult[traceResult.length - 6];
+		// var ty = traceResult[traceResult.length - 5];
+		// if(x1 == traceResult[traceResult.length - 2] && y1 == traceResult[traceResult.length - 1]){
+			// verts.push(x1,y1,0)
+		// }else if(x2 == traceResult[traceResult.length - 4] && y2 == traceResult[traceResult.length - 3]){
+			// verts.push(x2,y2,0)
+		// }else{
+		// }
+		// verts.push(tx,ty,0)
+		theta = (0.01) + (0.005 *Math.sin(t));
+		t+=Math.PI*2/60
+		t%=Math.PI*2;
 	};
 	this.boundless = true;
 	this.holdFire = function() {
 		if (sound.playing)
 			sound.stop(0);
 		this.visible = false;
+		theta = 0;
 	}
+	graphics.addToDisplay(this, 'gl_main');
 }
 BeamWeapon.prototype = new GLDrawable();
 

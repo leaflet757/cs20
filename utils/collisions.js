@@ -61,8 +61,7 @@ var Collisions = {
 		}
 	},
 	comp: function(a,b){//test if a is equal to b within epsilon
-		a = a-b;
-		return ((-this.epsilon<a) && (this.epsilon>a));
+		return Collisions.epsilon>Math.abs(a-b);
 	},
 	pointDist: function(x1,y1,x2,y2){
 		return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
@@ -172,21 +171,66 @@ var Collisions = {
 	pointInBox: function(x,y,xb,yb,width,height){
 		return (x>xb) && (x<xb+width) && (y>yb) && (y<yb+height);
 	},
+	valPointOnLine: function(x,y,x1,y1,x2,y2){
+		return ((y2-y1)*x) + ((x1-x2)*y) + ((x2*y1) - (x1*y2));
+	},
 	boxLine: function(x,y,width,height,xa,ya,xb,yb){
-		return 	(this.pointInBox(xa,ya,x,y,width,height))					||
-				(this.pointInBox(xa,ya,x,y,width,height)) 					||
-				(this.lineLine(xa,ya,xb,yb,x,y,x+width,y))  				||
-				(this.lineLine(xa,ya,xb,yb,x+width,y,x+width,y+height)) 	||
-				(this.lineLine(xa,ya,xb,yb,x+width,y+height,x,y+height)) 	||
-				(this.lineLine(xa,ya,xb,yb,x,y,x,y+height)); 
+		var val = this.valPointOnLine(x,y,xa,ya,xb,yb);
+		if(this.comp(val,0)){
+			return true;
+		}else if(val<0){
+			if(	this.valPointOnLine(x+width,y,xa,ya,xb,yb)<0 			&& 
+				this.valPointOnLine(x+width,y+height,xa,ya,xb,yb)<0 	&&
+				this.valPointOnLine(x,y+height,xa,ya,xb,yb)<0
+					){
+				return false
+			}
+		}else{
+			if(	this.valPointOnLine(x+width,y,xa,ya,xb,yb)>0 			&& 
+				this.valPointOnLine(x+width,y+height,xa,ya,xb,yb)>0 	&&
+				this.valPointOnLine(x,y+height,xa,ya,xb,yb)>0
+					){
+				return false;
+			}
+		}
+		if(!(
+				(xa>x+width  && xb>x+width) 	||
+				(xa<x        && xb<x)			||
+				(ya>y+height && yb>y+height)	||
+				(ya<y        && yb<y)			
+					)){
+			return true;
+		}
+		return false;
 	},
 	boxRay: function(x,y,width,height,xa,ya,xb,yb){
-		return 	(this.pointInBox(xa,ya,x,y,width,height))					||
-				(this.pointInBox(xb,yb,x,y,width,height)) 					||
-				(this.lineRay(x,y,x+width,y,xa,ya,xb,yb))  				||
-				(this.lineRay(x+width,y,x+width,y+height,xa,ya,xb,yb)) 	||
-				(this.lineRay(x+width,y+height,x,y+height,xa,ya,xb,yb)) 	||
-				(this.lineRay(x,y+height,x,y,xa,ya,xb,yb)); 
+		var val = this.valPointOnLine(x,y,xa,ya,xb,yb);
+		if(this.comp(val,0)){
+			return true;
+		}else if(val<0){
+			if(	this.valPointOnLine(x+width,y,xa,ya,xb,yb)<0 			&& 
+				this.valPointOnLine(x+width,y+height,xa,ya,xb,yb)<0 	&&
+				this.valPointOnLine(x,y+height,xa,ya,xb,yb)<0
+					){
+				return false
+			}
+		}else{
+			if(	this.valPointOnLine(x+width,y,xa,ya,xb,yb)>0 			&& 
+				this.valPointOnLine(x+width,y+height,xa,ya,xb,yb)>0 	&&
+				this.valPointOnLine(x,y+height,xa,ya,xb,yb)>0
+					){
+				return false;
+			}
+		}
+		if(!(
+				(xa>x+width  && xb>xa) 	||
+				(xa<x        && xb<xa)			||
+				(ya>y+height && yb>ya)	||
+				(ya<y        && yb<ya)			
+					)){
+			return true;
+		}
+		return false;
 	},
 	pointOnLine: function(x,y,ax,ay,bx,by){
 		if(ax==bx){
@@ -201,6 +245,9 @@ var Collisions = {
 			}
 			return false;
 		}
+	},
+	pointDistanceFromLine: function(x,y,xa,xb,ya,yb){
+	
 	},
 	pointInPolygon: function(x,y,verts,itemSize){//raytrace test
 		var c = 0,l;
@@ -280,6 +327,7 @@ var Collisions = {
 	polygonPolygon: function(verts1,itemSize1,verts2,itemSize2){
 		var first1 = true
 		var xa=verts1[verts1.length-itemSize1],ya=verts1[verts1.length-itemSize1];
+		if(this.pointInPolygon(verts1[0],verts1[1],verts2,itemSize2) || this.pointInPolygon(verts2[0],verts2[1],verts1,itemSize1)) return true;
 		for(var i = 0; i<verts1.length; i+=itemSize1){
 			var xb=verts2[verts2.length-itemSize2],ya=verts2[verts2.length2-itemSize2];
 			for(var j = 0; j<verts2.length; j+=itemSize2){
