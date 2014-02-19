@@ -61,8 +61,7 @@ var Collisions = {
 		}
 	},
 	comp: function(a,b){//test if a is equal to b within epsilon
-		a = a-b;
-		return ((-this.epsilon<a) && (this.epsilon>a));
+		return Collisions.epsilon>Math.abs(a-b);
 	},
 	pointDist: function(x1,y1,x2,y2){
 		return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
@@ -203,12 +202,6 @@ var Collisions = {
 			return true;
 		}
 		return false;
-		// return 	(this.pointInBox(xa,ya,x,y,width,height))					||
-				// (this.pointInBox(xa,ya,x,y,width,height)) 					||
-				// (this.lineLine(xa,ya,xb,yb,x,y,x+width,y))  				||
-				// (this.lineLine(xa,ya,xb,yb,x+width,y,x+width,y+height)) 	||
-				// (this.lineLine(xa,ya,xb,yb,x+width,y+height,x,y+height)) 	||
-				// (this.lineLine(xa,ya,xb,yb,x,y,x,y+height)); 
 	},
 	boxRay: function(x,y,width,height,xa,ya,xb,yb){
 		var val = this.valPointOnLine(x,y,xa,ya,xb,yb);
@@ -252,6 +245,9 @@ var Collisions = {
 			}
 			return false;
 		}
+	},
+	pointDistanceFromLine: function(x,y,xa,xb,ya,yb){
+	
 	},
 	pointInPolygon: function(x,y,verts,itemSize){//raytrace test
 		var c = 0,l;

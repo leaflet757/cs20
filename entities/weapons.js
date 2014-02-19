@@ -70,7 +70,7 @@ Entities.add('rocket', Entities.create( // blows up before it touches???
 							}
 						},
 						draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-							mvMatrix.translate(this.x, this.y, 0);
+							mvMatrix.translate(this.x+this.width/2, this.y+this.height/2, 0);
 							mvMatrix.rotateZ(this.theta);
 							this.animator.draw(gl,delta,screen,manager,pMatrix,mvMatrix);
 						}
@@ -90,14 +90,15 @@ Entities.add('rocket', Entities.create( // blows up before it touches???
 							var enemies = physics.getColliders(state.a, state.x,
 								state.y, state.width, state.height);
 							for (var i = 0; i < enemies.length; i++){
-								if (enemies[i].isEnemy) {
+								if (enemies[i].isEnemy && enemies[i].collision(this)) {
 									this.alive = false;
 									i = enemies.length;
 								}
 							}
+							this.a.length = 0;
 						}
-						this.blastbox.x = this.x - this.blastbox.width/2;
-						this.blastbox.y = this.y - this.blastbox.width/2;
+						this.blastbox.x = this.x + this.width/2 - this.blastbox.width/2;
+						this.blastbox.y = this.y + this.height/2 - this.blastbox.width/2;
 					}
 					
 					state.onCollision = function() {
@@ -431,23 +432,37 @@ function BeamWeapon(){
 	var visible = false;
 	var vec = vec2.create();
 	var theta = 0;
+	var t = 0;
+	var t2 = 10;
 	var laserWidth = 32;
 	var thickness = 4;
 	var length = 512;
-	var endX1 = 0;
-	var endY1 = 0;
-	var endX2 = 0;
-	var endY2 = 0;
+	var verts = 
+				[0.0, 0.0, 0.0,
+				 0.0, 0.0, 0.0,
+				 0.0, 0.0, 0.0];
 	var v = vec2.create();
 	var hits = [];
 	var sound = Sound.createSound('beam_fire', true);
 	sound.gain = 0.1;
  	
-	graphics.addToDisplay(this, 'gl_main');
 	
+	
+	this.glInit = function(manager){
+		manager.addArrayBuffer("beam",false,verts,3,3)
+	}
 	this.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix) {
-		manager.line(p.cx, p.cy, endX1, endY1,0,0,1,0,1);
-		manager.line(p.cx, p.cy, endX2, endY2,0,0,1,0,1);
+		manager.setArrayBuffer("beam",false,verts,verts.length/3,3);
+		manager.bindProgram("noise");
+		manager.setUniform1f("noise","time",t2);
+		manager.setArrayBufferAsProgramAttribute("beam","noise","vertexPosition");
+		manager.setMatrixUniforms('noise',pMatrix,mvMatrix.current);
+		gl.drawArrays(gl.TRIANGLE_FAN,0,verts.length/3);
+		t2%=10;
+		t2++;
+		hits.length = 0;
+		physics.rayTraceLine(hits,p.cx,p.cy,mouse.x,mouse.yInv);
+		manager.line(p.cx,p.cy,hits[0],hits[1],-98,1,0,0,0)
 	};
 	this.fire = function() {
 		if (!sound.playing) 
@@ -462,15 +477,37 @@ function BeamWeapon(){
 				traceResult[i].life -= damage * 1/i;
 			}
 		}
-		vec2.set(v,mouse.x-p.cx, mouse.yInv-p.cy);
-		Vector.setMag(v,v,laserWidth);
-		traceResult = physics.rayTrace(hits, p.cx, p.cy,(p.cx+v[0])-Math.cos(theta),(p.cy+v[1])-Math.cos(theta+Math.PI/2));
-		endX1 = traceResult[traceResult.length - 2];
-		endY1 = traceResult[traceResult.length - 1];
-		traceResult = physics.rayTrace(hits, p.cx, p.cy,(p.cx+v[0])+Math.cos(theta),(p.cx+v[1])+Math.cos(theta));
-		endX2 = traceResult[traceResult.length - 2];
-		endY2 = traceResult[traceResult.length - 1];
-		theta+=0.1;
+		verts.length = 0
+		verts = physics.getCone(verts,p.cx,p.cy,mouse.x,mouse.yInv,theta);
+		// vec2.set(v,mouse.x-p.cx, mouse.yInv-p.cy);
+		// Vector.setMag(v,v,laserWidth);
+		// var uv = mouse.x-p.cx;
+		// var vv = mouse.yInv-p.cy;
+		// var c = Math.cos(theta);
+		// var s = Math.sin(theta);
+		// var x1,y1,x2,y2;
+		// verts.push(p.cx,p.cy,0);
+		// traceResult = physics.rayTrace(hits, p.cx, p.cy,p.cx + ((uv*c) - (vv*s)),p.cy + ((uv*s) + (vv*c)),true);
+		// verts.push(traceResult[traceResult.length - 6],traceResult[traceResult.length - 5],0)
+		// x1 = traceResult[traceResult.length - 4];
+		// y1 = traceResult[traceResult.length - 3];
+		// x2 = traceResult[traceResult.length - 2]; 
+		// y2 = traceResult[traceResult.length - 1];
+		// c = Math.cos(-theta);
+		// s = Math.sin(-theta);
+		// traceResult = physics.rayTrace(hits, p.cx, p.cy,p.cx + ((uv*c) - (vv*s)),p.cy + ((uv*s) + (vv*c)),true);
+		// var tx =  traceResult[traceResult.length - 6];
+		// var ty = traceResult[traceResult.length - 5];
+		// if(x1 == traceResult[traceResult.length - 2] && y1 == traceResult[traceResult.length - 1]){
+			// verts.push(x1,y1,0)
+		// }else if(x2 == traceResult[traceResult.length - 4] && y2 == traceResult[traceResult.length - 3]){
+			// verts.push(x2,y2,0)
+		// }else{
+		// }
+		// verts.push(tx,ty,0)
+		theta = (0.01) + (0.005 *Math.sin(t));
+		t+=Math.PI*2/60
+		t%=Math.PI*2;
 	};
 	this.boundless = true;
 	this.holdFire = function() {
@@ -479,6 +516,7 @@ function BeamWeapon(){
 		this.visible = false;
 		theta = 0;
 	}
+	graphics.addToDisplay(this, 'gl_main');
 }
 BeamWeapon.prototype = new GLDrawable();
 
