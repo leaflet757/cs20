@@ -460,9 +460,6 @@ function BeamWeapon(){
 		gl.drawArrays(gl.TRIANGLE_FAN,0,verts.length/3);
 		t2%=10;
 		t2++;
-		hits.length = 0;
-		physics.rayTraceLine(hits,p.cx,p.cy,mouse.x,mouse.yInv);
-		manager.line(p.cx,p.cy,hits[0],hits[1],-98,1,0,0,0)
 	};
 	this.fire = function() {
 		if (!sound.playing) 
