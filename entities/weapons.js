@@ -500,6 +500,7 @@ function BeamWeapon(){
 	var COST = 0.8;
 	var RECHARGE_RATE = 1;
 	var vis = false;
+	var overheat = false;
 	var p = Entities.player.getInstance(0);
 	var damage = 0.7;
 	var force = -80;
@@ -541,7 +542,7 @@ function BeamWeapon(){
 		}
 	};
 	this.fire = function() {
-		if (energy >= COST) {
+		if (energy >= COST && !overheat) {
 			energy -= COST;
 			if (!sound.playing) 
 				sound.play(0);
@@ -562,6 +563,7 @@ function BeamWeapon(){
 			t%=Math.PI*2;
 		} else {
 			vis = false;
+			overheat = true;
 		}
 	};
 	
@@ -575,11 +577,13 @@ function BeamWeapon(){
 	
 	ticker.add(
 		{tick:function (delta) {
-			if (!vis) {
+			if (!vis || overheat) {
 				if (energy < 100)
 					energy+=RECHARGE_RATE;
-				if (energy > 100)
+				if (energy > 100) {
+					overheat = false;
 					energy = 100;
+				}
 			}
 		}
 	});
