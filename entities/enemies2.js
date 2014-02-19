@@ -124,6 +124,61 @@ Entities.add('enemy_suicider',Entities.create({
 	}
 ))
 
+Entities.add('enemy_indirect_suicider',Entities.create({
+	parent: Entities.enemy_suicider,
+	create: function(state){
+		if(!state.directSuiciderFirst){
+			state.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix){
+				manager.fillRect(this.x + this.width/2,this.y +this.height/2,0,this.width,this.height,0,0,1,0,1);
+			}
+			state.width = 25;
+			state.height = 25;
+			state.damage = 10;
+			state.maxSmallHealth = 10;
+			state.healthSpeed = 100;
+			state.deathSound = Sound.createSound('direct_suicider_death',false);
+			state.deathSound.gain = 0.1;
+			state.accelCap = 1000;
+			state.maxSpeed= 800;
+			state.accelMul = 75;
+			state.impact = 0.2;
+			state.moveSpeed = 400;
+			state.directSuiciderFirst = true;
+		}
+		var dir = Math.PI*2*Math.random();
+		state.vel[0] = state.moveSpeed;
+		Vector.setDir(state.vel,state.vel,dir);
+		state.life = 1;			
+		state.range = 8;
+	},
+	update: function(state,delta){
+		if(state.inActiveScope){
+			var p = Entities.player.getInstance(0);
+			var dist = pythag(p.cx-state.x+state.width/2,p.cy-state.y+state.height/2);
+			if( Math.abs(state.x -p.cx) < state.range && p.cy > state.y) {
+				var dir = Math.PI/2;
+				Vector.setDir(state.vel,state.vel,dir);
+			}else if(Math.abs(state.x- p.cx) < state.range && p.cy < state.y) {
+				var dir = Math.PI+ Math.PI/2;
+				Vector.setDir(state.vel,state.vel,dir);
+			}else if(Math.abs(state.y- p.cy) < state.range && p.cx > state.x) {
+				var dir = Math.PI*2;
+				Vector.setDir(state.vel,state.vel,dir);
+			}else if(Math.abs(state.y- p.cy) < state.range && p.cx < state.x) {
+				var dir = Math.PI;
+				Vector.setDir(state.vel,state.vel,dir);
+			}
+		}
+	},
+	destroy: function(state,reset){
+		if(!reset){
+			state.deathSound.play(0)
+			Entities.shrink_burst.burst(16,state.x+state.width/2,state.y+state.height/2,24,24,4,200,1,0,0,0.1,state.vel[0],state.vel[1]);
+		}
+	}
+}));
+
+
 Entities.add('enemy_direct_suicider',Entities.create({
 	parent: Entities.enemy_suicider,
 	create: function(state){

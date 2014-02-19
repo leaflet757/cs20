@@ -209,63 +209,6 @@ function initScene(){
 	graphics.addToDisplay(cursor,"gl_main")
 	ticker.add(cursor);
 	
-	// var testLines= [
-		// 0.0, 0.0,	512, 0.0,
-		// 512, 0.0,   512, 128,
-		// 512, 128,   640, 128,
-		// 640, 128,   640, 0,
-		// 640, 0,     1152, 0,
-		// 1152, 0,    1152, 512,
-		// 1152,512,   640, 512,
-		// 640, 512,   640, 394,
-		// 640, 394,   512, 394,
-		// 512, 394,   512, 512,
-		// 512, 512,   0.0, 512,
-		// 0.0, 512,	0.0, 0.0
-	// ]
-	
-	// physics.setGeometry(testLines);
-	
-	// var testMap = fillProperties(new GLDrawable(),{
-		// draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-			// manager.stroke(1,1,0,1);
-			// for(var i = 2; i<testLines.length; i+=2){
-				// manager.line(testLines[i-2],testLines[i-1],testLines[i],testLines[i+1],98);
-			// }
-		// },
-		// x: 0,
-		// y: 0,
-		// width: 512,
-		// height: 512
-	// });
-	
-	// var testSprite = fillProperties(new GLDrawable(),{
-		// glInit: function(manager){
-			// this.sprite = manager.createSprite('resources/img/emberButton.png')
-			// this.sprite.x = 128;
-			// this.sprite.y = 128;
-			// this.sprite.width = 128;
-			// this.sprite.height = 128;
-		// },
-		// draw:function(gl,delta,screen,manager,pMatrix,mvMatrix){
-			// this.sprite.draw();
-		// },
-		// x: 128,
-		// y: 128,
-		// width: 128,
-		// height: 128
-	// });
-	// graphics.addToDisplay(testSprite,'gl_main');
-	
-	// Entities.follower.newInstance(400,400);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	
-	
-	
-	// graphics.addToDisplay(testMap,"gl_main")
 	currentMap = new Map(9,0.5,256*4,512*4,256*4,512*4,640*4,128);
 	Entities.runner.def.max = 10;
 	Entities.enemy_direct_suicider.def.max = 5;
@@ -273,15 +216,8 @@ function initScene(){
 	Entities.enemy_breaker_suicider.def.max = 5;
 	Entities.enemy_meandering_suicider.def.max = 10;
 	currentMap.init([Entities.enemy_direct_suicider,Entities.enemy_direct_move_suicider,Entities.enemy_meandering_suicider,Entities.enemy_breaker_suicider],32);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	// Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	// Entities.player.newInstance(currentScreen.width/2,currentScreen.height/2);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
-	Entities.runner.newInstance(Math.random()*500, Math.random()*500);
+	Entities.enemy_indirect_suicider.newInstance(Entities.player.getInstance(0).cx, Entities.player.getInstance(0).cy+400);
+	Entities.enemy_indirect_suicider.newInstance(Entities.player.getInstance(0).cx+500, Entities.player.getInstance(0).cy);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }
