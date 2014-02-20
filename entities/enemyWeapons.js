@@ -77,7 +77,7 @@ Entities.add('enemyTail', Entities.create(
 			create: function(state,x,y){
 				// destroy will be called when state.alive is false
 				state.alive = true;
-				state.time = 2; // temporary variable created to destroy the instance after 1 second
+				state.time = 1.5; // temporary variable created to destroy the instance after 1 second
 				var p = Entities.player.getInstance(0);
 				
 				if(!state.first){
