@@ -457,8 +457,10 @@ Entities.add('enemy_turret',Entities.create({
 		if(!state.directSuiciderFirst){
 		var p = Entities.player.getInstance(0);
 			state.draw = function(gl,delta,screen,manager,pMatrix,mvMatrix){
-				manager.fillRect(this.x+this.width/2,this.y+this.height/2, 0, this.width,this.height,0,1,1,1,1)
+				manager.fillRect(this.x+this.width/2,this.y+this.height/2, 0, this.width,this.height,state.theta,1,1,1,1)
 			}
+			state.v = vec2.create();
+			state.theta = 0;
 			state.width = 80;
 			state.height = 80;
 			state.damage = 10;
@@ -478,8 +480,9 @@ Entities.add('enemy_turret',Entities.create({
 	},
 	update: function(state,delta){
 		if(state.inActiveScope){
-		state.delay += delta;
+			state.delay += delta;
 			var p = Entities.player.getInstance(0);
+			state.theta = Vector.getDir(vec2.set(state.v, state.x - p.cx, state.y - p.cy));
 			var dist = pythag(p.cx-state.x+state.width/2,p.cy-state.y+state.height/2);
 			if(state.delay >= .5) {
 			Entities.enemyFollowBullet.newInstance(state.x, state.y);
