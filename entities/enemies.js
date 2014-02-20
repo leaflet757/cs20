@@ -145,6 +145,7 @@ Entities.add('shooter_tank',Entities.create(
 			}
 		};
 	})())	
+<<<<<<< HEAD
 );
 
 Entities.add('enemy_indirect_suicider',Entities.create({
@@ -310,3 +311,4 @@ Entities.add('enemy_turret',Entities.create({
 		}
 	}
 }));
+
