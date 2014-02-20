@@ -23,52 +23,18 @@ Entities = fillProperties(new Updatable(),{
 	createStandardCollisionState: function(obj,x,y,width,height,elasticity){
 		return fillProperties(new GLDrawable(),fillProperties(new BasicCollider(x,y,width,height,elasticity),obj));
 	},
-	/**
-	* used to create a standard collision state with fine collisions
-	*/
 	createPolygonCollisionState: function(obj,x,y,width,height,elasticity,verts,itemSize){
 		return fillProperties(new GLDrawable(),fillProperties(new PolygonCollider(x,y,width,height,elasticity,verts,itemSize),obj));
-	},
-	/**
-	*	provides a standard set of properties for enemies
-	*/
-	createStandardEnemy: function(obj,x,y,width,height,elasticity,life,scope){
-		var life = life || 100;
-		return Object.defineProperties(fillProperties(this.createStandardCollisionState(obj,x,y,width,height,elasticity),{
-					scope: scope || 1024,
-					getPlayer: function(){
-						return Entities.Player.getInstance(0);
-					}
-				}),{
-					life:{
-						get: function(){
-							return life;
-						},
-						set: function(nLife){
-							life = nLife;
-							if(life<=0){
-								this.alive = false;
-							}
-						}
-					},
-					isEnemy:{
-						value: true,
-						writable: false
-					},
-					inActiveScope: {
-						get: function(){
-							var p = this.getPlayer();
-							return (p && pythag(p.cx-(this.x+this.width/2),p.cy-(this.y+this.height/2))<this.scope);
-						},
-						set: function(){}
-					}
-				});
 	},
 	/**
 	*	does a type check then adds the entity to Entities as a property with the given name
 	*/
 	add: function(name,entity){
 		if(entity instanceof Entity){
+			Object.defineProperty(entity,'euid',{
+				writible: false,
+				value: uid()
+			});
 			this[name] = entity;
 		}else{
 			throw 'Entities: attempt to add non-entity'
@@ -96,11 +62,9 @@ Entities = fillProperties(new Updatable(),{
 	*	clears all instances but not object pools
 	*/
 	reset:function(){
-		// this.reseting = true;
 		for(var o in this){
 			if(typeof this[o].reset== 'function')this[o].reset();
 		}
-		// this.reseting = false;
 	},
 	/**
 	*	clears all object pools, killing all instances
@@ -113,46 +77,17 @@ Entities = fillProperties(new Updatable(),{
 });
 
 function EntityDef(){
-	Object.defineProperties(this,{
-		doDestroy:{
-			value: function(state,reset){
-				if(this.parent){
-					this.parent.def.doDestroy(state,reset);
-				}
-				this.destroy(state,reset);
-			},
-			writable:false
-		},
-		doUpdate: {
-			value: function(state,delta){
-				if(this.parent){
-					this.parent.def.doUpdate(state,delta);
-				}
-				this.update(state,delta);
-			},
-			writable:false
-		},
-		doCreate: {
-			value: function(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p){
-				if(this.parent){
-					this.parent.def.doCreate(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
-				}
-				this.create(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
-			},
-			writable:false
-		},
-	})
 }
 EntityDef.prototype={
 	/**
 	* 	initializes the passed state object
 	*/
-	create: function(state,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p){
+	create: function(state,a,b,c,d,e,f,g,h){
 	},
 	/**
 	* 	does actions for the end of a instances life
 	*/
-	destroy: function(state,reset){
+	destroy: function(state){
 	},
 	/**
 	*  does tick for entity
@@ -163,15 +98,15 @@ EntityDef.prototype={
 	*	sets whether or not the entity is active
 	*/
 	setActive: function(state,active){
-	},
-	/**
-	* 	defines a parent entity for this def
-	*/
-	parent: false
+	}
 }
 
 function EntityState(id,euid){
-	this[euid] = id;
+	this.id = id;
+	Object.defineProperty(this,'euid',{
+			writible: false,
+			value: euid
+		});
 }
 EntityState.prototype={
 	alive:false,
@@ -187,10 +122,6 @@ function Entity(def){
 		this.instances = {};
 		this.instanceArray = new Array();
 		this.position = 0;
-		Object.defineProperty(this,'euid',{
-				writible: false,
-				value: uid()
-			});
 	}else{
 		throw 'Entity: illegal parameter';
 	}
@@ -202,28 +133,23 @@ Entity.prototype=(function(){
 		/**
 		* creates a new instance
 		*/
-		newInstance: function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p){
-			if(Entities.reseting) return;
+		newInstance: function(a,b,c,d,e,f,g,h){
 			var id = instanceId++
 			var instance;
 			if(this.position<this.instanceArray.length){
 				instance = this.instanceArray[this.position];
-				this.instances[id] = instance;
+				instance.id = instanceId++;
 			}else{
-				instance = new EntityState(id,this.euid);
+				instance = new EntityState(instanceId++,this.euid);
 				this.instanceArray.push(instance);
-				this.instances[id] = instance;
 			}
-			instance[this.euid]= id;
 			instance.alive = true;
-			this.def.doCreate(instance,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
+			this.instances[id] = instance;
+			this.def.create(instance,a,b,c,d,e,f,g,h);
 			this.position++;
-			return instance;
+			return id;
 		},
-		getInstance: function(index){
-			return this.instanceArray[index];
-		},
-		getInstanceById: function(id){
+		getInstance: function(id){
 			return this.instances[id];
 		},
 		/**
@@ -246,13 +172,14 @@ Entity.prototype=(function(){
 						this.instanceArray[i] = this.instanceArray[this.position];
 						this.instanceArray[this.position] = temp;
 					}
-					this.instances[temp[this.euid]] = null;
-					this.def.doDestroy(temp)
+					this.instances[temp.id] = null;
+					this.def.destroy(temp);
+					
 					instance = this.instanceArray[i];
 				}
-			}
-			for(var i = 0; i<this.position; i++){
-				this.def.doUpdate(this.instanceArray[i],delta)
+				if(i<this.position && instance.active){
+					this.def.update(instance,delta);
+				}
 			}
 		},
 		/**
@@ -261,7 +188,7 @@ Entity.prototype=(function(){
 		reset:function(){
 			for(var i = 0; i<this.position; i++){
 				delete this.instances[this.instanceArray[i].id];
-				this.def.doDestroy(this.instanceArray[i],true);
+				this.def.destroy(this.instanceArray[i]);
 			}
 			this.position = 0;
 		},
@@ -279,7 +206,4 @@ importS('entities/weaponManager.js');
 importS('entities/player.js');
 importS('entities/miscEntities.js');
 importS('entities/weapons.js');
-importS('entities/enemies2.js');
 importS('entities/enemies.js');
-importS('entities/pickups.js');
-importS('entities/enemyWeapons.js');

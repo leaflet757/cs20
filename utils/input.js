@@ -121,7 +121,7 @@ var input = {
 			}
 		});
 		
-		window.addEventListener(
+		element.addEventListener(
 			'mouseover',
 			function(evt){
 				onElement = true;
@@ -129,16 +129,16 @@ var input = {
 			},
 			false);
 			
-		// window.addEventListener(
-			// 'mouseout',
-			// function(evt){
-				// onElement = false;
-				// x=0;
-				// y=0;
-				// left=false;
-				// right=false;
-			// },
-			// false)
+		element.addEventListener(
+			'mouseout',
+			function(evt){
+				onElement = false;
+				x=0;
+				y=0;
+				left=false;
+				right=false;
+			},
+			false)
 			
 		element.addEventListener(
 			'mousemove',

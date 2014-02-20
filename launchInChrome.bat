@@ -1,1 +1,0 @@
-"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --disable-web-security file:///C:/Users/Alex/Documents/GitHub/cs20/game.html

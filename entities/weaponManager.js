@@ -1,4 +1,3 @@
-
 function WeaponManager()
 {
 	// instance variables
@@ -11,8 +10,7 @@ WeaponManager.prototype =
 {
 	// Fires the weapon: starting collision checks and drawing
  	fire: function() {
- 		if (!Loop.paused)
- 			this.currentWeapon.fire();
+ 		this.currentWeapon.fire();
  		return;
  	},
  	
@@ -45,9 +43,6 @@ WeaponManager.prototype =
  	
  	// Removes all weapons from the player
  	clear: function() {
- 		if (this.currentWeapon) {
- 			this.currentWeapon.holdFire();
- 		}
  		this.position = 0;
  		this.weaponList = [];
  		this.currentWeapon = undefined;
