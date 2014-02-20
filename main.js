@@ -216,8 +216,7 @@ function initScene(){
 	Entities.enemy_breaker_suicider.def.max = 5;
 	Entities.enemy_meandering_suicider.def.max = 10;
 	currentMap.init([Entities.enemy_direct_suicider,Entities.enemy_direct_move_suicider,Entities.enemy_meandering_suicider,Entities.enemy_breaker_suicider],32);
-	Entities.enemy_indirect_suicider.newInstance(Entities.player.getInstance(0).cx, Entities.player.getInstance(0).cy+400);
-	Entities.enemy_indirect_suicider.newInstance(Entities.player.getInstance(0).cx+500, Entities.player.getInstance(0).cy);
+	Entities.enemy_indirect_tail.newInstance(Entities.player.getInstance(0).cx, Entities.player.getInstance(0).cy+400);
 	physics.setGeometry(currentMap.lines);
 	graphics.addToDisplay(currentMap,'gl_main');
 }

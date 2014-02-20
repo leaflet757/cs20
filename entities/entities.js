@@ -282,3 +282,4 @@ importS('entities/weapons.js');
 importS('entities/enemies2.js');
 importS('entities/enemies.js');
 importS('entities/pickups.js');
+importS('entities/enemyWeapons.js');
